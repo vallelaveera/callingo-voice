@@ -768,7 +768,6 @@ const STATE = {
   recognition: null,
   stream: null,
   welcomeVoiceId: null,
-  _homeWelcomePlayed: false,
 };
 
 const WELCOME_VOICE_EMAIL = 'veera.reddy619@gmail.com';
@@ -788,12 +787,12 @@ async function loadWelcomeVoice() {
 // CONTENT
 // ============================================================
 const WELCOME = {
-  en: (name) => `Welcome to Callingo, ${name}! To make your experience personal, I need to clone your voice. You'll hear yourself speaking German or English — your own voice, perfectly fluent. Just read the two sentences below clearly.`,
-  hi: (name) => `Callingo mein aapka swagat hai, ${name}! Aapka anubhav personal banane ke liye, hume aapki awaaz clone karni hogi. Aap apni hi awaaz mein German ya English bolte sunenge. Bas neeche di gayi do lines clearly padhen.`,
-  de: (name) => `Willkommen bei Callingo, ${name}! Um dein Erlebnis persoenlich zu gestalten, muessen wir deine Stimme klonen. Du wirst dich selbst fliessend Deutsch oder Englisch sprechen hoeren. Lies einfach die zwei Saetze unten vor.`,
-  es: (name) => `Bienvenido a Callingo, ${name}! Para personalizar tu experiencia, necesitamos clonar tu voz. Te escucharas hablando aleman o ingles fluidamente — tu propia voz. Solo lee las dos frases de abajo claramente.`,
-  fr: (name) => `Bienvenue sur Callingo, ${name}! Pour personnaliser votre experience, nous devons cloner votre voix. Vous vous entendrez parler allemand ou anglais couramment. Lisez simplement les deux phrases ci-dessous clairement.`,
-  ar: (name) => `Marhaban bik fi Callingo, ${name}! Litakhsis tajribatik, nahtaj ila istinsakh sawtik. Satasma nafsik tatakallam al-almaniya aw al-inkliziya bi-talaqa. Faqat iqra al-jumlatain fi al-asfl bi-wuduh.`,
+  en: (name) => `Welcome to Callingo, ${name}. Please repeat these two sentences so we can clone your voice and use it for your practice calls.`,
+  hi: (name) => `Callingo mein swagat hai, ${name}. Kripya neeche di gayi do lines dohraiye taki hum aapki awaaz clone kar sakein aur practice calls mein use kar sakein.`,
+  de: (name) => `Willkommen bei Callingo, ${name}. Bitte wiederhole die zwei Saetze unten, damit wir deine Stimme klonen und in deinen Uebungsanrufen verwenden koennen.`,
+  es: (name) => `Bienvenido a Callingo, ${name}. Por favor repite estas dos frases para que podamos clonar tu voz y usarla en tus llamadas de practica.`,
+  fr: (name) => `Bienvenue sur Callingo, ${name}. Repete les deux phrases ci-dessous pour qu'on puisse cloner ta voix et l'utiliser dans tes appels d'entrainement.`,
+  ar: (name) => `Marhaban bik fi Callingo, ${name}. Min fadlik karrir al-jumlatain adnah hatta nastatee istinsakh sawtik wa istikhdamuhu fi mukalamat al-tadrub.`,
 };
 
 const SENTENCES = {
@@ -1340,26 +1339,19 @@ function initVoiceSetup() {
   STATE.currentSent = 0;
   updateSentUI();
   renderRecList();
-  // Show welcome text — audio is played in cloned voice on the home screen
   const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
   const el = document.getElementById('welcome-text');
   if (el) el.textContent = msg;
+  // Narrate the instructions in Veera's voice
+  setTimeout(playOnboardingWelcome, 400);
 }
 
-async function playClonedWelcome() {
-  const voiceId = STATE.welcomeVoiceId || STATE.voiceId;
-  if (!voiceId) return;
-  const messages = {
-    en: (n) => `Hi ${n}, welcome to Callingo. Pick a topic and let's talk.`,
-    hi: (n) => `Namaste ${n}, Callingo mein swagat hai. Topic chuniye, baat karte hain.`,
-    de: (n) => `Hallo ${n}, willkommen bei Callingo. Waehle ein Thema, wir reden.`,
-    es: (n) => `Hola ${n}, bienvenido a Callingo. Elige un tema y hablamos.`,
-    fr: (n) => `Bonjour ${n}, bienvenue sur Callingo. Choisis un sujet, on parle.`,
-    ar: (n) => `Marhaba ${n}, ahlan bik fi Callingo. Ikhtar mawdoo, sanatahaddath.`,
-  };
-  const msg = (messages[STATE.nativeLang] || messages.en)(STATE.name);
+async function playOnboardingWelcome() {
+  if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
+  if (!STATE.welcomeVoiceId) return;
+  const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
   try {
-    const audio = await tts(msg, voiceId);
+    const audio = await tts(msg, STATE.welcomeVoiceId);
     if (audio) audio.play();
   } catch(e) { /* silent fail */ }
 }
@@ -1507,7 +1499,7 @@ async function preGenerateFillers() {
 // ============================================================
 // HOME SCREEN
 // ============================================================
-async function updateHome() {
+function updateHome() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   document.getElementById('home-greeting').textContent = `${greeting}, ${STATE.name}!`;
@@ -1524,14 +1516,6 @@ async function updateHome() {
       <div class="topic-desc">${t.desc}</div>
     </div>`).join('');
 
-  // Auto-play welcome in Veera's voice (or user's own voice as fallback) once per page load
-  if (!STATE._homeWelcomePlayed) {
-    if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
-    if (STATE.welcomeVoiceId || STATE.voiceId) {
-      STATE._homeWelcomePlayed = true;
-      setTimeout(playClonedWelcome, 700);
-    }
-  }
 }
 
 function selectTopic(id) {
