@@ -896,6 +896,7 @@ Rules:
 - Never use asterisks.
 - Speak like a real phone call.
 - Ask only ONE thing at a time.
+- Always end with a question to keep the conversation going.
 - Responses should sound natural when read aloud.
 - Never give long explanations.
 - Never address the user by name or use their name.
@@ -948,6 +949,7 @@ Rules:
 - Never use asterisks.
 - Speak like a real phone call.
 - Ask only ONE thing at a time.
+- Always end with a question to keep the conversation going.
 - Responses should sound natural when read aloud.
 - Never give long explanations.
 - Never address the user by name or use their name.
@@ -1619,6 +1621,7 @@ Rules:
 - Never use asterisks.
 - Speak like a real phone call.
 - Ask only ONE thing at a time.
+- Always end with a question to keep the conversation going.
 - Responses should sound natural when read aloud.
 - Never give long explanations.
 - Never address the user by name or use their name.
@@ -1910,11 +1913,11 @@ async function callClaude(userText) {
   ];
 
   const levelGuide = {
-    beginner: 'The user is a BEGINNER. Use very simple words only (100 most common words). Repeat often. Slow pace. Be encouraging. Never use their name.',
-    elementary: 'The user is at ELEMENTARY level. Use simple everyday vocabulary. Repeat key words. Speak slowly. Encourage them. Never use their name.',
-    intermediate: 'The user is INTERMEDIATE. Use normal vocabulary and speed. Correct gently if needed. Challenge them slightly. Never use their name.',
-    advanced: 'The user is ADVANCED. Use natural vocabulary and speed. Use idioms and complex structures. Correct them naturally. Never use their name.',
-    fluent: 'The user is FLUENT. Speak naturally and fast. Use slang, idioms, and complex structures freely. No corrections needed—just chat. Never use their name.'
+    beginner: 'The user is a BEGINNER. Use very simple words only (100 most common words). Repeat often. Slow pace. Be encouraging. ALWAYS end with a question. Never use their name.',
+    elementary: 'The user is at ELEMENTARY level. Use simple everyday vocabulary. Repeat key words. Speak slowly. Encourage them. ALWAYS end with a question. Never use their name.',
+    intermediate: 'The user is INTERMEDIATE. Use normal vocabulary and speed. Correct gently if needed. Challenge them slightly. ALWAYS end with a question. Never use their name.',
+    advanced: 'The user is ADVANCED. Use natural vocabulary and speed. Use idioms and complex structures. Correct them naturally. ALWAYS end with a question. Never use their name.',
+    fluent: 'The user is FLUENT. Speak naturally and fast. Use slang, idioms, and complex structures freely. No corrections needed—just chat. ALWAYS end with a question. Never use their name.'
   };
 
   const systemPrompt = STATE.selectedTopic.system + '\n\nLevel guidance: ' + (levelGuide[STATE.level] || levelGuide.intermediate);
