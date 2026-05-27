@@ -1411,14 +1411,15 @@ function initVoiceSetup() {
   playOnboardingWelcome();
 }
 
-async function playOnboardingWelcome() {
-  if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
-  if (!STATE.welcomeVoiceId) return;
+function playOnboardingWelcome() {
+  if (!STATE.welcomeVoiceId) {
+    loadWelcomeVoice().then(() => playOnboardingWelcome());
+    return;
+  }
   const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
-  try {
-    const audio = await tts(msg, STATE.welcomeVoiceId);
+  tts(msg, STATE.welcomeVoiceId).then(audio => {
     if (audio) audio.play();
-  } catch(e) { /* silent fail */ }
+  }).catch(() => {});
 }
 
 function updateSentUI() {
