@@ -898,6 +898,7 @@ Rules:
 - Ask only ONE thing at a time.
 - Responses should sound natural when read aloud.
 - Never give long explanations.
+- Never address the user by name or use their name.
 - Never explain your reasoning.
 - Never ask multiple questions.
 - Assume speech-to-text mistakes are common.
@@ -949,6 +950,7 @@ Rules:
 - Ask only ONE thing at a time.
 - Responses should sound natural when read aloud.
 - Never give long explanations.
+- Never address the user by name or use their name.
 - Never explain your reasoning.
 - Never ask multiple questions.
 - Assume speech-to-text mistakes are common.
@@ -1618,6 +1620,7 @@ Rules:
 - Ask only ONE thing at a time.
 - Responses should sound natural when read aloud.
 - Never give long explanations.
+- Never address the user by name or use their name.
 - Never explain your reasoning.
 - Assume speech-to-text mistakes are common.
 - Guess meaning from context.
@@ -1906,11 +1909,11 @@ async function callClaude(userText) {
   ];
 
   const levelGuide = {
-    beginner: 'The user is a BEGINNER. Use very simple words only (100 most common words). Repeat often. Slow pace. Be encouraging.',
-    elementary: 'The user is at ELEMENTARY level. Use simple everyday vocabulary. Repeat key words. Speak slowly. Encourage them.',
-    intermediate: 'The user is INTERMEDIATE. Use normal vocabulary and speed. Correct gently if needed. Challenge them slightly.',
-    advanced: 'The user is ADVANCED. Use natural vocabulary and speed. Use idioms and complex structures. Correct them naturally.',
-    fluent: 'The user is FLUENT. Speak naturally and fast. Use slang, idioms, and complex structures freely. No corrections needed—just chat.'
+    beginner: 'The user is a BEGINNER. Use very simple words only (100 most common words). Repeat often. Slow pace. Be encouraging. Never use their name.',
+    elementary: 'The user is at ELEMENTARY level. Use simple everyday vocabulary. Repeat key words. Speak slowly. Encourage them. Never use their name.',
+    intermediate: 'The user is INTERMEDIATE. Use normal vocabulary and speed. Correct gently if needed. Challenge them slightly. Never use their name.',
+    advanced: 'The user is ADVANCED. Use natural vocabulary and speed. Use idioms and complex structures. Correct them naturally. Never use their name.',
+    fluent: 'The user is FLUENT. Speak naturally and fast. Use slang, idioms, and complex structures freely. No corrections needed—just chat. Never use their name.'
   };
 
   const systemPrompt = STATE.selectedTopic.system + '\n\nLevel guidance: ' + (levelGuide[STATE.level] || levelGuide.intermediate);
