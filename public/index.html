@@ -270,7 +270,16 @@ body{
   border:1px solid rgba(0,214,143,0.2);
   color:var(--text);
 }
-.bubble-sub{font-size:10px;color:var(--sub);margin-top:4px;font-family:'DM Mono',monospace;}
+.bubble-sub{
+  font-size:11px;
+  color:var(--green);
+  margin-top:6px;
+  padding-top:6px;
+  border-top:1px solid var(--border);
+  font-family:'DM Mono',monospace;
+  line-height:1.4;
+  opacity:0.85;
+}
 .typing{display:flex;gap:4px;align-items:center;padding:12px 14px;}
 .tdot{width:6px;height:6px;border-radius:50%;background:var(--sub);animation:td 1.2s infinite;}
 .tdot:nth-child(2){animation-delay:0.2s;}
@@ -419,6 +428,150 @@ body{
   cursor:pointer;font-size:18px;transition:all 0.15s;
 }
 .swipe-arrow:hover{border-color:var(--green);}
+
+/* ── STREAK / XP ── */
+.streak-bar{display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.streak-fire{font-size:28px;line-height:1;}
+.streak-info{flex:1;}
+.streak-num{font-size:20px;font-weight:800;color:var(--text);}
+.streak-label{font-size:11px;color:var(--sub);font-family:'DM Mono',monospace;letter-spacing:1px;}
+.xp-bar-wrap{height:6px;background:var(--border);border-radius:6px;overflow:hidden;margin-top:6px;}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),#00d68f);border-radius:6px;transition:width 0.6s ease;}
+.xp-label{font-size:10px;color:var(--sub);font-family:'DM Mono',monospace;margin-top:3px;}
+
+/* ── DAILY CHALLENGE BADGE ── */
+.daily-badge{
+  display:flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,#fff7ed,#fef3c7);
+  border:1.5px solid #fbbf24;border-radius:14px;padding:12px 16px;cursor:pointer;
+}
+.daily-icon{font-size:24px;}
+.daily-info{flex:1;}
+.daily-title{font-size:13px;font-weight:700;color:#92400e;}
+.daily-sub{font-size:11px;color:#a16207;font-family:'DM Mono',monospace;}
+.daily-done{font-size:18px;}
+
+/* ── WORD TAP TOOLTIP ── */
+.word-tip{
+  position:fixed;z-index:999;
+  background:var(--text);color:#fff;
+  border-radius:12px;padding:10px 14px;
+  font-size:13px;max-width:220px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.18);
+  pointer-events:none;
+  transition:opacity 0.15s;
+}
+.word-tip-word{font-weight:700;font-size:15px;margin-bottom:4px;}
+.word-tip-tr{color:var(--green);font-size:13px;margin-bottom:3px;}
+.word-tip-ex{color:rgba(255,255,255,0.6);font-size:11px;font-style:italic;}
+.bubble.ai span.tappable{cursor:pointer;border-bottom:1px dotted var(--green);transition:color 0.1s;}
+.bubble.ai span.tappable:hover{color:var(--green);}
+
+/* ── SOS / HELP OVERLAY ── */
+.sos-overlay{
+  position:absolute;inset:0;z-index:50;
+  background:rgba(10,15,12,0.7);
+  display:flex;align-items:flex-end;
+  opacity:0;pointer-events:none;transition:opacity 0.2s;
+}
+.sos-overlay.open{opacity:1;pointer-events:all;}
+.sos-sheet{
+  width:100%;background:var(--bg);
+  border-radius:20px 20px 0 0;padding:20px;
+  display:flex;flex-direction:column;gap:12px;
+  transform:translateY(100%);transition:transform 0.25s cubic-bezier(.4,0,.2,1);
+}
+.sos-overlay.open .sos-sheet{transform:translateY(0);}
+.sos-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--sub);text-transform:uppercase;}
+.sos-result{
+  background:var(--green-dim);border:1px solid rgba(0,168,107,0.2);
+  border-radius:12px;padding:14px 16px;display:none;
+}
+.sos-result-target{font-size:20px;font-weight:700;color:var(--green);}
+.sos-result-en{font-size:13px;color:var(--sub);margin-top:4px;}
+
+/* ── SPEED CONTROL ── */
+.speed-row{display:flex;gap:6px;justify-content:center;}
+.speed-btn{
+  padding:5px 12px;border-radius:20px;border:1px solid var(--border);
+  font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;
+  background:var(--s2);color:var(--sub);transition:all 0.15s;
+}
+.speed-btn.active{background:var(--green);border-color:var(--green);color:#fff;}
+
+/* ── SHADOWING MODE ── */
+#screen-shadow{background:#f0fdf6;}
+.shadow-phrase{
+  background:#fff;border:2px solid var(--green);border-radius:20px;
+  padding:28px 24px;text-align:center;
+}
+.shadow-phrase-target{font-size:22px;font-weight:700;color:var(--text);line-height:1.4;}
+.shadow-phrase-en{font-size:14px;color:var(--sub);margin-top:8px;}
+.shadow-score-ring{
+  width:80px;height:80px;border-radius:50%;
+  background:conic-gradient(var(--green) 0%, var(--border) 0%);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto;position:relative;
+}
+.shadow-score-ring::before{
+  content:'';position:absolute;inset:8px;border-radius:50%;background:#f0fdf6;
+}
+.shadow-score-num{position:relative;font-size:20px;font-weight:800;color:var(--green);}
+.shadow-result{text-align:center;padding:16px;}
+.shadow-result-label{font-size:12px;color:var(--sub);font-family:'DM Mono',monospace;letter-spacing:2px;margin-bottom:6px;}
+.shadow-result-text{font-size:15px;font-weight:600;color:var(--text);}
+
+/* ── CALL HISTORY SCREEN ── */
+#screen-history .hist-item{
+  background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:16px;
+  margin-bottom:10px;cursor:pointer;transition:border-color 0.15s;
+}
+#screen-history .hist-item:hover{border-color:var(--green);}
+.hist-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.hist-topic{font-size:14px;font-weight:700;}
+.hist-score{font-size:13px;font-weight:700;color:var(--green);}
+.hist-details{font-size:11px;color:var(--sub);font-family:'DM Mono',monospace;}
+.hist-transcript{
+  background:var(--s2);border-radius:10px;padding:12px;margin-top:10px;
+  max-height:200px;overflow-y:auto;display:none;
+}
+.hist-transcript.open{display:block;}
+.hist-msg{font-size:12px;margin-bottom:6px;line-height:1.4;}
+.hist-msg.ai{color:var(--text);}
+.hist-msg.user{color:var(--green);text-align:right;}
+
+/* ── GOAL SCREEN ── */
+.goal-btn{
+  background:var(--s1);border:1.5px solid var(--border);border-radius:14px;
+  padding:16px;cursor:pointer;transition:all 0.15s;text-align:left;
+  display:flex;align-items:center;gap:14px;
+}
+.goal-btn:hover{border-color:var(--green);}
+.goal-btn.selected{border-color:var(--green);background:var(--green-dim);}
+.goal-icon{font-size:28px;flex-shrink:0;}
+.goal-name{font-size:14px;font-weight:700;}
+.goal-desc{font-size:12px;color:var(--sub);margin-top:2px;line-height:1.4;}
+
+/* ── CONFIDENCE METER ── */
+.conf-topic-row{
+  background:var(--s1);border:1px solid var(--border);border-radius:12px;
+  padding:12px 16px;margin-bottom:8px;
+}
+.conf-topic-name{font-size:13px;font-weight:700;margin-bottom:6px;}
+.conf-bar-wrap{height:6px;background:var(--border);border-radius:6px;overflow:hidden;}
+.conf-bar-fill{height:100%;background:var(--green);border-radius:6px;transition:width 0.6s ease;}
+.conf-label{font-size:10px;color:var(--sub);font-family:'DM Mono',monospace;margin-top:3px;}
+
+/* ── PRONUNCIATION BADGE on bubble ── */
+.pron-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:10px;font-family:'DM Mono',monospace;
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:20px;padding:2px 8px;margin-top:5px;
+}
+.pron-badge.good{border-color:var(--green);color:var(--green);}
+.pron-badge.ok{border-color:var(--gold);color:var(--gold);}
+.pron-badge.poor{border-color:var(--red);color:var(--red);}
 
 /* ERROR */
 .err{
@@ -742,6 +895,30 @@ body{
       <div class="subtext" id="home-sub" style="margin-top:6px;">Ready to practice?</div>
     </div>
 
+    <!-- Streak + XP -->
+    <div class="streak-bar" id="streak-bar">
+      <div class="streak-fire" id="streak-fire">🔥</div>
+      <div class="streak-info">
+        <div class="streak-num"><span id="streak-count">0</span> day streak</div>
+        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xp-bar" style="width:0%"></div></div>
+        <div class="xp-label"><span id="xp-count">0</span> XP · level up at <span id="xp-next">100</span></div>
+      </div>
+      <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--sub);text-align:right;">
+        <div id="streak-best" style="font-weight:700;font-size:13px;color:var(--text);"></div>
+        <div>best</div>
+      </div>
+    </div>
+
+    <!-- Daily Challenge -->
+    <div class="daily-badge" id="daily-badge" onclick="startDailyChallenge()">
+      <div class="daily-icon">⚡</div>
+      <div class="daily-info">
+        <div class="daily-title" id="daily-title">Daily Challenge</div>
+        <div class="daily-sub" id="daily-sub">Complete today's challenge for 2× XP</div>
+      </div>
+      <div class="daily-done" id="daily-done"></div>
+    </div>
+
     <div class="voice-badge" id="voice-badge">
       <div class="badge-dot"></div>
       <div class="badge-text" id="voice-badge-text">Your voice is ready</div>
@@ -767,6 +944,16 @@ body{
     <button class="btn btn-primary" id="start-call-btn" disabled onclick="startCall()">
       📞 Start Call
     </button>
+
+    <!-- Shadowing mode -->
+    <button class="btn btn-outline" id="shadow-mode-btn" disabled onclick="startShadowMode()" style="padding:12px;font-size:12px;">
+      🔁 Shadowing Mode
+    </button>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button class="btn btn-outline" onclick="goNext('screen-history')" style="padding:10px;font-size:11px;">📋 Call History</button>
+      <button class="btn btn-outline" onclick="goNext('screen-confidence')" style="padding:10px;font-size:11px;">📈 Progress</button>
+    </div>
 
     <button class="btn btn-outline" onclick="goNext('screen-level')" style="padding:10px;font-size:12px;">
       🌍 Change language or level
@@ -843,6 +1030,40 @@ body{
       <button class="ctrl-btn" id="correct-btn" onclick="toggleCorrections()" title="Toggle corrections">✏️</button>
       <button class="ctrl-btn" onclick="endCall()" title="End" style="background:rgba(255,71,87,0.15);border-color:var(--red);">📵</button>
     </div>
+
+    <!-- Speed control -->
+    <div class="speed-row">
+      <button class="speed-btn" id="speed-slow" onclick="setSpeed('slow')">🐢 Slow</button>
+      <button class="speed-btn active" id="speed-normal" onclick="setSpeed('normal')">▶ Normal</button>
+      <button class="speed-btn" id="speed-fast" onclick="setSpeed('fast')">⚡ Fast</button>
+    </div>
+
+    <!-- SOS button -->
+    <button class="btn btn-outline" onclick="openSOS()" style="padding:8px;font-size:12px;border-color:var(--gold);color:var(--gold);">
+      💬 How do I say...?
+    </button>
+  </div>
+
+  <!-- SOS Overlay -->
+  <div class="sos-overlay" id="sos-overlay" onclick="closeSOS(event)">
+    <div class="sos-sheet">
+      <div class="sos-label">How do I say...</div>
+      <input class="inp" id="sos-inp" type="text" placeholder="Type in English what you want to say…"
+        onkeydown="if(event.key==='Enter')askSOS()"/>
+      <div class="sos-result" id="sos-result">
+        <div class="sos-result-target" id="sos-target"></div>
+        <div class="sos-result-en" id="sos-en"></div>
+      </div>
+      <button class="btn btn-primary" onclick="askSOS()" id="sos-btn">Translate →</button>
+      <button class="btn btn-outline" onclick="closeSOS(null)" style="padding:10px;font-size:12px;">Close</button>
+    </div>
+  </div>
+
+  <!-- Word tip tooltip -->
+  <div class="word-tip" id="word-tip" style="opacity:0;display:none;">
+    <div class="word-tip-word" id="wt-word"></div>
+    <div class="word-tip-tr" id="wt-tr"></div>
+    <div class="word-tip-ex" id="wt-ex"></div>
   </div>
 </div>
 
@@ -884,6 +1105,133 @@ body{
   </div>
 </div>
 
+<!-- ============ SCREEN: GOAL SETTING ============ -->
+<div id="screen-goal" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-name')">←</button>
+    <span class="top-title">Your Goal</span>
+    <span></span>
+  </div>
+  <div class="scroll-content">
+    <div>
+      <div class="headline" style="font-size:24px;">Why are you<br><em>learning?</em></div>
+      <div class="subtext" style="margin-top:8px;">We'll personalise your AI tutor to match.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;" id="goal-list">
+      <button class="goal-btn" onclick="selectGoal('travel','Travel','🧳')">
+        <div class="goal-icon">🧳</div>
+        <div><div class="goal-name">Travel</div><div class="goal-desc">Cafés, hotels, airports — real situations abroad.</div></div>
+      </button>
+      <button class="goal-btn" onclick="selectGoal('work','Work','💼')">
+        <div class="goal-icon">💼</div>
+        <div><div class="goal-name">Work</div><div class="goal-desc">Meetings, emails, interviews in the language.</div></div>
+      </button>
+      <button class="goal-btn" onclick="selectGoal('social','Social','🤝')">
+        <div class="goal-icon">🤝</div>
+        <div><div class="goal-name">Social</div><div class="goal-desc">Make friends, date, small talk — natural conversation.</div></div>
+      </button>
+      <button class="goal-btn" onclick="selectGoal('moving','Moving abroad','🏠')">
+        <div class="goal-icon">🏠</div>
+        <div><div class="goal-name">Moving abroad</div><div class="goal-desc">Everyday life — admin, doctors, neighbours.</div></div>
+      </button>
+      <button class="goal-btn" onclick="selectGoal('exam','Exam prep','🎓')">
+        <div class="goal-icon">🎓</div>
+        <div><div class="goal-name">Exam prep</div><div class="goal-desc">IELTS, Goethe, DELF — structured and precise.</div></div>
+      </button>
+      <button class="goal-btn" onclick="selectGoal('fun','Just for fun','🎉')">
+        <div class="goal-icon">🎉</div>
+        <div><div class="goal-name">Just for fun</div><div class="goal-desc">No pressure — enjoy the language, explore freely.</div></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN: SHADOWING MODE ============ -->
+<div id="screen-shadow" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-home')">←</button>
+    <span class="top-title">🔁 Shadowing</span>
+    <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--sub);" id="shadow-counter">1 / 5</span>
+  </div>
+  <div class="scroll-content" style="gap:16px;">
+    <div class="subtext">Listen to the phrase, then tap the mic to repeat it. Score 80+ to advance.</div>
+
+    <div class="shadow-phrase">
+      <div class="shadow-phrase-target" id="shadow-target">—</div>
+      <div class="shadow-phrase-en" id="shadow-en">—</div>
+    </div>
+
+    <div style="text-align:center;">
+      <div class="shadow-score-ring" id="shadow-ring" style="background:conic-gradient(var(--green) 0%, var(--border) 0%)">
+        <div class="shadow-score-num" id="shadow-score-num">—</div>
+      </div>
+      <div class="shadow-result">
+        <div class="shadow-result-label" id="shadow-result-label">READY TO LISTEN</div>
+        <div class="shadow-result-text" id="shadow-result-text">Tap play to hear the phrase</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <button class="btn btn-outline" onclick="playShadowPhrase()" id="shadow-play-btn" style="width:auto;padding:12px 28px;">
+        🔊 Play phrase
+      </button>
+      <button class="mic-btn disabled" id="shadow-mic" onclick="recordShadow()" style="width:72px;height:72px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="currentColor"/><path d="M19 10a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V22h2v-3.06A9 9 0 0 0 21 10z" fill="currentColor"/></svg>
+      </button>
+      <div class="mic-hint" id="shadow-hint">PLAY FIRST, THEN REPEAT</div>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-outline" onclick="nextShadowPhrase()" style="flex:1;padding:12px;font-size:12px;">⏭ Next phrase</button>
+      <button class="btn btn-primary" onclick="goNext('screen-home')" style="flex:1;padding:12px;font-size:12px;">✓ Done</button>
+    </div>
+
+    <div class="err" id="shadow-err"></div>
+  </div>
+</div>
+
+<!-- ============ SCREEN: CALL HISTORY ============ -->
+<div id="screen-history" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-home')">←</button>
+    <span class="top-title">📋 Call History</span>
+    <span></span>
+  </div>
+  <div class="scroll-content" id="history-list">
+    <div class="subtext" style="text-align:center;padding:40px 0;" id="history-empty">No calls yet. Start practicing!</div>
+  </div>
+</div>
+
+<!-- ============ SCREEN: CONFIDENCE / PROGRESS ============ -->
+<div id="screen-confidence" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-home')">←</button>
+    <span class="top-title">📈 Your Progress</span>
+    <span></span>
+  </div>
+  <div class="scroll-content" style="gap:16px;">
+    <div class="card">
+      <div class="card-label">Overall Stats</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;">
+        <div><div style="font-size:24px;font-weight:800;color:var(--green);" id="stat-calls">0</div><div style="font-size:10px;color:var(--sub);font-family:'DM Mono',monospace;">CALLS</div></div>
+        <div><div style="font-size:24px;font-weight:800;color:var(--green);" id="stat-mins">0</div><div style="font-size:10px;color:var(--sub);font-family:'DM Mono',monospace;">MINUTES</div></div>
+        <div><div style="font-size:24px;font-weight:800;color:var(--green);" id="stat-avg">—</div><div style="font-size:10px;color:var(--sub);font-family:'DM Mono',monospace;">AVG SCORE</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card-label" style="margin-bottom:10px;">Topic Confidence</div>
+      <div id="conf-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Score Trend</div>
+      <canvas id="score-chart" height="100" style="width:100%;"></canvas>
+      <div style="font-size:11px;color:var(--sub);text-align:center;margin-top:6px;font-family:'DM Mono',monospace;" id="chart-empty">Complete more calls to see your trend</div>
+    </div>
+  </div>
+</div>
+
 </div><!-- end #app -->
 
 <script>
@@ -914,10 +1262,21 @@ const STATE = {
   recognition: null,
   stream: null,
   welcomeVoiceId: null,
-  warmupCount: 0,
-  warmupPhase: true,
+  warmupPhase: false,
   correctionsEnabled: true,
   questionsAsked: [],
+  // New features
+  goal: 'fun',
+  ttsSpeed: 'normal',       // slow | normal | fast
+  xp: 0,
+  streak: 0,
+  bestStreak: 0,
+  lastPracticeDate: null,
+  dailyChallengeDate: null, // ISO date string if completed today
+  shadowPhrases: [],
+  shadowIdx: 0,
+  shadowPlayed: false,
+  callMode: 'normal',       // normal | shadow | daily
 };
 
 const WELCOME_VOICE_EMAIL = 'veera.reddy619@gmail.com';
@@ -1688,8 +2047,15 @@ function selectLevel(lvl) {
   document.querySelectorAll('#screen-level .lang-btn').forEach(b => b.classList.remove('selected'));
   event.currentTarget.classList.add('selected');
   setTimeout(() => {
-    initVoiceSetup();
-    goNext('screen-voice');
+    if (STATE.voiceId) {
+      // Voice already cloned — skip straight to home
+      saveState();
+      updateHome();
+      goNext('screen-home');
+    } else {
+      initVoiceSetup();
+      goNext('screen-voice');
+    }
   }, 300);
 }
 
@@ -1886,6 +2252,8 @@ function selectTopic(id) {
   event.currentTarget.classList.add('selected');
   document.getElementById('custom-topic-inp').value = '';
   document.getElementById('start-call-btn').disabled = false;
+  const sb = document.getElementById('shadow-mode-btn');
+  if (sb) sb.disabled = false;
   // Store vocab for this topic
   STATE.vocabCards = (VOCAB_CARDS[STATE.practiceLang] || VOCAB_CARDS.de)[id] || [];
 }
@@ -2088,14 +2456,14 @@ async function startCall() {
 async function launchCall() {
   STATE.callHistory = [];
   STATE.callSecs = 0;
-  STATE.warmupCount = 0;
-  STATE.warmupPhase = true;
+  STATE.warmupPhase = false;
   STATE.questionsAsked = [];
   STATE.correctionsEnabled = true;
   document.getElementById('call-messages').innerHTML = '';
   document.getElementById('call-avatar').textContent = STATE.selectedTopic.icon;
   document.getElementById('call-name').textContent = STATE.selectedTopic.name + ' · AI Tutor';
   document.getElementById('correct-btn').textContent = '✏️';
+  document.getElementById('skip-btn').style.display = 'none';
   goNext('call-screen');
 
   // Start timer
@@ -2105,9 +2473,9 @@ async function launchCall() {
     document.getElementById('call-timer').textContent = fmt(STATE.callSecs);
   }, 1000);
 
-  // Start with warmup questions
+  // Go straight to topic — no warmup questions
   setCallStatus('🔊 AI is speaking...');
-  await askWarmupQuestion();
+  await transitionToTopic();
   setTimeout(startListening, 500);
 }
 
@@ -2133,19 +2501,52 @@ async function askWarmupQuestion() {
 async function transitionToTopic() {
   STATE.warmupPhase = false;
   document.getElementById('skip-btn').style.display = 'none';
+  const n = STATE.name || 'there';
+
+  // Target language openers — include user's name
   const openings = {
-    de: { cafe: 'Guten Tag! Was möchten Sie?', airport: 'Guten Tag! Ihren Pass, bitte.', hotel: 'Willkommen! Haben Sie eine Reservierung?', shopping: 'Hallo! Kann ich Ihnen helfen?', doctor: 'Guten Tag! Was fehlt Ihnen?', job: 'Guten Tag! Erzählen Sie von sich.' },
-    en: { cafe: 'Hello! What would you like today?', airport: 'Hello! May I see your passport?', hotel: 'Welcome! Do you have a reservation?', shopping: 'Hi! Can I help you?', doctor: 'Hello! What brings you in today?', job: 'Hello! Tell me about yourself.' },
+    de: {
+      cafe:     `Hallo ${n}! Was darf ich Ihnen bringen?`,
+      airport:  `Hallo ${n}! Ihren Pass, bitte.`,
+      hotel:    `Willkommen, ${n}! Haben Sie eine Reservierung?`,
+      shopping: `Hallo ${n}! Wie kann ich Ihnen helfen?`,
+      doctor:   `Guten Tag, ${n}! Was fehlt Ihnen?`,
+      job:      `Guten Tag, ${n}! Schön, Sie kennenzulernen.`,
+    },
+    en: {
+      cafe:     `Hello ${n}! What can I get for you today?`,
+      airport:  `Hello ${n}! May I see your passport, please?`,
+      hotel:    `Welcome, ${n}! Do you have a reservation?`,
+      shopping: `Hi ${n}! How can I help you today?`,
+      doctor:   `Hello ${n}! What brings you in today?`,
+      job:      `Hello ${n}! Great to meet you. Tell me about yourself.`,
+    },
   };
-  // English display versions for all topic openers
+
+  // English display versions (shown in bubble)
   const openingsEn = {
-    de: { cafe: 'Good day! What would you like?', airport: 'Good day! Your passport, please.', hotel: 'Welcome! Do you have a reservation?', shopping: 'Hello! Can I help you?', doctor: 'Good day! What is the matter?', job: 'Good day! Tell me about yourself.' },
-    en: { cafe: 'Hello! What would you like today?', airport: 'Hello! May I see your passport?', hotel: 'Welcome! Do you have a reservation?', shopping: 'Hi! Can I help you?', doctor: 'Hello! What brings you in today?', job: 'Hello! Tell me about yourself.' },
+    de: {
+      cafe:     `Hello ${n}! What can I bring you?`,
+      airport:  `Hello ${n}! Your passport, please.`,
+      hotel:    `Welcome, ${n}! Do you have a reservation?`,
+      shopping: `Hello ${n}! How can I help you?`,
+      doctor:   `Good day, ${n}! What seems to be the matter?`,
+      job:      `Good day, ${n}! Lovely to meet you.`,
+    },
+    en: {
+      cafe:     `Hello ${n}! What can I get for you today?`,
+      airport:  `Hello ${n}! May I see your passport, please?`,
+      hotel:    `Welcome, ${n}! Do you have a reservation?`,
+      shopping: `Hi ${n}! How can I help you today?`,
+      doctor:   `Hello ${n}! What brings you in today?`,
+      job:      `Hello ${n}! Great to meet you. Tell me about yourself.`,
+    },
   };
-  const opener = openings[STATE.practiceLang]?.[STATE.selectedTopic.id] || 'How can I help?';
+
+  const opener   = openings[STATE.practiceLang]?.[STATE.selectedTopic.id]   || `Hello ${n}! How can I help?`;
   const openerEn = openingsEn[STATE.practiceLang]?.[STATE.selectedTopic.id] || opener;
-  // English in bubble, target lang spoken
-  addBubble('ai', openerEn);
+
+  addBubble('ai', openerEn, opener !== openerEn ? opener : null);
   STATE.callHistory.push({ role: 'assistant', content: opener });
   await speakAI(opener);
 }
@@ -2200,8 +2601,9 @@ function addBubble(role, text, subText) {
   const area = document.getElementById('call-messages');
   const b = document.createElement('div');
   b.className = 'bubble ' + role;
+  const langFlag = STATE.practiceLang === 'de' ? '🇩🇪' : '🇬🇧';
   const subHtml = (role === 'ai' && subText)
-    ? `<div class="bubble-sub">🔊 ${subText}</div>`
+    ? `<div class="bubble-sub">${langFlag} ${subText}</div>`
     : '';
   b.innerHTML = `<div>${text}</div>${subHtml}`;
   area.appendChild(b);
@@ -2285,21 +2687,13 @@ function toggleCorrections() {
 }
 
 async function skipFormalities() {
-  if (STATE.warmupPhase) {
-    await transitionToTopic();
-    setTimeout(startListening, 500);
-  }
+  // Warmup removed — nothing to skip
 }
 
 async function handleUserSpeech(text) {
   addBubble('user', text);
   STATE.callHistory.push({ role: 'user', content: text });
   console.log('User said:', text);
-
-  // Track warmup responses
-  if (STATE.warmupPhase && STATE.questionsAsked.length > 0) {
-    STATE.questionsAsked[STATE.questionsAsked.length - 1].response = text;
-  }
 
   setMicState('processing');
   addTyping();
@@ -2312,7 +2706,7 @@ async function handleUserSpeech(text) {
       .replace(/\bah+\b/gi, '')
       .trim();
 
-    const bilingualReply = await callClaude(cleaned, STATE.warmupPhase, STATE.correctionsEnabled);
+    const bilingualReply = await callClaude(cleaned, STATE.correctionsEnabled);
 
     let targetText = cleanAIText(bilingualReply.target || '');
     let englishText = cleanAIText(bilingualReply.english || targetText);
@@ -2333,12 +2727,7 @@ async function handleUserSpeech(text) {
     addBubble('ai', englishText, targetText !== englishText ? targetText : null);
     await speakAI(targetText);
 
-    // Continue warmup or transition to topic
-    if (STATE.warmupPhase) {
-      setTimeout(() => askWarmupQuestion(), 500);
-    } else {
-      setTimeout(startListening, 300);
-    }
+    setTimeout(startListening, 300);
   } catch(e) {
     removeTyping();
     setMicState('idle');
@@ -2409,7 +2798,7 @@ function sleep(ms) {
 // ============================================================
 // API CALLS
 // ============================================================
-async function callClaude(userText, warmupPhase, correctionsEnabled) {
+async function callClaude(userText, correctionsEnabled) {
   const messages = [
     ...STATE.callHistory.slice(-6),
     { role: 'user', content: userText }
@@ -2425,7 +2814,8 @@ async function callClaude(userText, warmupPhase, correctionsEnabled) {
 
   const targetLang = STATE.practiceLang === 'de' ? 'German' : 'English';
 
-  let systemPrompt = STATE.selectedTopic.system + '\n\nLevel guidance: ' + (levelGuide[STATE.level] || levelGuide.intermediate);
+  const goalPersona = GOAL_PERSONA[STATE.goal] || GOAL_PERSONA.fun;
+  let systemPrompt = STATE.selectedTopic.system + '\n\nLevel guidance: ' + (levelGuide[STATE.level] || levelGuide.intermediate) + '\n\nPersona context: ' + goalPersona;
 
   systemPrompt += `\n\nBILINGUAL OUTPUT: You MUST respond ONLY with a valid JSON object in this exact shape:
 {"target":"<your reply in ${targetLang}>","english":"<English translation of your reply>"}
@@ -2434,13 +2824,9 @@ The "target" field is what you say as the character, in ${targetLang}.
 The "english" field is the English translation so the learner can follow along.
 Keep both under 2 short sentences.`;
 
-  if (warmupPhase) {
-    systemPrompt += '\n\nWARMUP PHASE: You are just getting to know the user. Be friendly and welcoming. Listen to their answers and respond naturally. Do NOT ask the same type of question twice in a row.';
-  }
-
-  if (correctionsEnabled && !warmupPhase) {
+  if (correctionsEnabled) {
     systemPrompt += '\n\nCORRECTIONS ENABLED: If the user makes a grammatical error or uses incorrect vocabulary, gently correct them. Keep corrections brief and encouraging. Include the correction in your reply.';
-  } else if (!correctionsEnabled) {
+  } else {
     systemPrompt += '\n\nCORRECTIONS DISABLED: Do not correct the user\'s grammar or mistakes. Just continue the conversation naturally.';
   }
 
@@ -2629,18 +3015,690 @@ function blobToBase64(blob) {
 }
 
 // ============================================================
+// FEATURE 1: STREAK + XP
+// ============================================================
+function loadGameState() {
+  const g = JSON.parse(localStorage.getItem('callingo_game') || '{}');
+  STATE.xp            = g.xp            || 0;
+  STATE.streak        = g.streak        || 0;
+  STATE.bestStreak    = g.bestStreak    || 0;
+  STATE.lastPracticeDate   = g.lastPracticeDate   || null;
+  STATE.dailyChallengeDate = g.dailyChallengeDate || null;
+  STATE.goal          = g.goal          || 'fun';
+}
+
+function saveGameState() {
+  localStorage.setItem('callingo_game', JSON.stringify({
+    xp: STATE.xp, streak: STATE.streak, bestStreak: STATE.bestStreak,
+    lastPracticeDate: STATE.lastPracticeDate,
+    dailyChallengeDate: STATE.dailyChallengeDate,
+    goal: STATE.goal,
+  }));
+}
+
+function todayStr() { return new Date().toISOString().slice(0,10); }
+
+function awardXP(amount) {
+  STATE.xp += amount;
+  saveGameState();
+  renderStreakXP();
+  // Floating +XP toast
+  const toast = document.createElement('div');
+  toast.textContent = `+${amount} XP`;
+  toast.style.cssText = `position:fixed;top:80px;left:50%;transform:translateX(-50%);
+    background:var(--green);color:#fff;padding:8px 20px;border-radius:20px;
+    font-weight:700;font-size:14px;z-index:999;pointer-events:none;
+    animation:xp-toast 1.5s ease forwards;`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 1600);
+}
+
+function updateStreak() {
+  const today = todayStr();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  if (STATE.lastPracticeDate === today) return; // already counted today
+  if (STATE.lastPracticeDate === yesterday) {
+    STATE.streak++;
+  } else if (STATE.lastPracticeDate !== today) {
+    STATE.streak = 1; // reset
+  }
+  STATE.bestStreak = Math.max(STATE.bestStreak, STATE.streak);
+  STATE.lastPracticeDate = today;
+  saveGameState();
+}
+
+function renderStreakXP() {
+  const lvlXP = 100 + STATE.streak * 10;
+  const pct = Math.min((STATE.xp % lvlXP) / lvlXP * 100, 100);
+  const fire = STATE.streak >= 7 ? '🔥' : STATE.streak >= 3 ? '⚡' : '💧';
+  const el = id => document.getElementById(id);
+  if (el('streak-count')) el('streak-count').textContent = STATE.streak;
+  if (el('streak-fire'))  el('streak-fire').textContent  = fire;
+  if (el('streak-best'))  el('streak-best').textContent  = STATE.bestStreak;
+  if (el('xp-bar'))       el('xp-bar').style.width       = pct + '%';
+  if (el('xp-count'))     el('xp-count').textContent     = STATE.xp;
+  if (el('xp-next'))      el('xp-next').textContent      = lvlXP;
+}
+
+// XP toast animation
+const xpStyle = document.createElement('style');
+xpStyle.textContent = `@keyframes xp-toast{0%{opacity:0;transform:translateX(-50%) translateY(10px);}20%{opacity:1;transform:translateX(-50%) translateY(0);}80%{opacity:1;}100%{opacity:0;transform:translateX(-50%) translateY(-16px);}}`;
+document.head.appendChild(xpStyle);
+
+// ============================================================
+// FEATURE 2: DAILY CHALLENGE
+// ============================================================
+const DAILY_TOPICS = ['cafe','airport','hotel','shopping','doctor','job'];
+
+function getDailyTopic() {
+  // Deterministic daily topic based on date
+  const d = new Date();
+  const idx = (d.getFullYear() * 366 + d.getMonth() * 31 + d.getDate()) % DAILY_TOPICS.length;
+  return DAILY_TOPICS[idx];
+}
+
+function renderDailyChallenge() {
+  const done = STATE.dailyChallengeDate === todayStr();
+  const topicId = getDailyTopic();
+  const topics  = TOPICS[STATE.practiceLang] || TOPICS.de;
+  const topic   = topics.find(t => t.id === topicId);
+  const el = id => document.getElementById(id);
+  if (!el('daily-title')) return;
+  if (done) {
+    el('daily-title').textContent = 'Daily Challenge — Done! ✅';
+    el('daily-sub').textContent   = 'Come back tomorrow for a new one.';
+    el('daily-done').textContent  = '✅';
+    el('daily-badge').style.opacity = '0.6';
+    el('daily-badge').style.cursor  = 'default';
+  } else {
+    el('daily-title').textContent = `Daily: ${topic ? topic.icon + ' ' + topic.name : 'Practice'}`;
+    el('daily-sub').textContent   = '2× XP · ' + (new Date().toLocaleDateString('en',{weekday:'long'}));
+    el('daily-done').textContent  = '→';
+  }
+}
+
+function startDailyChallenge() {
+  if (STATE.dailyChallengeDate === todayStr()) return;
+  const topicId = getDailyTopic();
+  const topics  = TOPICS[STATE.practiceLang] || TOPICS.de;
+  STATE.selectedTopic = topics.find(t => t.id === topicId);
+  if (!STATE.selectedTopic) return;
+  STATE.vocabCards = (VOCAB_CARDS[STATE.practiceLang]||VOCAB_CARDS.de)[topicId] || [];
+  STATE.callMode   = 'daily';
+  showVocabScreen();
+}
+
+// ============================================================
+// FEATURE 3: WORD TAP TRANSLATION
+// ============================================================
+function makeWordsTappable(bubbleEl, text) {
+  // Wrap each word in a span
+  const words = text.split(/\s+/);
+  bubbleEl.querySelector('div').innerHTML = words.map((w,i) =>
+    `<span class="tappable" data-idx="${i}" onclick="tapWord(this,'${w.replace(/'/g,"\\'")}')">${w}</span>`
+  ).join(' ');
+}
+
+let wordTipTimer = null;
+async function tapWord(el, word) {
+  // Strip punctuation for lookup
+  const clean = word.replace(/[^a-zA-ZäöüÄÖÜß]/g,'');
+  if (clean.length < 2) return;
+
+  const tip = document.getElementById('word-tip');
+  const rect = el.getBoundingClientRect();
+  tip.style.display = 'block';
+  tip.style.opacity = '0';
+  document.getElementById('wt-word').textContent = clean;
+  document.getElementById('wt-tr').textContent   = '…';
+  document.getElementById('wt-ex').textContent   = '';
+  // Position above the word
+  const tipTop = Math.max(rect.top - 90, 60);
+  tip.style.top  = tipTop + 'px';
+  tip.style.left = Math.min(rect.left, window.innerWidth - 240) + 'px';
+  tip.style.opacity = '1';
+
+  // Ask Claude for a quick definition
+  try {
+    const res = await fetch('/api/claude', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        messages:[{role:'user', content:`Define the word "${clean}" in the context of ${STATE.practiceLang === 'de' ? 'German' : 'English'}. Return ONLY JSON: {"translation":"...","example":"..."}`}],
+        system:'You are a dictionary. Return only valid JSON, no other text.',
+        max_tokens:80
+      })
+    });
+    const data = await res.json();
+    const raw  = data.content?.[0]?.text || '{}';
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    document.getElementById('wt-tr').textContent = parsed.translation || '—';
+    document.getElementById('wt-ex').textContent = parsed.example     || '';
+  } catch(e) {
+    document.getElementById('wt-tr').textContent = '(tap again to retry)';
+  }
+
+  clearTimeout(wordTipTimer);
+  wordTipTimer = setTimeout(hideWordTip, 4000);
+}
+
+function hideWordTip() {
+  const tip = document.getElementById('word-tip');
+  if (tip) { tip.style.opacity = '0'; setTimeout(() => { tip.style.display = 'none'; }, 160); }
+}
+
+// Hide tip on scroll
+document.addEventListener('scroll', hideWordTip, true);
+
+// ============================================================
+// FEATURE 4: CALL HISTORY UI
+// ============================================================
+function renderHistory() {
+  const recordings = JSON.parse(localStorage.getItem('callingo_recordings') || '[]').reverse();
+  const list = document.getElementById('history-list');
+  const empty = document.getElementById('history-empty');
+  if (!list) return;
+  if (recordings.length === 0) { if(empty) empty.style.display='block'; return; }
+  if (empty) empty.style.display = 'none';
+  list.innerHTML = recordings.map((r,i) => {
+    const date = new Date(r.date).toLocaleDateString('en',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    const dur  = Math.floor((r.duration||0)/60) + 'm ' + ((r.duration||0)%60) + 's';
+    const transcript = (r.fullTranscript||[]).map(m =>
+      `<div class="hist-msg ${m.role}">${m.role==='assistant'?'🤖':'👤'} ${m.content}</div>`
+    ).join('');
+    return `<div class="hist-item" onclick="toggleTranscript(${i})">
+      <div class="hist-meta">
+        <div class="hist-topic">${r.topic||'Practice'}</div>
+        <div class="hist-score">${r.score ? r.score+'/100' : '—'}</div>
+      </div>
+      <div class="hist-details">${date} · ${dur} · ${r.language||'?'} · ${r.level||'?'}</div>
+      <div class="hist-transcript" id="ht-${i}">${transcript}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleTranscript(i) {
+  const el = document.getElementById('ht-'+i);
+  if (el) el.classList.toggle('open');
+}
+
+// ============================================================
+// FEATURE 5: SHADOWING MODE
+// ============================================================
+const SHADOW_PHRASES = {
+  de: {
+    cafe:     [{t:'Einen Kaffee, bitte.',e:'A coffee, please.'},{t:'Haben Sie Kuchen?',e:'Do you have cake?'},{t:'Die Rechnung, bitte!',e:'The bill, please!'},{t:'Mit Milch und Zucker.',e:'With milk and sugar.'},{t:'Was empfehlen Sie?',e:'What do you recommend?'}],
+    airport:  [{t:'Ihren Pass, bitte.',e:'Your passport, please.'},{t:'Wo ist das Gate?',e:'Where is the gate?'},{t:'Ich habe Handgepäck.',e:'I have carry-on luggage.'},{t:'Wann geht der Flug?',e:'When does the flight leave?'},{t:'Guten Flug!',e:'Have a good flight!'}],
+    hotel:    [{t:'Ich habe eine Reservierung.',e:'I have a reservation.'},{t:'Was ist das WLAN-Passwort?',e:'What is the WiFi password?'},{t:'Wann ist der Checkout?',e:'When is checkout?'},{t:'Ich brauche mehr Handtücher.',e:'I need more towels.'},{t:'Sehr schön, danke.',e:'Very nice, thank you.'}],
+    shopping: [{t:'Wie viel kostet das?',e:'How much does this cost?'},{t:'Gibt es das in Blau?',e:'Do you have this in blue?'},{t:'Ich nehme es.',e:'I will take it.'},{t:'Kann ich mit Karte zahlen?',e:'Can I pay by card?'},{t:'Ich suche eine Jacke.',e:'I am looking for a jacket.'}],
+    doctor:   [{t:'Ich habe Schmerzen.',e:'I am in pain.'},{t:'Seit gestern.',e:'Since yesterday.'},{t:'Ich habe Fieber.',e:'I have a fever.'},{t:'Ich bin allergisch.',e:'I am allergic.'},{t:'Brauche ich ein Rezept?',e:'Do I need a prescription?'}],
+    job:      [{t:'Guten Tag, schön Sie kennenzulernen.',e:'Good day, lovely to meet you.'},{t:'Ich habe fünf Jahre Erfahrung.',e:'I have five years of experience.'},{t:'Meine Stärken sind Kommunikation.',e:'My strengths are communication.'},{t:'Ich bin sehr motiviert.',e:'I am very motivated.'},{t:'Haben Sie noch Fragen?',e:'Do you have any more questions?'}],
+  },
+  en: {
+    cafe:     [{t:'A coffee, please.',e:'A coffee, please.'},{t:'Do you have any cake?',e:'Do you have any cake?'},{t:'Could I have the bill?',e:'Could I have the bill?'},{t:'With oat milk, please.',e:'With oat milk, please.'},{t:'What do you recommend?',e:'What do you recommend?'}],
+    airport:  [{t:'Here is my passport.',e:'Here is my passport.'},{t:'Which gate is my flight?',e:'Which gate is my flight?'},{t:'This is my carry-on.',e:'This is my carry-on.'},{t:'Is the flight on time?',e:'Is the flight on time?'},{t:'Have a safe flight!',e:'Have a safe flight!'}],
+    hotel:    [{t:'I have a reservation.',e:'I have a reservation.'},{t:'What is the WiFi password?',e:'What is the WiFi password?'},{t:'What time is check-out?',e:'What time is check-out?'},{t:'Could I have more towels?',e:'Could I have more towels?'},{t:'Thank you very much.',e:'Thank you very much.'}],
+    shopping: [{t:'How much is this?',e:'How much is this?'},{t:'Do you have this in blue?',e:'Do you have this in blue?'},{t:'I will take it, thank you.',e:'I will take it, thank you.'},{t:'Can I pay by card?',e:'Can I pay by card?'},{t:'I am looking for a jacket.',e:'I am looking for a jacket.'}],
+    doctor:   [{t:'I am not feeling well.',e:'I am not feeling well.'},{t:'It started yesterday.',e:'It started yesterday.'},{t:'I think I have a fever.',e:'I think I have a fever.'},{t:'I am allergic to penicillin.',e:'I am allergic to penicillin.'},{t:'Will I need a prescription?',e:'Will I need a prescription?'}],
+    job:      [{t:'Nice to meet you.',e:'Nice to meet you.'},{t:'I have five years of experience.',e:'I have five years of experience.'},{t:'My strength is communication.',e:'My strength is communication.'},{t:'I am highly motivated.',e:'I am highly motivated.'},{t:'Do you have any questions?',e:'Do you have any questions?'}],
+  },
+};
+
+function startShadowMode() {
+  if (!STATE.selectedTopic) return;
+  const phrases = (SHADOW_PHRASES[STATE.practiceLang]||SHADOW_PHRASES.de)[STATE.selectedTopic.id] || [];
+  STATE.shadowPhrases = phrases;
+  STATE.shadowIdx     = 0;
+  STATE.shadowPlayed  = false;
+  STATE.callMode      = 'shadow';
+  renderShadowPhrase();
+  goNext('screen-shadow');
+}
+
+function renderShadowPhrase() {
+  const phrases = STATE.shadowPhrases;
+  const p = phrases[STATE.shadowIdx];
+  if (!p) return;
+  document.getElementById('shadow-target').textContent = p.t;
+  document.getElementById('shadow-en').textContent     = p.e;
+  document.getElementById('shadow-counter').textContent = `${STATE.shadowIdx+1} / ${phrases.length}`;
+  document.getElementById('shadow-score-num').textContent = '—';
+  document.getElementById('shadow-result-label').textContent = 'READY TO LISTEN';
+  document.getElementById('shadow-result-text').textContent  = 'Tap play to hear the phrase';
+  document.getElementById('shadow-ring').style.background    = `conic-gradient(var(--green) 0%, var(--border) 0%)`;
+  document.getElementById('shadow-mic').classList.add('disabled');
+  document.getElementById('shadow-hint').textContent = 'PLAY FIRST, THEN REPEAT';
+  STATE.shadowPlayed = false;
+}
+
+async function playShadowPhrase() {
+  const p = STATE.shadowPhrases[STATE.shadowIdx];
+  if (!p) return;
+  document.getElementById('shadow-play-btn').disabled = true;
+  document.getElementById('shadow-result-label').textContent = 'LISTEN CAREFULLY…';
+  document.getElementById('shadow-result-text').textContent  = p.t;
+  try {
+    const audio = await tts(p.t);
+    if (audio) {
+      await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+    }
+  } catch(e) {}
+  document.getElementById('shadow-play-btn').disabled = false;
+  document.getElementById('shadow-mic').classList.remove('disabled');
+  document.getElementById('shadow-hint').textContent = 'NOW REPEAT IT';
+  document.getElementById('shadow-result-label').textContent = 'YOUR TURN';
+  document.getElementById('shadow-result-text').textContent  = 'Tap the mic and repeat the phrase';
+  STATE.shadowPlayed = true;
+}
+
+async function recordShadow() {
+  if (!STATE.shadowPlayed) return;
+  const micBtn = document.getElementById('shadow-mic');
+  if (micBtn.classList.contains('disabled')) return;
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { document.getElementById('shadow-err').textContent = '⚠️ Chrome only'; document.getElementById('shadow-err').style.display='block'; return; }
+
+  micBtn.classList.add('recording');
+  document.getElementById('shadow-hint').textContent = 'RECORDING…';
+
+  const recognition = new SR();
+  const langMap = { de:'de-DE', en:'en-US' };
+  recognition.lang = langMap[STATE.practiceLang] || 'en-US';
+  recognition.interimResults = false;
+
+  recognition.onresult = async (e) => {
+    const said = e.results[0][0].transcript;
+    micBtn.classList.remove('recording');
+    document.getElementById('shadow-hint').textContent = 'SCORING…';
+    const score = await scoreShadow(STATE.shadowPhrases[STATE.shadowIdx].t, said);
+    showShadowScore(score, said);
+    // Award XP
+    if (score >= 80) awardXP(10);
+    else if (score >= 50) awardXP(5);
+  };
+  recognition.onerror = () => { micBtn.classList.remove('recording'); document.getElementById('shadow-hint').textContent = 'TRY AGAIN'; };
+  try { recognition.start(); } catch(e) {}
+}
+
+async function scoreShadow(target, said) {
+  try {
+    const res = await fetch('/api/claude', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        messages:[{role:'user', content:`Target phrase: "${target}"\nUser said: "${said}"\nScore how well the user repeated the phrase. Consider pronunciation accuracy based on what speech recognition captured. Return ONLY a JSON: {"score": <0-100>, "feedback": "<one short encouraging sentence>"}`}],
+        system:'You are a pronunciation coach. Return only valid JSON.',
+        max_tokens:60
+      })
+    });
+    const data = await res.json();
+    const parsed = JSON.parse((data.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim());
+    return parsed;
+  } catch(e) { return { score: 70, feedback: 'Good effort!' }; }
+}
+
+function showShadowScore(result, said) {
+  const score   = result.score || 0;
+  const feedback = result.feedback || '';
+  const pct  = score / 100;
+  const color = score >= 80 ? 'var(--green)' : score >= 50 ? 'var(--gold)' : 'var(--red)';
+  document.getElementById('shadow-ring').style.background =
+    `conic-gradient(${color} ${pct*360}deg, var(--border) 0deg)`;
+  document.getElementById('shadow-score-num').textContent = score;
+  document.getElementById('shadow-score-num').style.color = color;
+  document.getElementById('shadow-result-label').textContent = score >= 80 ? '🎉 EXCELLENT!' : score >= 50 ? '👍 GOOD' : '💪 TRY AGAIN';
+  document.getElementById('shadow-result-text').textContent  = feedback;
+  document.getElementById('shadow-hint').textContent = 'Tap play to listen again or next phrase';
+}
+
+function nextShadowPhrase() {
+  if (STATE.shadowIdx < STATE.shadowPhrases.length - 1) {
+    STATE.shadowIdx++;
+    renderShadowPhrase();
+  } else {
+    awardXP(20);
+    goNext('screen-home');
+  }
+}
+
+// ============================================================
+// FEATURE 6: SOS — "HOW DO I SAY...?"
+// ============================================================
+function openSOS() {
+  const o = document.getElementById('sos-overlay');
+  if (o) { o.classList.add('open'); document.getElementById('sos-inp').focus(); }
+  document.getElementById('sos-result').style.display = 'none';
+  document.getElementById('sos-inp').value = '';
+}
+
+function closeSOS(e) {
+  if (e && e.target !== document.getElementById('sos-overlay')) return;
+  const o = document.getElementById('sos-overlay');
+  if (o) o.classList.remove('open');
+}
+
+async function askSOS() {
+  const text = document.getElementById('sos-inp').value.trim();
+  if (!text) return;
+  const btn = document.getElementById('sos-btn');
+  btn.disabled = true;
+  btn.textContent = 'Translating…';
+  const targetLang = STATE.practiceLang === 'de' ? 'German' : 'English';
+  try {
+    const res = await fetch('/api/claude', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        messages:[{role:'user', content:`Translate this to ${targetLang}: "${text}". Return ONLY JSON: {"translation":"...","pronunciation":"..."}`}],
+        system:'You are a translator. Return only valid JSON.',
+        max_tokens:80
+      })
+    });
+    const data = await res.json();
+    const parsed = JSON.parse((data.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim());
+    document.getElementById('sos-target').textContent = parsed.translation || '—';
+    document.getElementById('sos-en').textContent = parsed.pronunciation ? `Pronunciation: ${parsed.pronunciation}` : text;
+    document.getElementById('sos-result').style.display = 'block';
+    // Speak it
+    const audio = await tts(parsed.translation);
+    if (audio) audio.play();
+  } catch(e) {
+    document.getElementById('sos-target').textContent = 'Error — try again';
+    document.getElementById('sos-result').style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Translate →';
+}
+
+// ============================================================
+// FEATURE 7: VOICE SPEED CONTROL
+// ============================================================
+function setSpeed(speed) {
+  STATE.ttsSpeed = speed;
+  ['slow','normal','fast'].forEach(s => {
+    const b = document.getElementById('speed-'+s);
+    if (b) b.classList.toggle('active', s === speed);
+  });
+}
+
+// Modify tts() to use speed — patch playback rate on the Audio object
+// Fish Audio doesn't have a speed param but we can adjust audio.playbackRate
+const _originalTTS = tts;
+
+// ============================================================
+// FEATURE 8: PRONUNCIATION SCORE on user bubble
+// ============================================================
+async function scorePronunciation(targetText, userText) {
+  if (!targetText || !userText) return null;
+  try {
+    const res = await fetch('/api/claude', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        messages:[{role:'user', content:`The user was learning ${STATE.practiceLang === 'de' ? 'German' : 'English'}. The AI said: "${targetText}". The user replied: "${userText}". Score their pronunciation and grammar from 0-10. Return ONLY JSON: {"score":<0-10>,"tip":"<one short tip or praise>"}`}],
+        system:'You are a pronunciation coach. Return only valid JSON.',
+        max_tokens:60
+      })
+    });
+    const data = await res.json();
+    return JSON.parse((data.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim());
+  } catch(e) { return null; }
+}
+
+function addPronBadge(bubbleEl, score) {
+  if (score == null) return;
+  const cls = score >= 8 ? 'good' : score >= 5 ? 'ok' : 'poor';
+  const label = score >= 8 ? '🎯 ' + score + '/10' : score >= 5 ? '📢 ' + score + '/10' : '💪 ' + score + '/10';
+  const badge = document.createElement('div');
+  badge.className = `pron-badge ${cls}`;
+  badge.textContent = label;
+  bubbleEl.appendChild(badge);
+}
+
+// ============================================================
+// FEATURE 9: GOAL SETTING → PERSONA
+// ============================================================
+const GOAL_PERSONA = {
+  travel:  'You are a friendly local helping a tourist. Keep scenarios travel-focused: transport, food, accommodation.',
+  work:    'You are a professional colleague. Keep scenarios work-focused: meetings, introductions, presentations.',
+  social:  'You are a friendly new acquaintance. Keep conversation casual, personal, and natural.',
+  moving:  'You are a helpful neighbour. Focus on everyday life: admin, shops, neighbours, daily routines.',
+  exam:    'You are a strict language examiner. Use formal language and give precise corrections.',
+  fun:     'You are a fun, encouraging conversation partner. Keep it light and enjoyable.',
+};
+
+function selectGoal(id, name, icon) {
+  STATE.goal = id;
+  document.querySelectorAll('.goal-btn').forEach(b => b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  saveGameState();
+  setTimeout(() => goNext('screen-native-lang'), 300);
+}
+
+// ============================================================
+// FEATURE 10: CONFIDENCE METER
+// ============================================================
+function getConfidenceData() {
+  const recordings = JSON.parse(localStorage.getItem('callingo_recordings') || '[]');
+  const topics = {};
+  recordings.forEach(r => {
+    const t = r.topic || 'Other';
+    if (!topics[t]) topics[t] = { total: 0, count: 0 };
+    if (r.score) { topics[t].total += r.score; topics[t].count++; }
+  });
+  return topics;
+}
+
+function renderConfidence() {
+  const recordings = JSON.parse(localStorage.getItem('callingo_recordings') || '[]');
+  const totalCalls = recordings.length;
+  const totalMins  = Math.floor(recordings.reduce((a,r) => a + (r.duration||0), 0) / 60);
+  const scores     = recordings.filter(r => r.score).map(r => r.score);
+  const avgScore   = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : null;
+
+  const el = id => document.getElementById(id);
+  if (el('stat-calls')) el('stat-calls').textContent = totalCalls;
+  if (el('stat-mins'))  el('stat-mins').textContent  = totalMins;
+  if (el('stat-avg'))   el('stat-avg').textContent   = avgScore ? avgScore+'/100' : '—';
+
+  // Topic confidence bars
+  const topicData = getConfidenceData();
+  const confList  = el('conf-list');
+  if (confList) {
+    if (Object.keys(topicData).length === 0) {
+      confList.innerHTML = '<div class="subtext" style="text-align:center;padding:20px 0;">Complete some calls to see your confidence per topic.</div>';
+    } else {
+      confList.innerHTML = Object.entries(topicData).map(([name, d]) => {
+        const avg = d.count ? Math.round(d.total/d.count) : 0;
+        return `<div class="conf-topic-row">
+          <div class="conf-topic-name">${name} <span style="color:var(--sub);font-size:11px;">${d.count} call${d.count!==1?'s':''}</span></div>
+          <div class="conf-bar-wrap"><div class="conf-bar-fill" style="width:${avg}%"></div></div>
+          <div class="conf-label">${avg}/100 avg score</div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Score trend mini chart (canvas)
+  const canvas = el('score-chart');
+  const chartEmpty = el('chart-empty');
+  if (canvas && scores.length >= 2) {
+    if (chartEmpty) chartEmpty.style.display = 'none';
+    canvas.style.display = 'block';
+    const ctx = canvas.getContext('2d');
+    const w = canvas.offsetWidth || 300;
+    const h = 100;
+    canvas.width = w; canvas.height = h;
+    ctx.clearRect(0,0,w,h);
+    const last = scores.slice(-10);
+    const step = w / (last.length - 1);
+    ctx.beginPath();
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--green').trim();
+    ctx.lineWidth = 2;
+    last.forEach((s,i) => {
+      const x = i * step;
+      const y = h - (s / 100 * (h - 16)) - 8;
+      i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    // Dots
+    ctx.fillStyle = ctx.strokeStyle;
+    last.forEach((s,i) => {
+      ctx.beginPath();
+      ctx.arc(i*step, h-(s/100*(h-16))-8, 3,0,Math.PI*2);
+      ctx.fill();
+    });
+  } else if (canvas) {
+    canvas.style.display = 'none';
+    if (chartEmpty) chartEmpty.style.display = 'block';
+  }
+}
+
+// ============================================================
+// PATCH: updateHome + goNext to trigger new feature renders
+// ============================================================
+const _origGoNext = goNext;
+function goNext(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(screenId);
+  if (el) el.classList.add('active');
+  // Trigger renders
+  if (screenId === 'screen-home')       { renderStreakXP(); renderDailyChallenge(); }
+  if (screenId === 'screen-history')    renderHistory();
+  if (screenId === 'screen-confidence') renderConfidence();
+}
+
+// ============================================================
+// PATCH: saveCallRecording — attach score + update streak/XP
+// ============================================================
+const _origSaveCall = saveCallRecording;
+function saveCallRecording() {
+  _origSaveCall();
+  updateStreak();
+  const xpGain = STATE.callMode === 'daily' ? 40 : 20;
+  awardXP(xpGain + Math.floor(STATE.callSecs / 30)); // bonus XP per 30s
+  if (STATE.callMode === 'daily') {
+    STATE.dailyChallengeDate = todayStr();
+    saveGameState();
+  }
+  STATE.callMode = 'normal';
+}
+
+// ============================================================
+// PATCH: handleUserSpeech — add pronunciation scoring + word-tap + speed
+// ============================================================
+const _origHandleUserSpeech = handleUserSpeech;
+async function handleUserSpeech(text) {
+  // Get last AI message for pronunciation context
+  const lastAI = STATE.callHistory.filter(m=>m.role==='assistant').slice(-1)[0]?.content || '';
+
+  addBubble('user', text);
+  STATE.callHistory.push({ role: 'user', content: text });
+
+  setMicState('processing');
+  addTyping();
+
+  try {
+    const cleaned = text.replace(/\buh+\b/gi,'').replace(/\bum+\b/gi,'').replace(/\ber+\b/gi,'').replace(/\bah+\b/gi,'').trim();
+    const bilingualReply = await callClaude(cleaned, STATE.correctionsEnabled);
+
+    let targetText  = cleanAIText(bilingualReply.target || '');
+    let englishText = cleanAIText(bilingualReply.english || targetText);
+    targetText  = targetText.split(/[.!?]/).slice(0,2).join('. ').trim();
+    englishText = englishText.split(/[.!?]/).slice(0,2).join('. ').trim();
+    if (targetText && !targetText.match(/[.!?]$/))  targetText  += '.';
+    if (englishText && !englishText.match(/[.!?]$/)) englishText += '.';
+
+    removeTyping();
+    STATE.callHistory.push({ role: 'assistant', content: targetText });
+
+    // Show English in bubble with German subtitle + make words tappable
+    const bub = addBubble('ai', englishText, targetText !== englishText ? targetText : null);
+    makeWordsTappable(bub, englishText);
+
+    // Pronunciation score on user's last bubble (non-blocking)
+    scorePronunciation(lastAI, text).then(result => {
+      if (result && result.score != null) {
+        const userBubbles = document.querySelectorAll('.bubble.user');
+        const lastUser    = userBubbles[userBubbles.length - 1];
+        if (lastUser) addPronBadge(lastUser, result.score);
+      }
+    });
+
+    // Speak at selected speed
+    const speedRate = STATE.ttsSpeed === 'slow' ? 0.75 : STATE.ttsSpeed === 'fast' ? 1.3 : 1.0;
+    await speakAIAtRate(targetText, speedRate);
+
+    setTimeout(startListening, 300);
+  } catch(e) {
+    removeTyping();
+    setMicState('idle');
+    setTimeout(startListening, 500);
+  }
+}
+
+async function speakAIAtRate(text, rate) {
+  const chunks = splitForVoice(text);
+  for (const chunk of chunks) {
+    const audio = await tts(chunk);
+    if (audio) {
+      audio.playbackRate = rate || 1.0;
+      await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+    }
+    await sleep(150);
+  }
+}
+
+// ============================================================
+// PATCH: init — load game state + show goal screen for new users
+// ============================================================
+const _origInit = init;
+function init() {
+  loadGameState();
+  _origInit();
+}
+
+// Override saveName to go to goal screen for brand new users
+const _origSaveName = saveName;
+async function saveName() {
+  // We call original but intercept the navigation to native-lang
+  const val   = document.getElementById('name-inp').value.trim();
+  const email = document.getElementById('email-inp').value.trim().toLowerCase();
+  if (val.length < 2) return;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById('name-err').textContent = 'Please enter a valid email';
+    document.getElementById('name-err').style.display = 'block';
+    return;
+  }
+  STATE.name  = val;
+  STATE.email = email;
+
+  const btn = document.getElementById('name-btn');
+  const origLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Checking…';
+
+  try {
+    const res = await fetch('/api/voice?email=' + encodeURIComponent(email));
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.voiceId) {
+        STATE.voiceId = data.voiceId;
+        saveState();
+        btn.disabled = false; btn.textContent = origLabel;
+        updateHome();
+        goNext('screen-home');
+        return;
+      }
+    }
+  } catch(e) {}
+
+  btn.disabled = false; btn.textContent = origLabel;
+  saveState();
+  // New user → goal screen first, then native lang
+  goNext('screen-goal');
+}
+
+// ============================================================
 // START
 // ============================================================
 init();
 </script>
 </body>
 </html>
-
-
-function goHome() {
-  STATE.selectedTopic = null;
-
-  document.getElementById('chatPage').style.display = 'none';
-  document.getElementById('topicPage').style.display = 'none';
-  document.getElementById('languagePage').style.display = 'flex';
-}
