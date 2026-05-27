@@ -695,10 +695,10 @@ async function send() {
     const audioBlob = await ttsRes.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
-    bubble.querySelector('.bubble-meta').textContent = '🎙️ Speaking in your voice';
+    if(bubble) bubble.querySelector('.bubble-meta').textContent = '🎙️ Speaking in your voice';
     audio.play();
     audio.onended = () => {
-      bubble.querySelector('.bubble-meta').textContent = '🎙️ Your cloned voice';
+      if(bubble) bubble.querySelector('.bubble-meta').textContent = '🎙️ Your cloned voice';
     };
 
   } catch(e) {
