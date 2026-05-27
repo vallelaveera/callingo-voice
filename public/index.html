@@ -2,248 +2,259 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Voice Clone — Callingo</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0a">
+<title>Callingo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
-  --bg:#06080a;
-  --s1:#0d1117;
-  --s2:#161b22;
-  --gold:#f5c542;
-  --gold-dim:rgba(245,197,66,0.12);
-  --gold-glow:rgba(245,197,66,0.06);
-  --text:#e6edf3;
-  --sub:#7d8590;
-  --border:#21262d;
-  --red:#ff6b6b;
-  --green:#3fb950;
+  --bg:#0a0a0a;
+  --s1:#111111;
+  --s2:#1a1a1a;
+  --s3:#222222;
+  --green:#00d68f;
+  --green-dim:rgba(0,214,143,0.12);
+  --green-glow:rgba(0,214,143,0.06);
+  --text:#f0f0f0;
+  --sub:#666;
+  --sub2:#444;
+  --border:#222;
+  --red:#ff4757;
+  --gold:#ffd32a;
+  --radius:16px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
 }
 body{
-  font-family:'DM Mono',monospace;
+  font-family:'Syne',sans-serif;
   background:var(--bg);
   color:var(--text);
   min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245,197,66,0.05) 0%, transparent 60%);
+  overflow:hidden;
 }
-#app{width:100%;max-width:480px;}
+#app{
+  width:100%;
+  max-width:430px;
+  height:100vh;
+  margin:0 auto;
+  position:relative;
+  overflow:hidden;
+  background:var(--bg);
+}
 
-.screen{display:none;flex-direction:column;gap:24px;animation:rise 0.5s ease;}
-.screen.active{display:flex;}
-@keyframes rise{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+/* SCREENS */
+.screen{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.3s ease;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+.screen.active{opacity:1;pointer-events:all;}
 
-/* HEADER */
-.header{text-align:center;padding:8px 0;}
+/* TYPOGRAPHY */
 .logo{
-  font-family:'Instrument Serif',serif;
-  font-size:13px;
-  letter-spacing:6px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:5px;
   color:var(--sub);
   text-transform:uppercase;
-  margin-bottom:6px;
 }
-.title{
-  font-family:'Instrument Serif',serif;
-  font-size:36px;
+.headline{
+  font-size:32px;
+  font-weight:800;
+  line-height:1.15;
   color:var(--text);
-  line-height:1.1;
 }
-.title em{color:var(--gold);font-style:italic;}
-.subtitle{font-size:11px;color:var(--sub);margin-top:8px;letter-spacing:1px;}
+.headline em{color:var(--green);font-style:normal;}
+.subtext{font-size:14px;color:var(--sub);line-height:1.6;}
+.mono{font-family:'DM Mono',monospace;}
 
-/* CARD */
+/* CARDS */
 .card{
   background:var(--s1);
   border:1px solid var(--border);
-  border-radius:16px;
-  padding:24px;
-  position:relative;
-}
-.card::after{
-  content:'';
-  position:absolute;
-  inset:0;border-radius:16px;
-  background:linear-gradient(135deg,rgba(245,197,66,0.03),transparent);
-  pointer-events:none;
-}
-.card-tag{
-  font-size:9px;
-  letter-spacing:3px;
-  color:var(--gold);
-  text-transform:uppercase;
-  margin-bottom:14px;
-  opacity:0.7;
-}
-
-/* API KEY */
-.key-input{
-  width:100%;
-  background:var(--s2);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:12px 16px;
-  font-size:13px;
-  color:var(--text);
-  font-family:'DM Mono',monospace;
-  outline:none;
-  transition:border-color 0.2s;
-  margin-top:12px;
-}
-.key-input:focus{border-color:var(--gold);}
-.key-input::placeholder{color:var(--sub);}
-
-/* SENTENCE */
-.sentence-display{
-  background:var(--s2);
-  border:1px solid var(--border);
-  border-radius:12px;
+  border-radius:var(--radius);
   padding:20px;
-  text-align:center;
 }
-.sentence-count{
+.card-label{
+  font-family:'DM Mono',monospace;
   font-size:9px;
   letter-spacing:3px;
   color:var(--sub);
-  margin-bottom:10px;
-}
-.sentence-text{
-  font-family:'Instrument Serif',serif;
-  font-size:20px;
-  color:var(--text);
-  line-height:1.5;
-}
-.progress{
-  height:2px;
-  background:var(--border);
-  border-radius:2px;
-  overflow:hidden;
-  margin-top:14px;
-}
-.progress-fill{
-  height:100%;
-  background:var(--gold);
-  border-radius:2px;
-  transition:width 0.4s ease;
+  text-transform:uppercase;
+  margin-bottom:14px;
 }
 
-/* MIC */
-.mic-area{display:flex;flex-direction:column;align-items:center;gap:14px;}
+/* INPUTS */
+.inp{
+  width:100%;
+  background:var(--s2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:14px 16px;
+  font-size:16px;
+  color:var(--text);
+  font-family:'Syne',sans-serif;
+  outline:none;
+  transition:border-color 0.2s;
+}
+.inp:focus{border-color:var(--green);}
+.inp::placeholder{color:var(--sub2);}
+
+/* BUTTONS */
+.btn{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:12px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  font-family:'Syne',sans-serif;
+  letter-spacing:0.5px;
+  transition:all 0.15s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.btn-primary{background:var(--green);color:#000;}
+.btn-primary:hover{background:#00c07f;}
+.btn-primary:disabled{background:var(--s3);color:var(--sub);cursor:default;}
+.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border);}
+.btn-outline:hover{border-color:var(--green);color:var(--green);}
+.btn-danger{background:var(--red);color:white;}
+
+/* LANGUAGE BUTTONS */
+.lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.lang-btn{
+  background:var(--s2);
+  border:1.5px solid var(--border);
+  border-radius:14px;
+  padding:16px 12px;
+  cursor:pointer;
+  text-align:center;
+  transition:all 0.15s;
+  font-family:'Syne',sans-serif;
+}
+.lang-btn:hover{border-color:var(--green);}
+.lang-btn.selected{border-color:var(--green);background:var(--green-dim);}
+.lang-flag{font-size:28px;margin-bottom:6px;}
+.lang-name{font-size:13px;font-weight:700;color:var(--text);}
+.lang-native{font-size:11px;color:var(--sub);margin-top:2px;font-family:'DM Mono',monospace;}
+
+/* PROGRESS */
+.progress-track{height:3px;background:var(--border);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--green);border-radius:3px;transition:width 0.4s ease;}
+
+/* MIC BUTTON */
+.mic-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
 .mic-btn{
-  width:72px;height:72px;
+  width:80px;height:80px;
   border-radius:50%;
-  border:1.5px solid var(--gold);
-  background:var(--gold-glow);
+  border:2px solid var(--green);
+  background:var(--green-glow);
   cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   transition:all 0.2s;
   position:relative;
 }
-.mic-btn:hover{background:var(--gold-dim);}
 .mic-btn.recording{
   border-color:var(--red);
-  background:rgba(255,107,107,0.08);
-  animation:rec-pulse 1.5s infinite;
+  background:rgba(255,71,87,0.1);
+  animation:mic-pulse 1.2s infinite;
 }
-@keyframes rec-pulse{
-  0%{box-shadow:0 0 0 0 rgba(255,107,107,0.3);}
-  70%{box-shadow:0 0 0 14px rgba(255,107,107,0);}
-  100%{box-shadow:0 0 0 0 rgba(255,107,107,0);}
+.mic-btn.disabled{opacity:0.3;cursor:default;border-color:var(--border);}
+@keyframes mic-pulse{
+  0%{box-shadow:0 0 0 0 rgba(255,71,87,0.3);}
+  70%{box-shadow:0 0 0 16px rgba(255,71,87,0);}
+  100%{box-shadow:0 0 0 0 rgba(255,71,87,0);}
 }
-.mic-btn svg{width:26px;height:26px;}
-.mic-hint{font-size:11px;color:var(--sub);letter-spacing:1px;}
+.mic-hint{font-family:'DM Mono',monospace;font-size:10px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;}
 
 /* WAVEFORM */
-.wave{display:flex;align-items:center;justify-content:center;gap:3px;height:36px;}
-.wbar{width:2px;border-radius:2px;background:var(--gold);opacity:0.4;transition:height 0.08s;}
+.wave{display:flex;align-items:center;gap:3px;height:40px;}
+.wbar{width:3px;border-radius:3px;background:var(--green);opacity:0.5;transition:height 0.08s;}
 
-/* RECORDINGS */
-.rec-list{display:flex;flex-direction:column;gap:6px;}
-.rec-row{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 14px;
+/* SENTENCE BOX */
+.sent-box{
   background:var(--s2);
   border:1px solid var(--border);
-  border-radius:10px;
-  font-size:11px;
-}
-.rec-dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0;}
-.rec-dot.done{background:var(--green);}
-.rec-label{flex:1;color:var(--sub);}
-.rec-status{color:var(--sub);}
-.rec-status.done{color:var(--green);}
-
-/* BUTTONS */
-.btn{
-  width:100%;padding:13px;
-  border:none;border-radius:10px;
-  font-size:12px;font-weight:500;
-  cursor:pointer;
-  font-family:'DM Mono',monospace;
-  letter-spacing:1px;
-  transition:all 0.2s;
-}
-.btn-gold{background:var(--gold);color:#000;}
-.btn-gold:hover{background:#f0bc30;}
-.btn-gold:disabled{background:var(--border);color:var(--sub);cursor:default;}
-.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border);}
-.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
-
-/* CLONING */
-.clone-progress{display:flex;flex-direction:column;gap:10px;}
-.clone-step{
-  display:flex;align-items:center;gap:12px;
-  padding:12px 14px;
-  background:var(--s2);
-  border:1px solid var(--border);
-  border-radius:10px;
-  font-size:11px;
-}
-.step-icon{font-size:16px;flex-shrink:0;}
-.step-label{flex:1;color:var(--sub);}
-.step-status{font-size:11px;color:var(--sub);}
-.step-status.done{color:var(--green);}
-.step-status.working{color:var(--gold);}
-.spinner{
-  width:14px;height:14px;
-  border:2px solid var(--border);
-  border-top-color:var(--gold);
-  border-radius:50%;
-  animation:spin 0.8s linear infinite;
-  flex-shrink:0;
-}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-/* VOICE ID DISPLAY */
-.voice-id-box{
-  background:var(--s2);
-  border:1px solid var(--gold);
-  border-radius:10px;
-  padding:14px 16px;
+  border-radius:14px;
+  padding:20px;
   text-align:center;
 }
-.voice-id-label{font-size:9px;letter-spacing:3px;color:var(--sub);margin-bottom:6px;}
-.voice-id-val{font-size:12px;color:var(--gold);word-break:break-all;}
+.sent-num{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--sub);margin-bottom:10px;}
+.sent-text{font-size:18px;font-weight:600;line-height:1.5;color:var(--text);}
 
-/* CHAT */
-.chat-area{
-  display:flex;flex-direction:column;gap:8px;
-  max-height:300px;overflow-y:auto;
-  padding:4px 0;
-}
-.chat-area::-webkit-scrollbar{width:3px;}
-.chat-area::-webkit-scrollbar-thumb{background:var(--border);}
-.bubble{
-  max-width:82%;
+/* TOPIC CARDS */
+.topic-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.topic-card{
+  background:var(--s1);
+  border:1.5px solid var(--border);
   border-radius:14px;
-  padding:10px 14px;
+  padding:16px;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.topic-card:hover{border-color:var(--green);}
+.topic-card.selected{border-color:var(--green);background:var(--green-dim);}
+.topic-icon{font-size:28px;margin-bottom:8px;}
+.topic-name{font-size:13px;font-weight:700;color:var(--text);}
+.topic-desc{font-size:11px;color:var(--sub);margin-top:3px;line-height:1.4;}
+
+/* CALL SCREEN */
+#call-screen{background:#070f0a;}
+.call-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:max(16px,var(--safe-top)) 20px 16px;
+  background:rgba(0,0,0,0.5);
+  flex-shrink:0;
+}
+.call-info{display:flex;align-items:center;gap:12px;}
+.call-avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--green-dim);
+  border:1px solid var(--green);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+}
+.call-name{font-size:14px;font-weight:700;}
+.call-timer{font-family:'DM Mono',monospace;font-size:11px;color:var(--sub);}
+.end-btn{
+  background:var(--red);
+  border:none;
+  border-radius:24px;
+  padding:10px 20px;
+  color:white;
   font-size:13px;
-  font-family:'DM Mono',monospace;
+  font-weight:700;
+  cursor:pointer;
+  font-family:'Syne',sans-serif;
+}
+.call-messages{
+  flex:1;
+  overflow-y:auto;
+  padding:16px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.call-messages::-webkit-scrollbar{display:none;}
+.bubble{
+  max-width:80%;
+  border-radius:16px;
+  padding:10px 14px;
+  font-size:14px;
   line-height:1.5;
 }
 .bubble.ai{
@@ -254,468 +265,1158 @@ body{
 }
 .bubble.user{
   align-self:flex-end;
-  background:var(--gold-dim);
-  border:1px solid rgba(245,197,66,0.2);
+  background:var(--green-dim);
+  border:1px solid rgba(0,214,143,0.2);
   color:var(--text);
 }
-.bubble-meta{font-size:9px;color:var(--sub);margin-top:4px;letter-spacing:1px;}
+.bubble-sub{font-size:10px;color:var(--sub);margin-top:4px;font-family:'DM Mono',monospace;}
 .typing{display:flex;gap:4px;align-items:center;padding:12px 14px;}
 .tdot{width:6px;height:6px;border-radius:50%;background:var(--sub);animation:td 1.2s infinite;}
-.tdot:nth-child(2){animation-delay:.2s;}
-.tdot:nth-child(3){animation-delay:.4s;}
+.tdot:nth-child(2){animation-delay:0.2s;}
+.tdot:nth-child(3){animation-delay:0.4s;}
 @keyframes td{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-6px);}}
-
-.chat-row{display:flex;gap:8px;}
-.chat-in{
-  flex:1;
-  background:var(--s2);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:11px 14px;
-  font-size:13px;
-  color:var(--text);
+.call-controls{
+  padding:16px 20px max(20px,var(--safe-bot));
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  background:rgba(0,0,0,0.5);
+  flex-shrink:0;
+}
+.call-status{
   font-family:'DM Mono',monospace;
-  outline:none;
-  transition:border-color 0.2s;
+  font-size:11px;
+  color:var(--sub);
+  letter-spacing:1px;
+  min-height:16px;
 }
-.chat-in:focus{border-color:var(--gold);}
-.chat-in::placeholder{color:var(--sub);}
-.chat-send{
-  background:var(--gold);
-  border:none;border-radius:10px;
-  padding:11px 16px;
-  color:#000;font-size:12px;font-weight:500;
-  cursor:pointer;font-family:'DM Mono',monospace;
-  transition:background 0.15s;
-  white-space:nowrap;
+.call-btns{display:flex;align-items:center;gap:24px;}
+.ctrl-btn{
+  width:56px;height:56px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:var(--s2);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+  transition:all 0.15s;
 }
-.chat-send:hover{background:#f0bc30;}
-.chat-send:disabled{background:var(--border);color:var(--sub);cursor:default;}
+.ctrl-btn:hover{border-color:var(--green);}
+.ctrl-btn.muted{background:rgba(255,71,87,0.15);border-color:var(--red);}
+.main-mic{
+  width:72px;height:72px;
+  border-radius:50%;
+  border:2px solid var(--green);
+  background:var(--green);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;
+  transition:all 0.2s;
+  box-shadow:0 4px 20px rgba(0,214,143,0.3);
+}
+.main-mic.listening{
+  animation:listen-pulse 1.5s infinite;
+  background:var(--green);
+}
+.main-mic.speaking{background:var(--s3);border-color:var(--border);box-shadow:none;}
+.main-mic.processing{background:#ffd32a;border-color:#ffd32a;box-shadow:0 4px 20px rgba(255,211,42,0.3);}
+@keyframes listen-pulse{
+  0%{box-shadow:0 0 0 0 rgba(0,214,143,0.4);}
+  70%{box-shadow:0 0 0 16px rgba(0,214,143,0);}
+  100%{box-shadow:0 0 0 0 rgba(0,214,143,0);}
+}
 
+/* REPORT */
+.report-score{
+  text-align:center;
+  padding:24px;
+  background:var(--s1);
+  border-radius:var(--radius);
+  border:1px solid var(--border);
+}
+.score-num{font-size:64px;font-weight:800;color:var(--green);}
+.score-label{font-size:12px;color:var(--sub);font-family:'DM Mono',monospace;letter-spacing:2px;}
+.report-section{margin-bottom:16px;}
+.report-section-title{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:3px;
+  color:var(--sub);
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.report-item{
+  background:var(--s1);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px 16px;
+  margin-bottom:8px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--text);
+}
+.report-item.correction{border-left:3px solid var(--red);}
+.report-item.vocab{border-left:3px solid var(--green);}
+.report-item.good{border-left:3px solid var(--gold);}
+
+/* ERROR */
+.err{
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  color:var(--red);
+  padding:8px 12px;
+  background:rgba(255,71,87,0.06);
+  border:1px solid rgba(255,71,87,0.15);
+  border-radius:8px;
+  display:none;
+}
+
+/* SCROLLABLE CONTENT */
+.scroll-content{
+  flex:1;
+  overflow-y:auto;
+  padding:24px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+  padding-bottom:max(24px,var(--safe-bot));
+}
+.scroll-content::-webkit-scrollbar{display:none;}
+
+/* TOP BAR */
+.top-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:max(16px,var(--safe-top)) 20px 16px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.back-btn{
+  background:transparent;
+  border:none;
+  color:var(--sub);
+  font-size:20px;
+  cursor:pointer;
+  width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+}
+.back-btn:hover{color:var(--text);}
+.top-title{font-size:14px;font-weight:700;}
+
+/* VOICE BADGE */
 .voice-badge{
   display:flex;align-items:center;gap:8px;
-  background:var(--gold-glow);
-  border:1px solid rgba(245,197,66,0.2);
+  background:var(--green-dim);
+  border:1px solid rgba(0,214,143,0.2);
   border-radius:10px;
   padding:10px 14px;
-  font-size:11px;
-  color:var(--gold);
 }
 .badge-dot{
   width:6px;height:6px;border-radius:50%;
-  background:var(--gold);
-  animation:pulse 1.5s infinite;
+  background:var(--green);
+  animation:bdot 1.5s infinite;
 }
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+@keyframes bdot{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.badge-text{font-size:12px;color:var(--green);font-family:'DM Mono',monospace;}
 
-.err{
-  font-size:11px;color:var(--red);
-  padding:8px 12px;
-  background:rgba(255,107,107,0.06);
-  border:1px solid rgba(255,107,107,0.15);
-  border-radius:8px;
-  display:none;
+/* CLONING STEPS */
+.clone-step{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;
+  background:var(--s2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  font-size:12px;
+  font-family:'DM Mono',monospace;
+}
+.clone-step-icon{font-size:16px;flex-shrink:0;}
+.clone-step-label{flex:1;color:var(--sub);}
+.clone-step-status{color:var(--sub);}
+.clone-step-status.done{color:var(--green);}
+.clone-step-status.working{color:var(--gold);}
+
+/* SPINNER */
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner{
+  width:16px;height:16px;
+  border:2px solid var(--border);
+  border-top-color:var(--gold);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
 }
 </style>
 </head>
 <body>
 <div id="app">
 
-<!-- SCREEN 1: API KEY -->
-<div id="s-key" class="screen active">
-  <div class="header">
-    <div class="logo">Callingo</div>
-    <div class="title">Clone Your <em>Voice</em></div>
-    <div class="subtitle">Read · Record · Clone · Converse</div>
+<!-- ============ SCREEN: NAME ============ -->
+<div id="screen-name" class="screen active">
+  <div class="scroll-content" style="justify-content:center;min-height:100vh;">
+    <div style="text-align:center;padding:20px 0;">
+      <div class="logo" style="margin-bottom:16px;">Callingo</div>
+      <div class="headline">Learn by<br><em>Talking</em></div>
+      <div class="subtext" style="margin-top:12px;">Real voice conversations.<br>In your own voice.</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Let's start</div>
+      <div class="subtext" style="margin-bottom:16px;">What's your name?</div>
+      <input class="inp" id="name-inp" type="text" placeholder="Your first name…"
+        oninput="document.getElementById('name-btn').disabled=this.value.trim().length<2"
+        onkeydown="if(event.key==='Enter')goNext('screen-native-lang')"/>
+      <div class="err" id="name-err" style="margin-top:8px;">Please enter your name</div>
+    </div>
+    <button class="btn btn-primary" id="name-btn" disabled onclick="saveName()">Continue →</button>
   </div>
-  <div class="card">
-    <div class="card-tag">Step 01 — Authentication</div>
-    <div style="font-size:13px;color:var(--sub);line-height:1.6;">Enter your Fish Audio API key to get started.</div>
-    <input class="key-input" id="key-input" type="password" placeholder="fish_sk_xxxxxxxxxxxxxxxx"/>
-    <div class="err" id="key-err">Invalid key format</div>
-  </div>
-  <button class="btn btn-gold" onclick="saveKey()">Continue →</button>
 </div>
 
-<!-- SCREEN 2: RECORD -->
-<div id="s-record" class="screen">
-  <div class="header">
-    <div class="logo">Callingo</div>
-    <div class="title">Read & <em>Record</em></div>
-    <div class="subtitle">Speak clearly · No background noise</div>
+<!-- ============ SCREEN: NATIVE LANGUAGE ============ -->
+<div id="screen-native-lang" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-name')">←</button>
+    <span class="top-title">Your Language</span>
+    <span></span>
   </div>
-
-  <div class="card">
-    <div class="card-tag">Step 02 — Voice Sample</div>
-    <div class="sentence-display">
-      <div class="sentence-count" id="sent-count">SENTENCE 1 / 2</div>
-      <div class="sentence-text" id="sent-text">Loading...</div>
+  <div class="scroll-content">
+    <div>
+      <div class="headline" style="font-size:24px;">Which language are you<br><em>comfortable in?</em></div>
+      <div class="subtext" style="margin-top:8px;">We'll explain everything in this language</div>
     </div>
-    <div class="progress" style="margin-top:16px;">
-      <div class="progress-fill" id="rec-prog" style="width:0%"></div>
+    <div class="lang-grid">
+      <button class="lang-btn" onclick="selectNativeLang('en','English','In English')">
+        <div class="lang-flag">🇬🇧</div>
+        <div class="lang-name">English</div>
+        <div class="lang-native">In English</div>
+      </button>
+      <button class="lang-btn" onclick="selectNativeLang('hi','Hindi','Hinglish mein')">
+        <div class="lang-flag">🇮🇳</div>
+        <div class="lang-name">Hindi</div>
+        <div class="lang-native">Hinglish mein</div>
+      </button>
+      <button class="lang-btn" onclick="selectNativeLang('de','German','Auf Deutsch')">
+        <div class="lang-flag">🇩🇪</div>
+        <div class="lang-name">German</div>
+        <div class="lang-native">Auf Deutsch</div>
+      </button>
+      <button class="lang-btn" onclick="selectNativeLang('es','Spanish','En Espanol')">
+        <div class="lang-flag">🇪🇸</div>
+        <div class="lang-name">Spanish</div>
+        <div class="lang-native">En Espanol</div>
+      </button>
+      <button class="lang-btn" onclick="selectNativeLang('fr','French','En Francais')">
+        <div class="lang-flag">🇫🇷</div>
+        <div class="lang-name">French</div>
+        <div class="lang-native">En Francais</div>
+      </button>
+      <button class="lang-btn" onclick="selectNativeLang('ar','Arabic','Bil Arabi')">
+        <div class="lang-flag">🇸🇦</div>
+        <div class="lang-name">Arabic</div>
+        <div class="lang-native">Bil Arabi</div>
+      </button>
     </div>
   </div>
+</div>
 
-  <div class="mic-area">
-    <button class="mic-btn" id="mic-btn" onclick="toggleRecord()">
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="#f5c542"/>
-        <path d="M19 10a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V22h2v-3.06A9 9 0 0 0 21 10z" fill="#f5c542"/>
-      </svg>
+<!-- ============ SCREEN: PRACTICE LANGUAGE ============ -->
+<div id="screen-practice-lang" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-native-lang')">←</button>
+    <span class="top-title">Practice Language</span>
+    <span></span>
+  </div>
+  <div class="scroll-content">
+    <div>
+      <div class="headline" style="font-size:24px;">What do you want<br>to <em>practice?</em></div>
+      <div class="subtext" style="margin-top:8px;" id="practice-sub">Pick the language you're learning</div>
+    </div>
+    <div class="lang-grid">
+      <button class="lang-btn" onclick="selectPracticeLang('de','German','Deutsch')">
+        <div class="lang-flag">🇩🇪</div>
+        <div class="lang-name">German</div>
+        <div class="lang-native">Deutsch</div>
+      </button>
+      <button class="lang-btn" onclick="selectPracticeLang('en','English','English')">
+        <div class="lang-flag">🇬🇧</div>
+        <div class="lang-name">English</div>
+        <div class="lang-native">English</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN: VOICE SETUP ============ -->
+<div id="screen-voice" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-practice-lang')">←</button>
+    <span class="top-title" id="voice-top-title">Your Voice</span>
+    <span></span>
+  </div>
+  <div class="scroll-content">
+
+    <!-- Welcome message -->
+    <div class="card" id="welcome-card">
+      <div class="card-label">Welcome</div>
+      <div style="font-size:16px;font-weight:600;line-height:1.5;color:var(--text);" id="welcome-text">
+        Loading your welcome message...
+      </div>
+      <button class="btn btn-outline" style="margin-top:14px;padding:10px;" onclick="playWelcome()">
+        🔊 Play again
+      </button>
+    </div>
+
+    <!-- Sentence recording -->
+    <div id="record-section">
+      <div class="card-label">Read aloud to clone your voice</div>
+      <div class="sent-box" id="sent-box">
+        <div class="sent-num" id="sent-num">SENTENCE 1 / 2</div>
+        <div class="sent-text" id="sent-text">Loading...</div>
+      </div>
+      <div class="progress-track" style="margin-top:12px;">
+        <div class="progress-fill" id="rec-progress" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="mic-wrap">
+      <button class="mic-btn" id="mic-btn" onclick="toggleRecord()">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="currentColor"/>
+          <path d="M19 10a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V22h2v-3.06A9 9 0 0 0 21 10z" fill="currentColor"/>
+        </svg>
+      </button>
+      <div class="wave" id="wave">
+        <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
+        <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
+        <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
+        <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
+        <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
+      </div>
+      <div class="mic-hint" id="mic-hint">TAP TO RECORD</div>
+    </div>
+
+    <div id="rec-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <button class="btn btn-primary" id="clone-btn" disabled onclick="startCloning()">Clone My Voice →</button>
+    <div class="err" id="voice-err"></div>
+  </div>
+</div>
+
+<!-- ============ SCREEN: CLONING ============ -->
+<div id="screen-cloning" class="screen">
+  <div class="scroll-content" style="justify-content:center;min-height:100vh;">
+    <div style="text-align:center;">
+      <div class="logo" style="margin-bottom:16px;">Callingo</div>
+      <div class="headline" style="font-size:28px;">Cloning your<br><em>voice</em></div>
+      <div class="subtext" style="margin-top:8px;">This takes about 10 seconds</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="clone-step">
+        <div class="clone-step-icon">📤</div>
+        <div class="clone-step-label">Uploading recording</div>
+        <div class="clone-step-status" id="cs-upload">waiting</div>
+      </div>
+      <div class="clone-step">
+        <div class="clone-step-icon">🧬</div>
+        <div class="clone-step-label">Cloning voice model</div>
+        <div class="clone-step-status" id="cs-clone">waiting</div>
+      </div>
+      <div class="clone-step">
+        <div class="clone-step-icon">⚡</div>
+        <div class="clone-step-label">Pre-generating fillers</div>
+        <div class="clone-step-status" id="cs-fillers">waiting</div>
+      </div>
+      <div class="clone-step">
+        <div class="clone-step-icon">✅</div>
+        <div class="clone-step-label">Ready!</div>
+        <div class="clone-step-status" id="cs-ready">waiting</div>
+      </div>
+    </div>
+    <div class="err" id="clone-err"></div>
+  </div>
+</div>
+
+<!-- ============ SCREEN: HOME ============ -->
+<div id="screen-home" class="screen">
+  <div class="scroll-content">
+    <div>
+      <div class="logo" style="margin-bottom:8px;">Callingo</div>
+      <div class="headline" id="home-greeting">Good morning!</div>
+      <div class="subtext" id="home-sub" style="margin-top:6px;">Ready to practice?</div>
+    </div>
+
+    <div class="voice-badge" id="voice-badge">
+      <div class="badge-dot"></div>
+      <div class="badge-text" id="voice-badge-text">Your voice is ready</div>
+    </div>
+
+    <!-- Practice language + topic -->
+    <div class="card">
+      <div class="card-label">Choose a topic to practice</div>
+      <div style="font-size:13px;color:var(--sub);margin-bottom:14px;" id="practice-lang-label">German · Deutsch</div>
+      <div class="topic-grid" id="topic-grid"></div>
+    </div>
+
+    <button class="btn btn-primary" id="start-call-btn" disabled onclick="startCall()">
+      📞 Start Call
     </button>
-    <div class="wave" id="wave">
+
+    <button class="btn btn-outline" onclick="goNext('screen-voice')" style="padding:10px;font-size:12px;">
+      🎙️ Re-record voice
+    </button>
+  </div>
+</div>
+
+<!-- ============ SCREEN: CALL ============ -->
+<div id="call-screen" class="screen">
+  <div class="call-header">
+    <div class="call-info">
+      <div class="call-avatar" id="call-avatar">🤖</div>
+      <div>
+        <div class="call-name" id="call-name">AI Tutor</div>
+        <div class="call-timer" id="call-timer">0:00</div>
+      </div>
+    </div>
+    <button class="end-btn" onclick="endCall()">📵 End</button>
+  </div>
+
+  <div class="call-messages" id="call-messages"></div>
+
+  <div class="call-controls">
+    <div class="wave" id="call-wave">
+      <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
       <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
       <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
       <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
       <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
       <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
     </div>
-    <div class="mic-hint" id="mic-hint">TAP TO START RECORDING</div>
-  </div>
-
-  <div class="rec-list" id="rec-list"></div>
-
-  <button class="btn btn-gold" id="clone-btn" disabled onclick="startClone()">
-    Clone My Voice →
-  </button>
-  <div class="err" id="rec-err"></div>
-</div>
-
-<!-- SCREEN 3: CLONING -->
-<div id="s-cloning" class="screen">
-  <div class="header">
-    <div class="logo">Callingo</div>
-    <div class="title">Cloning <em>Voice</em></div>
-    <div class="subtitle">This takes about 10 seconds</div>
-  </div>
-  <div class="card">
-    <div class="card-tag">Step 03 — Processing</div>
-    <div class="clone-progress" id="clone-steps">
-      <div class="clone-step" id="cs-upload">
-        <div class="step-icon">📤</div>
-        <div class="step-label">Uploading audio to Fish Audio</div>
-        <div class="step-status" id="ss-upload">waiting</div>
-      </div>
-      <div class="clone-step" id="cs-clone">
-        <div class="step-icon">🧬</div>
-        <div class="step-label">Cloning voice model</div>
-        <div class="step-status" id="ss-clone">waiting</div>
-      </div>
-      <div class="clone-step" id="cs-ready">
-        <div class="step-icon">✅</div>
-        <div class="step-label">Voice ID ready</div>
-        <div class="step-status" id="ss-ready">waiting</div>
-      </div>
+    <div class="call-status" id="call-status">Connecting...</div>
+    <div class="call-btns">
+      <button class="ctrl-btn" id="mute-btn" onclick="toggleMute()" title="Mute">🎤</button>
+      <button class="main-mic" id="main-mic" onclick="toggleMic()">🎤</button>
+      <button class="ctrl-btn" onclick="endCall()" title="End" style="background:rgba(255,71,87,0.15);border-color:var(--red);">📵</button>
     </div>
   </div>
-  <div class="err" id="clone-err"></div>
 </div>
 
-<!-- SCREEN 4: CHAT -->
-<div id="s-chat" class="screen">
-  <div class="header" style="padding:4px 0;">
-    <div class="logo">Callingo</div>
-    <div class="title">Your <em>Voice</em></div>
+<!-- ============ SCREEN: REPORT ============ -->
+<div id="screen-report" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-home')">←</button>
+    <span class="top-title">Call Report</span>
+    <span></span>
   </div>
-
-  <div class="voice-badge">
-    <div class="badge-dot"></div>
-    <div style="flex:1;">Speaking in your cloned voice</div>
-    <div style="font-size:9px;color:rgba(245,197,66,0.5);" id="vid-short"></div>
-  </div>
-
-  <div class="card" style="padding:14px;">
-    <div class="chat-area" id="chat-area"></div>
-  </div>
-
-  <div style="display:flex;flex-direction:column;gap:8px;">
-    <div class="chat-row">
-      <input class="chat-in" id="chat-in"
-        placeholder="Ask anything..."
-        onkeydown="if(event.key==='Enter')send()"/>
-      <button class="chat-send" id="send-btn" onclick="send()">Send</button>
+  <div class="scroll-content">
+    <div class="report-score">
+      <div class="score-num" id="report-score">—</div>
+      <div class="score-label">/ 100 · PERFORMANCE</div>
     </div>
-    <button class="btn btn-outline" onclick="goTo('s-record')" style="padding:10px;font-size:11px;">Re-record voice</button>
+
+    <div class="report-section" id="report-corrections-section">
+      <div class="report-section-title">Corrections</div>
+      <div id="report-corrections"></div>
+    </div>
+
+    <div class="report-section" id="report-vocab-section">
+      <div class="report-section-title">New vocabulary</div>
+      <div id="report-vocab"></div>
+    </div>
+
+    <div class="report-section" id="report-good-section">
+      <div class="report-section-title">Well done</div>
+      <div id="report-good"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="goNext('screen-home')">Back to home →</button>
+    <button class="btn btn-outline" onclick="startCall()" style="padding:12px;font-size:13px;">Call again</button>
   </div>
-  <div class="err" id="chat-err"></div>
 </div>
 
-</div>
+</div><!-- end #app -->
 
 <script>
-// ---- CONFIG ----
-const SENTENCES = [
-  "The morning light filters through the window as I prepare for a new day of learning.",
-  "Every language opens a door to a new world of culture, connection, and understanding."
-];
+// ============================================================
+// STATE
+// ============================================================
+const STATE = {
+  name: '',
+  nativeLang: 'en',
+  practiceLang: 'de',
+  voiceId: null,
+  fillerAudios: [],
+  selectedTopic: null,
+  callHistory: [],
+  callSecs: 0,
+  callTimer: null,
+  isListening: false,
+  isSpeaking: false,
+  isMuted: false,
+  mediaRecorder: null,
+  audioChunks: [],
+  recordings: [],
+  currentSent: 0,
+  waveInterval: null,
+  recognition: null,
+  stream: null,
+};
 
-// ---- STATE ----
-let apiKey = '';
-let recordings = [];
-let voiceId = null;
-let mediaRecorder = null;
-let isRecording = false;
-let currentSent = 0;
-let audioChunks = [];
-let stream = null;
-let waveInt = null;
+// ============================================================
+// CONTENT
+// ============================================================
+const WELCOME = {
+  en: (name) => `Welcome to Callingo, ${name}! To make your experience personal, I need to clone your voice. You'll hear yourself speaking German or English — your own voice, perfectly fluent. Just read the two sentences below clearly.`,
+  hi: (name) => `Callingo mein aapka swagat hai, ${name}! Aapka anubhav personal banane ke liye, hume aapki awaaz clone karni hogi. Aap apni hi awaaz mein German ya English bolte sunenge. Bas neeche di gayi do lines clearly padhen.`,
+  de: (name) => `Willkommen bei Callingo, ${name}! Um dein Erlebnis persoenlich zu gestalten, muessen wir deine Stimme klonen. Du wirst dich selbst fliessend Deutsch oder Englisch sprechen hoeren. Lies einfach die zwei Saetze unten vor.`,
+  es: (name) => `Bienvenido a Callingo, ${name}! Para personalizar tu experiencia, necesitamos clonar tu voz. Te escucharas hablando aleman o ingles fluidamente — tu propia voz. Solo lee las dos frases de abajo claramente.`,
+  fr: (name) => `Bienvenue sur Callingo, ${name}! Pour personnaliser votre experience, nous devons cloner votre voix. Vous vous entendrez parler allemand ou anglais couramment. Lisez simplement les deux phrases ci-dessous clairement.`,
+  ar: (name) => `Marhaban bik fi Callingo, ${name}! Litakhsis tajribatik, nahtaj ila istinsakh sawtik. Satasma nafsik tatakallam al-almaniya aw al-inkliziya bi-talaqa. Faqat iqra al-jumlatain fi al-asfl bi-wuduh.`,
+};
 
-// ---- NAV ----
-function goTo(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
+const SENTENCES = {
+  en: [
+    "The morning sun rises over the quiet green hills and peaceful valleys.",
+    "She quickly bought six juicy plums and fresh bread from the local market.",
+  ],
+  hi: [
+    "Aaj subah mausam bahut sundar hai aur thandi hawa chal rahi hai.",
+    "Main har roz kuch naya seekhta hoon aur khush rehta hoon.",
+  ],
+  de: [
+    "The morning sun rises over the quiet green hills and peaceful valleys.",
+    "She quickly bought six juicy plums and fresh bread from the local market.",
+  ],
+  es: [
+    "The morning sun rises over the quiet green hills and peaceful valleys.",
+    "She quickly bought six juicy plums and fresh bread from the local market.",
+  ],
+  fr: [
+    "The morning sun rises over the quiet green hills and peaceful valleys.",
+    "She quickly bought six juicy plums and fresh bread from the local market.",
+  ],
+  ar: [
+    "The morning sun rises over the quiet green hills and peaceful valleys.",
+    "She quickly bought six juicy plums and fresh bread from the local market.",
+  ],
+};
 
-function saveKey() {
-  const v = document.getElementById('key-input').value.trim();
-  if (!v || v.length < 10) {
-    document.getElementById('key-err').style.display = 'block';
-    return;
+const TOPICS = {
+  de: [
+    { id:'cafe', icon:'☕', name:'Cafe', desc:'Order coffee and food', system: `You are a German cafe waiter. User is learning German. Speak ONLY German. Max 8 words per reply. Be natural and helpful. If they speak English, teach the German phrase.` },
+    { id:'airport', icon:'✈️', name:'Airport', desc:'Check-in and boarding', system: `You are a German airport staff. User is learning German. Speak ONLY German. Max 8 words per reply. Help them navigate the airport.` },
+    { id:'hotel', icon:'🏨', name:'Hotel', desc:'Check-in and requests', system: `You are a German hotel receptionist. User is learning German. Speak ONLY German. Max 8 words per reply.` },
+    { id:'shopping', icon:'🛍️', name:'Shopping', desc:'Buy clothes and items', system: `You are a German shop assistant. User is learning German. Speak ONLY German. Max 8 words per reply.` },
+    { id:'doctor', icon:'🏥', name:'Doctor', desc:'Describe symptoms', system: `You are a German doctor. User is learning German. Speak ONLY German. Max 8 words per reply.` },
+    { id:'job', icon:'💼', name:'Job Interview', desc:'Interview practice', system: `You are a German interviewer. User is learning German. Speak ONLY German. Max 8 words per reply.` },
+  ],
+  en: [
+    { id:'cafe', icon:'☕', name:'Cafe', desc:'Order coffee and food', system: `You are a British cafe waiter. User is learning English. Speak natural English. Max 8 words per reply.` },
+    { id:'airport', icon:'✈️', name:'Airport', desc:'Check-in and boarding', system: `You are an English airport staff. User is learning English. Speak natural English. Max 8 words per reply.` },
+    { id:'hotel', icon:'🏨', name:'Hotel', desc:'Check-in and requests', system: `You are an English hotel receptionist. User is learning English. Max 8 words per reply.` },
+    { id:'shopping', icon:'🛍️', name:'Shopping', desc:'Buy clothes and items', system: `You are an English shop assistant. User is learning English. Max 8 words per reply.` },
+    { id:'doctor', icon:'🏥', name:'Doctor', desc:'Describe symptoms', system: `You are an English doctor. User is learning English. Max 8 words per reply.` },
+    { id:'job', icon:'💼', name:'Job Interview', desc:'Interview in English', system: `You are an English interviewer. User is learning English. Max 8 words per reply.` },
+  ],
+};
+
+const FILLERS = {
+  de: ['Hmm...', 'Ah...', 'Moment...', 'Ja...', 'Also...'],
+  en: ['Hmm...', 'Ah...', 'Let me think...', 'Right...', 'Well...'],
+};
+
+// ============================================================
+// INIT — load from localStorage
+// ============================================================
+function init() {
+  const saved = JSON.parse(localStorage.getItem('callingo_state') || '{}');
+  if (saved.name) STATE.name = saved.name;
+  if (saved.nativeLang) STATE.nativeLang = saved.nativeLang;
+  if (saved.practiceLang) STATE.practiceLang = saved.practiceLang;
+  if (saved.voiceId) STATE.voiceId = saved.voiceId;
+
+  if (STATE.voiceId && STATE.name) {
+    updateHome();
+    goNext('screen-home');
   }
-  apiKey = v;
-  document.getElementById('key-err').style.display = 'none';
-  initRecord();
-  goTo('s-record');
 }
 
-// ---- RECORD ----
-function initRecord() {
-  recordings = [];
-  currentSent = 0;
+function saveState() {
+  localStorage.setItem('callingo_state', JSON.stringify({
+    name: STATE.name,
+    nativeLang: STATE.nativeLang,
+    practiceLang: STATE.practiceLang,
+    voiceId: STATE.voiceId,
+  }));
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goNext(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+}
+
+// ============================================================
+// SCREEN 1: NAME
+// ============================================================
+function saveName() {
+  const val = document.getElementById('name-inp').value.trim();
+  if (val.length < 2) return;
+  STATE.name = val;
+  goNext('screen-native-lang');
+}
+
+// ============================================================
+// SCREEN 2: NATIVE LANGUAGE
+// ============================================================
+function selectNativeLang(code, name, native) {
+  STATE.nativeLang = code;
+  document.querySelectorAll('#screen-native-lang .lang-btn').forEach(b => b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  setTimeout(() => goNext('screen-practice-lang'), 300);
+}
+
+// ============================================================
+// SCREEN 3: PRACTICE LANGUAGE
+// ============================================================
+function selectPracticeLang(code, name, native) {
+  STATE.practiceLang = code;
+  document.querySelectorAll('#screen-practice-lang .lang-btn').forEach(b => b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  setTimeout(() => {
+    initVoiceSetup();
+    goNext('screen-voice');
+  }, 300);
+}
+
+// ============================================================
+// SCREEN 4: VOICE SETUP
+// ============================================================
+function initVoiceSetup() {
+  STATE.recordings = [];
+  STATE.currentSent = 0;
+  const sents = SENTENCES[STATE.nativeLang] || SENTENCES.en;
   updateSentUI();
   renderRecList();
+  // Play welcome message
+  setTimeout(playWelcome, 500);
+}
+
+function playWelcome() {
+  const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
+  document.getElementById('welcome-text').textContent = msg;
+  // Use browser TTS for welcome (cloned voice not ready yet)
+  const u = new SpeechSynthesisUtterance(msg);
+  u.rate = 0.9;
+  u.lang = STATE.nativeLang === 'de' ? 'de-DE' : 'en-US';
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
 }
 
 function updateSentUI() {
-  document.getElementById('sent-count').textContent = `SENTENCE ${currentSent + 1} / ${SENTENCES.length}`;
-  document.getElementById('sent-text').textContent = SENTENCES[currentSent];
-  document.getElementById('rec-prog').style.width = (currentSent / SENTENCES.length * 100) + '%';
+  const sents = SENTENCES[STATE.nativeLang] || SENTENCES.en;
+  const total = sents.length;
+  document.getElementById('sent-num').textContent = `SENTENCE ${STATE.currentSent + 1} / ${total}`;
+  document.getElementById('sent-text').textContent = sents[STATE.currentSent] || '';
+  document.getElementById('rec-progress').style.width = (STATE.currentSent / total * 100) + '%';
 }
 
 function renderRecList() {
-  document.getElementById('rec-list').innerHTML = SENTENCES.map((s, i) => `
-    <div class="rec-row">
-      <div class="rec-dot ${recordings[i] ? 'done' : ''}"></div>
-      <div class="rec-label">${s.substring(0, 45)}…</div>
-      <div class="rec-status ${recordings[i] ? 'done' : ''}">${recordings[i] ? '✓' : '–'}</div>
+  const sents = SENTENCES[STATE.nativeLang] || SENTENCES.en;
+  document.getElementById('rec-list').innerHTML = sents.map((s, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border:1px solid var(--border);border-radius:10px;">
+      <div style="width:6px;height:6px;border-radius:50%;background:${STATE.recordings[i] ? 'var(--green)' : 'var(--border)'};flex-shrink:0;"></div>
+      <div style="flex:1;font-size:12px;color:var(--sub);font-family:DM Mono,monospace;">${s.substring(0, 40)}…</div>
+      <div style="font-size:11px;color:${STATE.recordings[i] ? 'var(--green)' : 'var(--sub)'};">${STATE.recordings[i] ? '✓' : '–'}</div>
     </div>`).join('');
-  document.getElementById('clone-btn').disabled = recordings.length < SENTENCES.length || !recordings.every(Boolean);
+  const sents2 = SENTENCES[STATE.nativeLang] || SENTENCES.en;
+  document.getElementById('clone-btn').disabled = STATE.recordings.length < sents2.length || !STATE.recordings.every(Boolean);
 }
 
 async function toggleRecord() {
-  if (isRecording) stopRec();
-  else await startRec();
+  if (STATE.mediaRecorder && STATE.mediaRecorder.state === 'recording') {
+    STATE.mediaRecorder.stop();
+  } else {
+    await startRecording();
+  }
 }
 
-async function startRec() {
+async function startRecording() {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    STATE.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   } catch(e) {
-    showErr('rec-err', '⚠️ Mic access denied — open via https:// URL');
+    document.getElementById('voice-err').textContent = '⚠️ Mic access denied';
+    document.getElementById('voice-err').style.display = 'block';
     return;
   }
-  audioChunks = [];
-  mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-  mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-  mediaRecorder.onstop = onRecStop;
-  mediaRecorder.start();
-  isRecording = true;
+  STATE.audioChunks = [];
+  STATE.mediaRecorder = new MediaRecorder(STATE.stream);
+  STATE.mediaRecorder.ondataavailable = e => STATE.audioChunks.push(e.data);
+  STATE.mediaRecorder.onstop = onRecordingStop;
+  STATE.mediaRecorder.start();
   document.getElementById('mic-btn').classList.add('recording');
-  document.getElementById('mic-hint').textContent = 'RECORDING... TAP TO STOP';
-  startWave(true);
+  document.getElementById('mic-hint').textContent = 'RECORDING… TAP TO STOP';
+  startWave('wave');
 }
 
-function stopRec() {
-  if (!mediaRecorder || !isRecording) return;
-  mediaRecorder.stop();
-  stream?.getTracks().forEach(t => t.stop());
-  isRecording = false;
-  stopWave();
+function onRecordingStop() {
+  STATE.stream?.getTracks().forEach(t => t.stop());
+  stopWave('wave');
   document.getElementById('mic-btn').classList.remove('recording');
-  document.getElementById('mic-hint').textContent = 'PROCESSING...';
-}
-
-function onRecStop() {
-  const blob = new Blob(audioChunks, { type: 'audio/webm' });
-  recordings[currentSent] = blob;
   document.getElementById('mic-hint').textContent = '✓ RECORDED!';
+  const blob = new Blob(STATE.audioChunks, { type: 'audio/webm' });
+  STATE.recordings[STATE.currentSent] = blob;
   setTimeout(() => {
-    currentSent++;
-    if (currentSent < SENTENCES.length) {
+    const sents = SENTENCES[STATE.nativeLang] || SENTENCES.en;
+    STATE.currentSent++;
+    if (STATE.currentSent < sents.length) {
       updateSentUI();
-      document.getElementById('mic-hint').textContent = 'TAP TO START RECORDING';
+      document.getElementById('mic-hint').textContent = 'TAP TO RECORD';
     } else {
-      document.getElementById('rec-prog').style.width = '100%';
-      document.getElementById('mic-hint').textContent = 'ALL DONE — CLONE NOW';
+      document.getElementById('rec-progress').style.width = '100%';
+      document.getElementById('mic-hint').textContent = 'ALL DONE!';
     }
     renderRecList();
-  }, 700);
+  }, 600);
 }
 
-function startWave(on) {
-  clearInterval(waveInt);
-  if (on) {
-    waveInt = setInterval(() => {
-      document.querySelectorAll('.wbar').forEach(b => {
-        b.style.height = (4 + Math.random() * 28) + 'px';
-        b.style.opacity = '0.9';
-      });
-    }, 100);
-  }
-}
-
-function stopWave() {
-  clearInterval(waveInt);
-  document.querySelectorAll('.wbar').forEach(b => { b.style.height = '4px'; b.style.opacity = '0.3'; });
-}
-
-// ---- CLONE ----
-function setStep(id, status) {
-  const el = document.getElementById('ss-' + id);
+// ============================================================
+// VOICE CLONING
+// ============================================================
+function setCloneStep(id, status) {
+  const el = document.getElementById('cs-' + id);
+  if (!el) return;
   el.textContent = status === 'working' ? '...' : status === 'done' ? '✓ done' : 'waiting';
-  el.className = 'step-status ' + (status === 'done' ? 'done' : status === 'working' ? 'working' : '');
+  el.className = 'clone-step-status ' + (status === 'done' ? 'done' : status === 'working' ? 'working' : '');
 }
 
-async function startClone() {
-  goTo('s-cloning');
-  hideErr('clone-err');
-
+async function startCloning() {
+  goNext('screen-cloning');
   try {
-    // Step 1 — combine blobs
-    setStep('upload', 'working');
-    const combined = new Blob(recordings, { type: 'audio/webm' });
-
-    // Step 2 — send to Fish Audio
-    const base64 = await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(',')[1]);
-      reader.readAsDataURL(combined);
-    });
-
+    // Step 1 — combine and upload
+    setCloneStep('upload', 'working');
+    const combined = new Blob(STATE.recordings, { type: 'audio/webm' });
+    const base64 = await blobToBase64(combined);
     const res = await fetch('/api/fish-clone', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ audioBase64: base64, name: 'My Callingo Voice' })
+      body: JSON.stringify({ audioBase64: base64, name: `${STATE.name} Voice` })
     });
-
-    if (!res.ok) {
-      const e = await res.json().catch(() => ({}));
-      throw new Error(e.message || 'Clone failed: ' + res.status);
-    }
-
+    if (!res.ok) throw new Error('Clone failed: ' + res.status);
     const data = await res.json();
-    setStep('upload', 'done');
-    setStep('clone', 'working');
+    STATE.voiceId = data._id || data.id;
+    setCloneStep('upload', 'done');
 
-    await sleep(1000);
-    voiceId = data._id || data.id;
-    setStep('clone', 'done');
-    setStep('ready', 'working');
+    // Step 2
+    setCloneStep('clone', 'working');
+    await sleep(800);
+    setCloneStep('clone', 'done');
+
+    // Step 3 — pre-generate fillers
+    setCloneStep('fillers', 'working');
+    await preGenerateFillers();
+    setCloneStep('fillers', 'done');
+
+    // Step 4
+    setCloneStep('ready', 'working');
+    saveState();
     await sleep(500);
-    setStep('ready', 'done');
-
+    setCloneStep('ready', 'done');
     await sleep(600);
-    initChat();
 
+    updateHome();
+    goNext('screen-home');
   } catch(e) {
-    showErr('clone-err', '❌ ' + e.message);
-    setTimeout(() => goTo('s-record'), 3000);
+    document.getElementById('clone-err').textContent = '❌ ' + e.message;
+    document.getElementById('clone-err').style.display = 'block';
+    setTimeout(() => goNext('screen-voice'), 3000);
   }
 }
 
-// ---- CHAT ----
-function initChat() {
-  goTo('s-chat');
-  document.getElementById('vid-short').textContent = voiceId.substring(0, 12) + '...';
-  addBubble('ai', 'Your voice has been cloned! 🎙️ I\'ll reply in your own voice. Try asking me something — in any language!', 'AI · cloned voice ready');
+async function preGenerateFillers() {
+  STATE.fillerAudios = [];
+  const fillers = FILLERS[STATE.practiceLang] || FILLERS.en;
+  for (const text of fillers.slice(0, 3)) {
+    try {
+      const audio = await tts(text);
+      if (audio) STATE.fillerAudios.push(audio);
+    } catch(e) { /* silent fail */ }
+  }
 }
 
-function addBubble(role, text, meta) {
-  const area = document.getElementById('chat-area');
+// ============================================================
+// HOME SCREEN
+// ============================================================
+function updateHome() {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('home-greeting').textContent = `${greeting}, ${STATE.name}!`;
+  document.getElementById('home-sub').textContent = `Ready to practice ${STATE.practiceLang === 'de' ? 'German' : 'English'}?`;
+  document.getElementById('practice-lang-label').textContent = STATE.practiceLang === 'de' ? 'German · Deutsch' : 'English · English';
+  document.getElementById('voice-badge-text').textContent = `🎙️ ${STATE.name}'s voice · ready`;
+
+  // Build topics
+  const topics = TOPICS[STATE.practiceLang] || TOPICS.de;
+  document.getElementById('topic-grid').innerHTML = topics.map(t => `
+    <div class="topic-card" onclick="selectTopic('${t.id}')">
+      <div class="topic-icon">${t.icon}</div>
+      <div class="topic-name">${t.name}</div>
+      <div class="topic-desc">${t.desc}</div>
+    </div>`).join('');
+}
+
+function selectTopic(id) {
+  STATE.selectedTopic = (TOPICS[STATE.practiceLang] || TOPICS.de).find(t => t.id === id);
+  document.querySelectorAll('.topic-card').forEach(c => c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  document.getElementById('start-call-btn').disabled = false;
+}
+
+// ============================================================
+// CALL SCREEN
+// ============================================================
+async function startCall() {
+  if (!STATE.selectedTopic) return;
+  STATE.callHistory = [];
+  STATE.callSecs = 0;
+  document.getElementById('call-messages').innerHTML = '';
+  document.getElementById('call-avatar').textContent = STATE.selectedTopic.icon;
+  document.getElementById('call-name').textContent = STATE.selectedTopic.name + ' · AI Tutor';
+  goNext('call-screen');
+
+  // Start timer
+  if (STATE.callTimer) clearInterval(STATE.callTimer);
+  STATE.callTimer = setInterval(() => {
+    STATE.callSecs++;
+    document.getElementById('call-timer').textContent = fmt(STATE.callSecs);
+  }, 1000);
+
+  // AI speaks first
+  setCallStatus('🔊 AI is speaking...');
+  const openings = {
+    de: { cafe: 'Guten Tag! Was moechten Sie?', airport: 'Guten Tag! Ihren Pass bitte.', hotel: 'Willkommen! Haben Sie eine Reservierung?', shopping: 'Kann ich helfen?', doctor: 'Guten Tag! Was fehlt Ihnen?', job: 'Guten Tag! Erzaehlen Sie von sich.' },
+    en: { cafe: 'Hello! What would you like?', airport: 'Hello! May I see your passport?', hotel: 'Welcome! Do you have a reservation?', shopping: 'Hi! Can I help you?', doctor: 'Hello! What brings you in today?', job: 'Hello! Tell me about yourself.' },
+  };
+  const opener = openings[STATE.practiceLang]?.[STATE.selectedTopic.id] || 'Hello! How can I help?';
+  await speakAI(opener);
+}
+
+function setCallStatus(text) {
+  document.getElementById('call-status').textContent = text;
+}
+
+function setMicState(state) {
+  const btn = document.getElementById('main-mic');
+  btn.className = 'main-mic ' + state;
+  if (state === 'listening') {
+    btn.textContent = '🎤';
+    setCallStatus('🎤 Listening…');
+    animateCallWave(true);
+  } else if (state === 'speaking') {
+    btn.textContent = '🔊';
+    setCallStatus('🔊 AI is speaking…');
+    animateCallWave(true);
+  } else if (state === 'processing') {
+    btn.textContent = '⏳';
+    setCallStatus('⏳ Thinking…');
+    animateCallWave(false);
+  } else {
+    btn.textContent = '🎤';
+    setCallStatus('Tap mic to speak');
+    animateCallWave(false);
+  }
+}
+
+async function speakAI(text) {
+  STATE.isSpeaking = true;
+  setMicState('speaking');
+  addBubble('ai', text);
+  try {
+    const audio = await tts(text);
+    if (audio) {
+      await new Promise(resolve => {
+        audio.onended = resolve;
+        audio.onerror = resolve;
+        audio.play();
+      });
+    }
+  } catch(e) {
+    // fallback to browser TTS
+    await browserTTS(text);
+  }
+  STATE.isSpeaking = false;
+  // Auto-start listening
+  if (!STATE.isMuted) {
+    await sleep(300);
+    startListening();
+  } else {
+    setMicState('idle');
+  }
+}
+
+function addBubble(role, text) {
+  const area = document.getElementById('call-messages');
   const b = document.createElement('div');
   b.className = 'bubble ' + role;
-  b.innerHTML = `<div>${text}</div>${meta ? `<div class="bubble-meta">${meta}</div>` : ''}`;
+  b.innerHTML = `<div>${text}</div>`;
   area.appendChild(b);
   area.scrollTop = area.scrollHeight;
+  return b;
 }
 
 function addTyping() {
-  const area = document.getElementById('chat-area');
+  const area = document.getElementById('call-messages');
   const t = document.createElement('div');
-  t.className = 'bubble ai'; t.id = 'typing';
+  t.className = 'bubble ai'; t.id = 'typing-bubble';
   t.innerHTML = '<div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>';
-  area.appendChild(t); area.scrollTop = area.scrollHeight;
+  area.appendChild(t);
+  area.scrollTop = area.scrollHeight;
+}
+function removeTyping() { document.getElementById('typing-bubble')?.remove(); }
+
+function startListening() {
+  if (STATE.isMuted || STATE.isSpeaking) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    setCallStatus('⚠️ Voice not supported — Chrome only');
+    return;
+  }
+  STATE.recognition = new SR();
+  const langMap = { de: 'de-DE', en: 'en-US' };
+  STATE.recognition.lang = langMap[STATE.practiceLang] || 'en-US';
+  STATE.recognition.interimResults = false;
+  STATE.recognition.maxAlternatives = 1;
+  STATE.isListening = true;
+  setMicState('listening');
+
+  STATE.recognition.onresult = async (e) => {
+    const text = e.results[0][0].transcript;
+    STATE.isListening = false;
+    stopListening();
+    await handleUserSpeech(text);
+  };
+
+  STATE.recognition.onerror = (e) => {
+    STATE.isListening = false;
+    if (e.error !== 'aborted') setMicState('idle');
+  };
+
+  STATE.recognition.onend = () => {
+    if (STATE.isListening) STATE.isListening = false;
+  };
+
+  try { STATE.recognition.start(); } catch(e) { setMicState('idle'); }
 }
 
-function removeTyping() { document.getElementById('typing')?.remove(); }
+function stopListening() {
+  STATE.isListening = false;
+  if (STATE.recognition) {
+    try { STATE.recognition.stop(); } catch(e) {}
+    STATE.recognition = null;
+  }
+}
 
-async function send() {
-  const inp = document.getElementById('chat-in');
-  const text = inp.value.trim();
-  if (!text) return;
-  inp.value = '';
-  document.getElementById('send-btn').disabled = true;
-  addBubble('user', text, 'You');
+function toggleMic() {
+  if (STATE.isSpeaking) return;
+  if (STATE.isListening) {
+    stopListening();
+    setMicState('idle');
+  } else {
+    startListening();
+  }
+}
+
+function toggleMute() {
+  STATE.isMuted = !STATE.isMuted;
+  const btn = document.getElementById('mute-btn');
+  btn.textContent = STATE.isMuted ? '🔇' : '🎤';
+  btn.classList.toggle('muted', STATE.isMuted);
+  if (STATE.isMuted) stopListening();
+}
+
+async function handleUserSpeech(text) {
+  addBubble('user', text);
+  STATE.callHistory.push({ role: 'user', content: text });
+
+  // Play filler instantly while thinking
+  playFiller();
+  setMicState('processing');
   addTyping();
-  hideErr('chat-err');
 
   try {
-    // Step 1 — get Claude response via Anthropic API
-    const chatRes = await fetch('/api/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: text }]
-      })
-    });
-
-    const chatData = await chatRes.json();
-    const replyText = chatData.content?.[0]?.text || 'Sorry, I could not respond.';
-
+    const reply = await callClaude(text);
     removeTyping();
-    const bubble = addBubble('ai', replyText, '🔊 generating your voice...');
-
-    // Step 2 — generate TTS with cloned voice via Fish Audio
-    const ttsRes = await fetch('/api/fish', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        endpoint: '/v1/tts',
-        body: {
-          text: replyText,
-          reference_id: voiceId,
-          format: 'mp3',
-          latency: 'normal'
-        }
-      })
-    });
-
-    if (!ttsRes.ok) throw new Error('TTS failed: ' + ttsRes.status);
-
-    const audioBlob = await ttsRes.blob();
-    const audioUrl = URL.createObjectURL(audioBlob);
-    const audio = new Audio(audioUrl);
-    if(bubble) bubble.querySelector('.bubble-meta').textContent = '🎙️ Speaking in your voice';
-    audio.play();
-    audio.onended = () => {
-      if(bubble) bubble.querySelector('.bubble-meta').textContent = '🎙️ Your cloned voice';
-    };
-
+    STATE.callHistory.push({ role: 'assistant', content: reply });
+    await speakAI(reply);
   } catch(e) {
     removeTyping();
-    showErr('chat-err', '❌ ' + e.message);
+    setMicState('idle');
+  }
+}
+
+function playFiller() {
+  if (STATE.fillerAudios.length > 0) {
+    const audio = STATE.fillerAudios[Math.floor(Math.random() * STATE.fillerAudios.length)];
+    try {
+      const clone = new Audio(audio.src);
+      clone.volume = 0.7;
+      clone.play();
+    } catch(e) {}
+  }
+}
+
+// ============================================================
+// API CALLS
+// ============================================================
+async function callClaude(userText) {
+  const messages = [
+    ...STATE.callHistory.slice(-6),
+    { role: 'user', content: userText }
+  ];
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, system: STATE.selectedTopic.system })
+  });
+  if (!res.ok) throw new Error('Claude failed: ' + res.status);
+  const data = await res.json();
+  return data.content?.[0]?.text || '';
+}
+
+async function tts(text) {
+  const res = await fetch('/api/fish', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      endpoint: '/v1/tts',
+      body: {
+        text,
+        reference_id: STATE.voiceId,
+        format: 'mp3',
+        latency: 'normal',
+      }
+    })
+  });
+  if (!res.ok) throw new Error('TTS failed: ' + res.status);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  audio.src = url;
+  return audio;
+}
+
+async function browserTTS(text) {
+  return new Promise(resolve => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = STATE.practiceLang === 'de' ? 'de-DE' : 'en-US';
+    u.rate = 0.9;
+    u.onend = resolve;
+    u.onerror = resolve;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  });
+}
+
+// ============================================================
+// END CALL + REPORT
+// ============================================================
+async function endCall() {
+  stopListening();
+  if (STATE.callTimer) clearInterval(STATE.callTimer);
+  STATE.isSpeaking = false;
+  speechSynthesis.cancel();
+
+  if (STATE.callHistory.length < 2) {
+    goNext('screen-home');
+    return;
   }
 
-  document.getElementById('send-btn').disabled = false;
-  document.getElementById('chat-in').focus();
+  goNext('screen-report');
+  await generateReport();
 }
 
-function showErr(id, msg) {
-  const el = document.getElementById(id);
-  el.textContent = msg; el.style.display = 'block';
+async function generateReport() {
+  document.getElementById('report-score').textContent = '…';
+  document.getElementById('report-corrections').innerHTML = '';
+  document.getElementById('report-vocab').innerHTML = '';
+  document.getElementById('report-good').innerHTML = '';
+
+  try {
+    const transcript = STATE.callHistory.map(m => `${m.role}: ${m.content}`).join('\n');
+    const res = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: `Analyze this language learning conversation and return ONLY valid JSON:\n\n${transcript}\n\nReturn: {"score":number,"corrections":[{"wrong":"...","right":"..."}],"vocab":["word - meaning"],"good":["what they did well"]}` }],
+        system: 'You are a language teacher. Analyze conversations. Return only valid JSON, no other text.'
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.[0]?.text || '{}';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const report = JSON.parse(clean);
+
+    document.getElementById('report-score').textContent = report.score || '—';
+    document.getElementById('report-corrections').innerHTML = (report.corrections || []).map(c =>
+      `<div class="report-item correction">❌ "${c.wrong}" → ✅ "${c.right}"</div>`).join('') || '<div class="report-item">No corrections needed!</div>';
+    document.getElementById('report-vocab').innerHTML = (report.vocab || []).map(v =>
+      `<div class="report-item vocab">📖 ${v}</div>`).join('') || '<div class="report-item">Keep practicing!</div>';
+    document.getElementById('report-good').innerHTML = (report.good || []).map(g =>
+      `<div class="report-item good">⭐ ${g}</div>`).join('') || '<div class="report-item">Great effort!</div>';
+  } catch(e) {
+    document.getElementById('report-score').textContent = '—';
+  }
 }
-function hideErr(id) { document.getElementById(id).style.display = 'none'; }
+
+// ============================================================
+// WAVEFORM
+// ============================================================
+function startWave(id) {
+  if (STATE.waveInterval) clearInterval(STATE.waveInterval);
+  STATE.waveInterval = setInterval(() => {
+    document.querySelectorAll(`#${id} .wbar`).forEach(b => {
+      b.style.height = (4 + Math.random() * 28) + 'px';
+      b.style.opacity = '0.8';
+    });
+  }, 100);
+}
+function stopWave(id) {
+  clearInterval(STATE.waveInterval);
+  document.querySelectorAll(`#${id} .wbar`).forEach(b => { b.style.height = '4px'; b.style.opacity = '0.3'; });
+}
+
+let callWaveInt = null;
+function animateCallWave(on) {
+  if (callWaveInt) clearInterval(callWaveInt);
+  if (on) {
+    callWaveInt = setInterval(() => {
+      document.querySelectorAll('#call-wave .wbar').forEach(b => {
+        b.style.height = (4 + Math.random() * 24) + 'px';
+        b.style.opacity = '0.8';
+      });
+    }, 120);
+  } else {
+    document.querySelectorAll('#call-wave .wbar').forEach(b => { b.style.height = '4px'; b.style.opacity = '0.2'; });
+  }
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function fmt(s) { return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function blobToBase64(blob) {
+  return new Promise(resolve => {
+    const r = new FileReader();
+    r.onloadend = () => resolve(r.result.split(',')[1]);
+    r.readAsDataURL(blob);
+  });
+}
+
+// ============================================================
+// START
+// ============================================================
+init();
 </script>
 </body>
 </html>
