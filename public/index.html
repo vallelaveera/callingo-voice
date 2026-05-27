@@ -744,10 +744,14 @@ body{
       <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
       <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
     </div>
-    <div class="call-status" id="call-status">Connecting...</div>
+    <div style="display:flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap;padding:0 10px;">
+      <div class="call-status" id="call-status">Connecting...</div>
+      <button class="btn btn-outline" id="skip-btn" onclick="skipFormalities()" style="padding:6px 12px;font-size:11px;display:none;">⏩ Skip formalities</button>
+    </div>
     <div class="call-btns">
       <button class="ctrl-btn" id="mute-btn" onclick="toggleMute()" title="Mute">🎤</button>
       <button class="main-mic" id="main-mic" onclick="toggleMic()">🎤</button>
+      <button class="ctrl-btn" id="correct-btn" onclick="toggleCorrections()" title="Toggle corrections">✏️</button>
       <button class="ctrl-btn" onclick="endCall()" title="End" style="background:rgba(255,71,87,0.15);border-color:var(--red);">📵</button>
     </div>
   </div>
@@ -820,6 +824,10 @@ const STATE = {
   recognition: null,
   stream: null,
   welcomeVoiceId: null,
+  warmupCount: 0,
+  warmupPhase: true,
+  correctionsEnabled: true,
+  questionsAsked: [],
 };
 
 const WELCOME_VOICE_EMAIL = 'veera.reddy619@gmail.com';
@@ -1264,6 +1272,34 @@ You are a job interviewer.
 };
 
 
+const WARMUP_QUESTIONS = {
+  beginner: {
+    de: ['Wie geht es dir heute?', 'Hast du gut geschlafen?', 'Wie ist das Wetter heute?'],
+    en: ['How are you today?', 'Did you sleep well?', 'What\'s the weather like?'],
+  },
+  elementary: {
+    de: ['Wie geht es dir heute?', 'Hast du gut geschlafen?', 'Was hast du gestern gemacht?'],
+    en: ['How are you doing today?', 'Did you sleep well last night?', 'What did you do yesterday?'],
+  },
+  intermediate: {
+    de: ['Wie geht es dir in letzter Zeit?', 'Wie hast du geschlafen?', 'Was hält dich beschäftigt?'],
+    en: ['How have you been lately?', 'How did you sleep?', 'What\'s been keeping you busy?'],
+  },
+  advanced: {
+    de: ['Wie läuft es dir?', 'Wie war deine Woche?', 'Etwas Interessantes passiert?'],
+    en: ['How\'s it going?', 'How was your week?', 'Anything interesting happening?'],
+  },
+  fluent: {
+    de: ['Was geht ab?', 'Wie war deine Woche?'],
+    en: ['What\'s up?', 'How\'s your week been?'],
+  },
+};
+
+const WARMUP_TRANSITIONS = {
+  de: 'Okay, lass uns anfangen. ',
+  en: 'Alright, let\'s get started. ',
+};
+
 const FILLERS = {
   de: [],
   en: [],
@@ -1647,9 +1683,14 @@ async function startCall() {
   if (!STATE.selectedTopic) return;
   STATE.callHistory = [];
   STATE.callSecs = 0;
+  STATE.warmupCount = 0;
+  STATE.warmupPhase = true;
+  STATE.questionsAsked = [];
+  STATE.correctionsEnabled = true;
   document.getElementById('call-messages').innerHTML = '';
   document.getElementById('call-avatar').textContent = STATE.selectedTopic.icon;
   document.getElementById('call-name').textContent = STATE.selectedTopic.name + ' · AI Tutor';
+  document.getElementById('correct-btn').textContent = '✏️';
   goNext('call-screen');
 
   // Start timer
@@ -1659,18 +1700,39 @@ async function startCall() {
     document.getElementById('call-timer').textContent = fmt(STATE.callSecs);
   }, 1000);
 
-  // AI speaks first
+  // Start with warmup questions
   setCallStatus('🔊 AI is speaking...');
+  await askWarmupQuestion();
+  setTimeout(startListening, 500);
+}
+
+async function askWarmupQuestion() {
+  const questions = WARMUP_QUESTIONS[STATE.level]?.[STATE.practiceLang] || WARMUP_QUESTIONS.intermediate[STATE.practiceLang];
+  document.getElementById('skip-btn').style.display = STATE.warmupPhase ? 'block' : 'none';
+
+  if (STATE.warmupCount >= questions.length) {
+    await transitionToTopic();
+    return;
+  }
+  const question = questions[STATE.warmupCount];
+  STATE.questionsAsked.push({ question, timestamp: new Date().toISOString(), response: '' });
+  addBubble('ai', question);
+  STATE.callHistory.push({ role: 'assistant', content: question });
+  await speakAI(question);
+  STATE.warmupCount++;
+}
+
+async function transitionToTopic() {
+  STATE.warmupPhase = false;
+  document.getElementById('skip-btn').style.display = 'none';
   const openings = {
-    de: { cafe: 'Guten Tag! Was moechten Sie?', airport: 'Guten Tag! Ihren Pass bitte.', hotel: 'Willkommen! Haben Sie eine Reservierung?', shopping: 'Kann ich helfen?', doctor: 'Guten Tag! Was fehlt Ihnen?', job: 'Guten Tag! Erzaehlen Sie von sich.' },
-    en: { cafe: 'Hello! What would you like?', airport: 'Hello! May I see your passport?', hotel: 'Welcome! Do you have a reservation?', shopping: 'Hi! Can I help you?', doctor: 'Hello! What brings you in today?', job: 'Hello! Tell me about yourself.' },
+    de: { cafe: 'Okay, lass uns anfangen. Guten Tag! Was moechten Sie?', airport: 'Okay, lass uns anfangen. Guten Tag! Ihren Pass bitte.', hotel: 'Okay, lass uns anfangen. Willkommen! Haben Sie eine Reservierung?', shopping: 'Okay, lass uns anfangen. Kann ich helfen?', doctor: 'Okay, lass uns anfangen. Guten Tag! Was fehlt Ihnen?', job: 'Okay, lass uns anfangen. Guten Tag! Erzaehlen Sie von sich.' },
+    en: { cafe: 'Alright, let\'s get started. Hello! What would you like?', airport: 'Alright, let\'s get started. Hello! May I see your passport?', hotel: 'Alright, let\'s get started. Welcome! Do you have a reservation?', shopping: 'Alright, let\'s get started. Hi! Can I help you?', doctor: 'Alright, let\'s get started. Hello! What brings you in today?', job: 'Alright, let\'s get started. Hello! Tell me about yourself.' },
   };
-  const opener = openings[STATE.practiceLang]?.[STATE.selectedTopic.id] || 'Hello! How can I help?';
+  const opener = openings[STATE.practiceLang]?.[STATE.selectedTopic.id] || 'Let\'s get started. How can I help?';
   addBubble('ai', opener);
   STATE.callHistory.push({ role: 'assistant', content: opener });
   await speakAI(opener);
-  // Auto-start listening after opener
-  setTimeout(startListening, 500);
 }
 
 function setCallStatus(text) {
@@ -1797,10 +1859,29 @@ function toggleMute() {
   if (STATE.isMuted) stopListening();
 }
 
+function toggleCorrections() {
+  STATE.correctionsEnabled = !STATE.correctionsEnabled;
+  const btn = document.getElementById('correct-btn');
+  btn.textContent = STATE.correctionsEnabled ? '✏️' : '✋';
+  btn.style.opacity = STATE.correctionsEnabled ? '1' : '0.5';
+}
+
+async function skipFormalities() {
+  if (STATE.warmupPhase) {
+    await transitionToTopic();
+    setTimeout(startListening, 500);
+  }
+}
+
 async function handleUserSpeech(text) {
   addBubble('user', text);
   STATE.callHistory.push({ role: 'user', content: text });
   console.log('User said:', text);
+
+  // Track warmup responses
+  if (STATE.warmupPhase && STATE.questionsAsked.length > 0) {
+    STATE.questionsAsked[STATE.questionsAsked.length - 1].response = text;
+  }
 
   setMicState('processing');
   addTyping();
@@ -1814,7 +1895,7 @@ async function handleUserSpeech(text) {
       .trim();
     console.log('After cleaning:', cleaned);
 
-    let reply = await callClaude(cleaned);
+    let reply = await callClaude(cleaned, STATE.warmupPhase, STATE.correctionsEnabled);
     console.log('Claude raw:', reply);
 
     reply = cleanAIText(reply);
@@ -1834,8 +1915,13 @@ async function handleUserSpeech(text) {
     STATE.callHistory.push({ role: 'assistant', content: reply });
     addBubble('ai', reply);
     await speakAI(reply);
-    // Auto-resume listening after AI finishes
-    setTimeout(startListening, 300);
+
+    // Continue warmup or transition to topic
+    if (STATE.warmupPhase) {
+      setTimeout(() => askWarmupQuestion(), 500);
+    } else {
+      setTimeout(startListening, 300);
+    }
   } catch(e) {
     removeTyping();
     setMicState('idle');
@@ -1906,7 +1992,7 @@ function sleep(ms) {
 // ============================================================
 // API CALLS
 // ============================================================
-async function callClaude(userText) {
+async function callClaude(userText, warmupPhase, correctionsEnabled) {
   const messages = [
     ...STATE.callHistory.slice(-6),
     { role: 'user', content: userText }
@@ -1920,7 +2006,17 @@ async function callClaude(userText) {
     fluent: 'The user is FLUENT. Speak naturally and fast. Use slang, idioms, and complex structures freely. No corrections needed—just chat. ALWAYS end with a question. Never use their name.'
   };
 
-  const systemPrompt = STATE.selectedTopic.system + '\n\nLevel guidance: ' + (levelGuide[STATE.level] || levelGuide.intermediate);
+  let systemPrompt = STATE.selectedTopic.system + '\n\nLevel guidance: ' + (levelGuide[STATE.level] || levelGuide.intermediate);
+
+  if (warmupPhase) {
+    systemPrompt += '\n\nWARMUP PHASE: You are just getting to know the user. Be friendly and welcoming. Listen to their answers and respond naturally. Do NOT ask the same type of question twice in a row.';
+  }
+
+  if (correctionsEnabled && !warmupPhase) {
+    systemPrompt += '\n\nCORRECTIONS ENABLED: If the user makes a grammatical error or uses incorrect vocabulary, gently correct them by saying "I think you mean..." or "Did you mean...?" Keep corrections brief and encouraging.';
+  } else if (!correctionsEnabled) {
+    systemPrompt += '\n\nCORRECTIONS DISABLED: Do not correct the user\'s grammar or mistakes. Just continue the conversation naturally.';
+  }
 
   const res = await fetch('/api/claude', {
     method: 'POST',
@@ -1982,6 +2078,9 @@ async function endCall() {
   STATE.isSpeaking = false;
   speechSynthesis.cancel();
 
+  // Save call recording/data
+  saveCallRecording();
+
   if (STATE.callHistory.length < 2) {
     goNext('screen-home');
     return;
@@ -1989,6 +2088,28 @@ async function endCall() {
 
   goNext('screen-report');
   await generateReport();
+}
+
+function saveCallRecording() {
+  const callData = {
+    date: new Date().toISOString(),
+    topic: STATE.selectedTopic?.name || 'Custom',
+    language: STATE.practiceLang,
+    level: STATE.level,
+    duration: STATE.callSecs,
+    warmupQuestions: STATE.questionsAsked,
+    fullTranscript: STATE.callHistory,
+    correctionsEnabled: STATE.correctionsEnabled,
+  };
+
+  const recordings = JSON.parse(localStorage.getItem('callingo_recordings') || '[]');
+  recordings.push(callData);
+  // Keep last 20 recordings
+  if (recordings.length > 20) {
+    recordings.shift();
+  }
+  localStorage.setItem('callingo_recordings', JSON.stringify(recordings));
+  console.log('Call saved:', callData);
 }
 
 async function generateReport() {
