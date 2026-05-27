@@ -7,10 +7,13 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
   try {
+    const body = req.body || {};
     const payload = JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
-      messages: req.body.messages
+      max_tokens: typeof body.max_tokens === 'number' ? body.max_tokens : 200,
+      ...(body.system ? { system: body.system } : {}),
+      ...(typeof body.temperature === 'number' ? { temperature: body.temperature } : {}),
+      messages: body.messages,
     });
 
     const result = await new Promise((resolve, reject) => {

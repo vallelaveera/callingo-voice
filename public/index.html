@@ -725,6 +725,11 @@ body{
       <div id="report-vocab"></div>
     </div>
 
+    <div class="report-section" id="report-vocab-used-section">
+      <div class="report-section-title">Vocabulary you used</div>
+      <div id="report-vocab-used"></div>
+    </div>
+
     <div class="report-section" id="report-good-section">
       <div class="report-section-title">Well done</div>
       <div id="report-good"></div>
@@ -762,8 +767,22 @@ const STATE = {
   waveInterval: null,
   recognition: null,
   stream: null,
+  welcomeVoiceId: null,
   _homeWelcomePlayed: false,
 };
+
+const WELCOME_VOICE_EMAIL = 'veera.reddy619@gmail.com';
+
+async function loadWelcomeVoice() {
+  if (STATE.welcomeVoiceId) return;
+  try {
+    const res = await fetch('/api/voice?email=' + encodeURIComponent(WELCOME_VOICE_EMAIL));
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.voiceId) STATE.welcomeVoiceId = data.voiceId;
+    }
+  } catch(e) { /* silent fail — falls back to user's own voice */ }
+}
 
 // ============================================================
 // CONTENT
@@ -1206,6 +1225,9 @@ function init() {
   if (saved.practiceLang) STATE.practiceLang = saved.practiceLang;
   if (saved.voiceId) STATE.voiceId = saved.voiceId;
 
+  // Pre-fetch the shared welcome voice (Veera's clone) — non-blocking
+  loadWelcomeVoice();
+
   // Pre-fill name/email inputs for returning users
   const nameInp = document.getElementById('name-inp');
   const emailInp = document.getElementById('email-inp');
@@ -1325,7 +1347,8 @@ function initVoiceSetup() {
 }
 
 async function playClonedWelcome() {
-  if (!STATE.voiceId) return;
+  const voiceId = STATE.welcomeVoiceId || STATE.voiceId;
+  if (!voiceId) return;
   const messages = {
     en: (n) => `Hi ${n}, welcome to Callingo. Pick a topic and let's talk.`,
     hi: (n) => `Namaste ${n}, Callingo mein swagat hai. Topic chuniye, baat karte hain.`,
@@ -1336,7 +1359,7 @@ async function playClonedWelcome() {
   };
   const msg = (messages[STATE.nativeLang] || messages.en)(STATE.name);
   try {
-    const audio = await tts(msg);
+    const audio = await tts(msg, voiceId);
     if (audio) audio.play();
   } catch(e) { /* silent fail */ }
 }
@@ -1484,7 +1507,7 @@ async function preGenerateFillers() {
 // ============================================================
 // HOME SCREEN
 // ============================================================
-function updateHome() {
+async function updateHome() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   document.getElementById('home-greeting').textContent = `${greeting}, ${STATE.name}!`;
@@ -1501,10 +1524,13 @@ function updateHome() {
       <div class="topic-desc">${t.desc}</div>
     </div>`).join('');
 
-  // Auto-play welcome in cloned voice once per page load
-  if (STATE.voiceId && !STATE._homeWelcomePlayed) {
-    STATE._homeWelcomePlayed = true;
-    setTimeout(playClonedWelcome, 700);
+  // Auto-play welcome in Veera's voice (or user's own voice as fallback) once per page load
+  if (!STATE._homeWelcomePlayed) {
+    if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
+    if (STATE.welcomeVoiceId || STATE.voiceId) {
+      STATE._homeWelcomePlayed = true;
+      setTimeout(playClonedWelcome, 700);
+    }
   }
 }
 
@@ -1541,6 +1567,8 @@ async function startCall() {
     en: { cafe: 'Hello! What would you like?', airport: 'Hello! May I see your passport?', hotel: 'Welcome! Do you have a reservation?', shopping: 'Hi! Can I help you?', doctor: 'Hello! What brings you in today?', job: 'Hello! Tell me about yourself.' },
   };
   const opener = openings[STATE.practiceLang]?.[STATE.selectedTopic.id] || 'Hello! How can I help?';
+  addBubble('ai', opener);
+  STATE.callHistory.push({ role: 'assistant', content: opener });
   await speakAI(opener);
 }
 
@@ -1702,6 +1730,7 @@ async function handleUserSpeech(text) {
     }
     removeTyping();
     STATE.callHistory.push({ role: 'assistant', content: reply });
+    addBubble('ai', reply);
     await speakAI(reply);
   } catch(e) {
     removeTyping();
@@ -1792,7 +1821,9 @@ async function callClaude(userText) {
   return data.content?.[0]?.text || '';
 }
 
-async function tts(text) {
+async function tts(text, voiceId) {
+  const refId = voiceId || STATE.voiceId;
+  if (!refId) return null;
   const res = await fetch('/api/fish', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1800,7 +1831,7 @@ async function tts(text) {
       endpoint: '/v1/tts',
       body: {
         text,
-        reference_id: STATE.voiceId,
+        reference_id: refId,
         format: 'mp3',
         latency: 'normal',
       }
@@ -1848,6 +1879,7 @@ async function generateReport() {
   document.getElementById('report-score').textContent = '…';
   document.getElementById('report-corrections').innerHTML = '';
   document.getElementById('report-vocab').innerHTML = '';
+  document.getElementById('report-vocab-used').innerHTML = '';
   document.getElementById('report-good').innerHTML = '';
 
   try {
@@ -1856,8 +1888,9 @@ async function generateReport() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        messages: [{ role: 'user', content: `Analyze this language learning conversation and return ONLY valid JSON:\n\n${transcript}\n\nReturn: {"score":number,"corrections":[{"wrong":"...","right":"..."}],"vocab":["word - meaning"],"good":["what they did well"]}` }],
-        system: 'You are a language teacher. Analyze conversations. Return only valid JSON, no other text.'
+        messages: [{ role: 'user', content: `Analyze this language learning conversation and return ONLY valid JSON.\n\nTranscript:\n${transcript}\n\nReturn this exact shape:\n{"score":number,"corrections":[{"wrong":"...","right":"..."}],"vocab":["word - meaning"],"vocabUsed":["word - meaning"],"good":["what they did well"]}\n\nField meanings:\n- "vocab": new words/phrases the AI introduced that the user did NOT say.\n- "vocabUsed": notable words/phrases the USER actually said during the call, with a short meaning. Skip filler/stop words. Up to 10 items.` }],
+        system: 'You are a language teacher. Analyze conversations. Return only valid JSON, no other text.',
+        max_tokens: 800
       })
     });
     const data = await res.json();
@@ -1870,6 +1903,8 @@ async function generateReport() {
       `<div class="report-item correction">❌ "${c.wrong}" → ✅ "${c.right}"</div>`).join('') || '<div class="report-item">No corrections needed!</div>';
     document.getElementById('report-vocab').innerHTML = (report.vocab || []).map(v =>
       `<div class="report-item vocab">📖 ${v}</div>`).join('') || '<div class="report-item">Keep practicing!</div>';
+    document.getElementById('report-vocab-used').innerHTML = (report.vocabUsed || []).map(v =>
+      `<div class="report-item vocab">🗣️ ${v}</div>`).join('') || '<div class="report-item">Try saying more next time!</div>';
     document.getElementById('report-good').innerHTML = (report.good || []).map(g =>
       `<div class="report-item good">⭐ ${g}</div>`).join('') || '<div class="report-item">Great effort!</div>';
   } catch(e) {
