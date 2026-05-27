@@ -657,6 +657,16 @@ body{
       <div class="card-label">Choose a topic to practice</div>
       <div style="font-size:13px;color:var(--sub);margin-bottom:14px;" id="practice-lang-label">German · Deutsch</div>
       <div class="topic-grid" id="topic-grid"></div>
+
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="font-size:11px;color:var(--sub);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">Or pick your own</div>
+        <input class="inp" id="custom-topic-inp" type="text" placeholder="e.g., Cooking, Sports, Travel…"
+          style="margin-bottom:8px;"
+          onkeydown="if(event.key==='Enter')selectCustomTopic()"/>
+        <button class="btn btn-outline" onclick="selectCustomTopic()" style="padding:10px;font-size:12px;">
+          ✏️ Use custom topic
+        </button>
+      </div>
     </div>
 
     <button class="btn btn-primary" id="start-call-btn" disabled onclick="startCall()">
@@ -1343,7 +1353,7 @@ function initVoiceSetup() {
   const el = document.getElementById('welcome-text');
   if (el) el.textContent = msg;
   // Narrate the instructions in Veera's voice
-  setTimeout(playOnboardingWelcome, 200);
+  setTimeout(playOnboardingWelcome, 20);
 }
 
 async function playOnboardingWelcome() {
@@ -1522,6 +1532,50 @@ function selectTopic(id) {
   STATE.selectedTopic = (TOPICS[STATE.practiceLang] || TOPICS.de).find(t => t.id === id);
   document.querySelectorAll('.topic-card').forEach(c => c.classList.remove('selected'));
   event.currentTarget.classList.add('selected');
+  document.getElementById('custom-topic-inp').value = '';
+  document.getElementById('start-call-btn').disabled = false;
+}
+
+function selectCustomTopic() {
+  const topicName = document.getElementById('custom-topic-inp').value.trim();
+  if (!topicName) return;
+
+  const lang = STATE.practiceLang || 'de';
+  const isGerman = lang === 'de';
+
+  STATE.selectedTopic = {
+    id: 'custom',
+    icon: '🎯',
+    name: topicName,
+    desc: 'Custom topic',
+    system: `
+You are a real-time ${isGerman ? 'German' : 'English'} language tutor in a live voice call.
+
+Rules:
+- Speak ONLY ${isGerman ? 'German' : 'English'}.
+- Maximum 10 words per sentence.
+- Only 1 short sentence.
+- Maximum 2 sentences.
+- Never use markdown.
+- Never use bullet points.
+- Never use numbered lists.
+- Never use asterisks.
+- Speak like a real phone call.
+- Ask only ONE thing at a time.
+- Responses should sound natural when read aloud.
+- Never give long explanations.
+- Never explain your reasoning.
+- Assume speech-to-text mistakes are common.
+- Guess meaning from context.
+- Keep conversation moving naturally.
+- Sound like a real human speaking live.
+
+You are discussing: ${topicName}
+Keep the conversation about this topic naturally.
+`
+  };
+
+  document.querySelectorAll('.topic-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('start-call-btn').disabled = false;
 }
 
