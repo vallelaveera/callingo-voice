@@ -1494,12 +1494,13 @@ function setMicState(state) {
   }
 }
 
+
 async function speakAI(text) {
-  STATE.isSpeaking = true;
-  setMicState('speaking');
-  addBubble('ai', text);
-  try {
-    const audio = await tts(text);
+  const chunks = splitForVoice(text);
+
+  for (const chunk of chunks) {
+    const audio = await tts(chunk);
+
     if (audio) {
       await new Promise(resolve => {
         audio.onended = resolve;
@@ -1507,19 +1508,11 @@ async function speakAI(text) {
         audio.play();
       });
     }
-  } catch(e) {
-    // fallback to browser TTS
-    await browserTTS(text);
-  }
-  STATE.isSpeaking = false;
-  // Auto-start listening
-  if (!STATE.isMuted) {
-    await sleep(300);
-    startListening();
-  } else {
-    setMicState('idle');
+
+    await sleep(150);
   }
 }
+
 
 function addBubble(role, text) {
   const area = document.getElementById('call-messages');
@@ -1672,6 +1665,31 @@ function cleanAIText(text) {
       'What role are you interviewing for?'
     )
     .trim();
+}
+
+
+// ============================================================
+// VOICE CHUNKING
+// ============================================================
+
+function splitForVoice(text) {
+  return text
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    .replace(/\s+/g, ' ')
+    .split(/[.!?]/)
+    .flatMap(sentence => {
+      return sentence
+        .split(/,| and | but /i)
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+    })
+    .filter(s => s.length > 3)
+    .slice(0, 6);
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 
@@ -1835,3 +1853,12 @@ init();
 </script>
 </body>
 </html>
+
+
+function goHome() {
+  STATE.selectedTopic = null;
+
+  document.getElementById('chatPage').style.display = 'none';
+  document.getElementById('topicPage').style.display = 'none';
+  document.getElementById('languagePage').style.display = 'flex';
+}
