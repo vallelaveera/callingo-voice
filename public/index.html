@@ -10,19 +10,19 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
-  --bg:#0a0a0a;
-  --s1:#111111;
-  --s2:#1a1a1a;
-  --s3:#222222;
-  --green:#00d68f;
-  --green-dim:rgba(0,214,143,0.12);
-  --green-glow:rgba(0,214,143,0.06);
-  --text:#f0f0f0;
-  --sub:#666;
-  --sub2:#444;
-  --border:#222;
-  --red:#ff4757;
-  --gold:#ffd32a;
+  --bg:#ffffff;
+  --s1:#fafafa;
+  --s2:#f1f3f2;
+  --s3:#e4e6e5;
+  --green:#00a86b;
+  --green-dim:rgba(0,168,107,0.10);
+  --green-glow:rgba(0,168,107,0.06);
+  --text:#0a0f0c;
+  --sub:#6b7280;
+  --sub2:#c4c4c4;
+  --border:#e5e7eb;
+  --red:#e63946;
+  --gold:#d97706;
   --radius:16px;
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bot:env(safe-area-inset-bottom,0px);
@@ -125,8 +125,8 @@ body{
   justify-content:center;
   gap:8px;
 }
-.btn-primary{background:var(--green);color:#000;}
-.btn-primary:hover{background:#00c07f;}
+.btn-primary{background:var(--green);color:#fff;}
+.btn-primary:hover{background:#008f5b;}
 .btn-primary:disabled{background:var(--s3);color:var(--sub);cursor:default;}
 .btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border);}
 .btn-outline:hover{border-color:var(--green);color:var(--green);}
@@ -146,7 +146,7 @@ body{
 }
 .lang-btn:hover{border-color:var(--green);}
 .lang-btn.selected{border-color:var(--green);background:var(--green-dim);}
-.lang-flag{font-size:28px;margin-bottom:6px;}
+.lang-flag{width:44px;height:30px;margin:0 auto 8px;display:block;border-radius:4px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
 .lang-name{font-size:13px;font-weight:700;color:var(--text);}
 .lang-native{font-size:11px;color:var(--sub);margin-top:2px;font-family:'DM Mono',monospace;}
 
@@ -211,13 +211,14 @@ body{
 .topic-desc{font-size:11px;color:var(--sub);margin-top:3px;line-height:1.4;}
 
 /* CALL SCREEN */
-#call-screen{background:#070f0a;}
+#call-screen{background:#f3fbf6;}
 .call-header{
   display:flex;
   align-items:center;
   justify-content:space-between;
   padding:max(16px,var(--safe-top)) 20px 16px;
-  background:rgba(0,0,0,0.5);
+  background:rgba(255,255,255,0.85);
+  border-bottom:1px solid var(--border);
   flex-shrink:0;
 }
 .call-info{display:flex;align-items:center;gap:12px;}
@@ -281,7 +282,8 @@ body{
   flex-direction:column;
   align-items:center;
   gap:12px;
-  background:rgba(0,0,0,0.5);
+  background:rgba(255,255,255,0.85);
+  border-top:1px solid var(--border);
   flex-shrink:0;
 }
 .call-status{
@@ -462,11 +464,15 @@ body{
     </div>
     <div class="card">
       <div class="card-label">Let's start</div>
-      <div class="subtext" style="margin-bottom:16px;">What's your name?</div>
+      <div class="subtext" style="margin-bottom:16px;">What's your name and email?</div>
       <input class="inp" id="name-inp" type="text" placeholder="Your first name…"
-        oninput="document.getElementById('name-btn').disabled=this.value.trim().length<2"
-        onkeydown="if(event.key==='Enter')goNext('screen-native-lang')"/>
-      <div class="err" id="name-err" style="margin-top:8px;">Please enter your name</div>
+        oninput="validateNameForm()"
+        onkeydown="if(event.key==='Enter')document.getElementById('email-inp').focus()"/>
+      <input class="inp" id="email-inp" type="email" placeholder="Your email…"
+        style="margin-top:10px;"
+        oninput="validateNameForm()"
+        onkeydown="if(event.key==='Enter')saveName()"/>
+      <div class="err" id="name-err" style="margin-top:8px;">Please enter your name and email</div>
     </div>
     <button class="btn btn-primary" id="name-btn" disabled onclick="saveName()">Continue →</button>
   </div>
@@ -486,32 +492,32 @@ body{
     </div>
     <div class="lang-grid">
       <button class="lang-btn" onclick="selectNativeLang('en','English','In English')">
-        <div class="lang-flag">🇬🇧</div>
+        <img class="lang-flag" src="https://flagcdn.com/w80/gb.png" alt="UK flag" loading="lazy"/>
         <div class="lang-name">English</div>
         <div class="lang-native">In English</div>
       </button>
       <button class="lang-btn" onclick="selectNativeLang('hi','Hindi','Hinglish mein')">
-        <div class="lang-flag">🇮🇳</div>
+        <img class="lang-flag" src="https://flagcdn.com/w80/in.png" alt="India flag" loading="lazy"/>
         <div class="lang-name">Hindi</div>
         <div class="lang-native">Hinglish mein</div>
       </button>
       <button class="lang-btn" onclick="selectNativeLang('de','German','Auf Deutsch')">
-        <div class="lang-flag">🇩🇪</div>
+        <img class="lang-flag" src="https://flagcdn.com/w80/de.png" alt="Germany flag" loading="lazy"/>
         <div class="lang-name">German</div>
         <div class="lang-native">Auf Deutsch</div>
       </button>
       <button class="lang-btn" onclick="selectNativeLang('es','Spanish','En Espanol')">
-        <div class="lang-flag">🇪🇸</div>
+        <img class="lang-flag" src="https://flagcdn.com/w80/es.png" alt="Spain flag" loading="lazy"/>
         <div class="lang-name">Spanish</div>
         <div class="lang-native">En Espanol</div>
       </button>
       <button class="lang-btn" onclick="selectNativeLang('fr','French','En Francais')">
-        <div class="lang-flag">🇫🇷</div>
+        <img class="lang-flag" src="https://flagcdn.com/w80/fr.png" alt="France flag" loading="lazy"/>
         <div class="lang-name">French</div>
         <div class="lang-native">En Francais</div>
       </button>
       <button class="lang-btn" onclick="selectNativeLang('ar','Arabic','Bil Arabi')">
-        <div class="lang-flag">🇸🇦</div>
+        <img class="lang-flag" src="https://flagcdn.com/w80/sa.png" alt="Saudi Arabia flag" loading="lazy"/>
         <div class="lang-name">Arabic</div>
         <div class="lang-native">Bil Arabi</div>
       </button>
@@ -533,12 +539,12 @@ body{
     </div>
     <div class="lang-grid">
       <button class="lang-btn" onclick="selectPracticeLang('de','German','Deutsch')">
-        <div class="lang-flag">🇩🇪</div>
+        <img class="lang-flag" src="https://flagcdn.com/w80/de.png" alt="Germany flag" loading="lazy"/>
         <div class="lang-name">German</div>
         <div class="lang-native">Deutsch</div>
       </button>
       <button class="lang-btn" onclick="selectPracticeLang('en','English','English')">
-        <div class="lang-flag">🇬🇧</div>
+        <img class="lang-flag" src="https://flagcdn.com/w80/gb.png" alt="UK flag" loading="lazy"/>
         <div class="lang-name">English</div>
         <div class="lang-native">English</div>
       </button>
@@ -555,15 +561,12 @@ body{
   </div>
   <div class="scroll-content">
 
-    <!-- Welcome message -->
+    <!-- Welcome message (text only — audio plays in cloned voice after cloning) -->
     <div class="card" id="welcome-card">
       <div class="card-label">Welcome</div>
       <div style="font-size:16px;font-weight:600;line-height:1.5;color:var(--text);" id="welcome-text">
         Loading your welcome message...
       </div>
-      <button class="btn btn-outline" style="margin-top:14px;padding:10px;" onclick="playWelcome()">
-        🔊 Play again
-      </button>
     </div>
 
     <!-- Sentence recording -->
@@ -740,6 +743,7 @@ body{
 // ============================================================
 const STATE = {
   name: '',
+  email: '',
   nativeLang: 'en',
   practiceLang: 'de',
   voiceId: null,
@@ -758,6 +762,7 @@ const STATE = {
   waveInterval: null,
   recognition: null,
   stream: null,
+  _homeWelcomePlayed: false,
 };
 
 // ============================================================
@@ -774,28 +779,28 @@ const WELCOME = {
 
 const SENTENCES = {
   en: [
-    "The morning sun rises over the quiet green hills and peaceful valleys.",
-    "She quickly bought six juicy plums and fresh bread from the local market.",
+    "I drink fresh water and eat warm bread every single morning at home.",
+    "My happy dog runs in the park and plays with the kids each day.",
   ],
   hi: [
-    "Aaj subah mausam bahut sundar hai aur thandi hawa chal rahi hai.",
-    "Main har roz kuch naya seekhta hoon aur khush rehta hoon.",
+    "Main har subah paani peeta hoon aur roti khata hoon ghar mein.",
+    "Mera dost mere ghar aata hai aur hum saath khelte hain roz.",
   ],
   de: [
-    "The morning sun rises over the quiet green hills and peaceful valleys.",
-    "She quickly bought six juicy plums and fresh bread from the local market.",
+    "I drink fresh water and eat warm bread every single morning at home.",
+    "My happy dog runs in the park and plays with the kids each day.",
   ],
   es: [
-    "The morning sun rises over the quiet green hills and peaceful valleys.",
-    "She quickly bought six juicy plums and fresh bread from the local market.",
+    "I drink fresh water and eat warm bread every single morning at home.",
+    "My happy dog runs in the park and plays with the kids each day.",
   ],
   fr: [
-    "The morning sun rises over the quiet green hills and peaceful valleys.",
-    "She quickly bought six juicy plums and fresh bread from the local market.",
+    "I drink fresh water and eat warm bread every single morning at home.",
+    "My happy dog runs in the park and plays with the kids each day.",
   ],
   ar: [
-    "The morning sun rises over the quiet green hills and peaceful valleys.",
-    "She quickly bought six juicy plums and fresh bread from the local market.",
+    "I drink fresh water and eat warm bread every single morning at home.",
+    "My happy dog runs in the park and plays with the kids each day.",
   ],
 };
 
@@ -1196,9 +1201,17 @@ const FILLERS = {
 function init() {
   const saved = JSON.parse(localStorage.getItem('callingo_state') || '{}');
   if (saved.name) STATE.name = saved.name;
+  if (saved.email) STATE.email = saved.email;
   if (saved.nativeLang) STATE.nativeLang = saved.nativeLang;
   if (saved.practiceLang) STATE.practiceLang = saved.practiceLang;
   if (saved.voiceId) STATE.voiceId = saved.voiceId;
+
+  // Pre-fill name/email inputs for returning users
+  const nameInp = document.getElementById('name-inp');
+  const emailInp = document.getElementById('email-inp');
+  if (nameInp && STATE.name) nameInp.value = STATE.name;
+  if (emailInp && STATE.email) emailInp.value = STATE.email;
+  validateNameForm();
 
   if (STATE.voiceId && STATE.name) {
     updateHome();
@@ -1209,10 +1222,19 @@ function init() {
 function saveState() {
   localStorage.setItem('callingo_state', JSON.stringify({
     name: STATE.name,
+    email: STATE.email,
     nativeLang: STATE.nativeLang,
     practiceLang: STATE.practiceLang,
     voiceId: STATE.voiceId,
   }));
+}
+
+function validateNameForm() {
+  const name = (document.getElementById('name-inp')?.value || '').trim();
+  const email = (document.getElementById('email-inp')?.value || '').trim();
+  const ok = name.length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const btn = document.getElementById('name-btn');
+  if (btn) btn.disabled = !ok;
 }
 
 // ============================================================
@@ -1226,10 +1248,42 @@ function goNext(screenId) {
 // ============================================================
 // SCREEN 1: NAME
 // ============================================================
-function saveName() {
+async function saveName() {
   const val = document.getElementById('name-inp').value.trim();
+  const email = document.getElementById('email-inp').value.trim().toLowerCase();
   if (val.length < 2) return;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById('name-err').textContent = 'Please enter a valid email';
+    document.getElementById('name-err').style.display = 'block';
+    return;
+  }
   STATE.name = val;
+  STATE.email = email;
+
+  const btn = document.getElementById('name-btn');
+  const origLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+
+  try {
+    const res = await fetch('/api/voice?email=' + encodeURIComponent(email));
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.voiceId) {
+        STATE.voiceId = data.voiceId;
+        saveState();
+        btn.disabled = false;
+        btn.textContent = origLabel;
+        updateHome();
+        goNext('screen-home');
+        return;
+      }
+    }
+  } catch(e) { /* fall through to onboarding */ }
+
+  btn.disabled = false;
+  btn.textContent = origLabel;
+  saveState();
   goNext('screen-native-lang');
 }
 
@@ -1262,22 +1316,29 @@ function selectPracticeLang(code, name, native) {
 function initVoiceSetup() {
   STATE.recordings = [];
   STATE.currentSent = 0;
-  const sents = SENTENCES[STATE.nativeLang] || SENTENCES.en;
   updateSentUI();
   renderRecList();
-  // Play welcome message
-  setTimeout(playWelcome, 500);
+  // Show welcome text — audio is played in cloned voice on the home screen
+  const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
+  const el = document.getElementById('welcome-text');
+  if (el) el.textContent = msg;
 }
 
-function playWelcome() {
-  const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
-  document.getElementById('welcome-text').textContent = msg;
-  // Use browser TTS for welcome (cloned voice not ready yet)
-  const u = new SpeechSynthesisUtterance(msg);
-  u.rate = 0.9;
-  u.lang = STATE.nativeLang === 'de' ? 'de-DE' : 'en-US';
-  speechSynthesis.cancel();
-  speechSynthesis.speak(u);
+async function playClonedWelcome() {
+  if (!STATE.voiceId) return;
+  const messages = {
+    en: (n) => `Hi ${n}, welcome to Callingo. Pick a topic and let's talk.`,
+    hi: (n) => `Namaste ${n}, Callingo mein swagat hai. Topic chuniye, baat karte hain.`,
+    de: (n) => `Hallo ${n}, willkommen bei Callingo. Waehle ein Thema, wir reden.`,
+    es: (n) => `Hola ${n}, bienvenido a Callingo. Elige un tema y hablamos.`,
+    fr: (n) => `Bonjour ${n}, bienvenue sur Callingo. Choisis un sujet, on parle.`,
+    ar: (n) => `Marhaba ${n}, ahlan bik fi Callingo. Ikhtar mawdoo, sanatahaddath.`,
+  };
+  const msg = (messages[STATE.nativeLang] || messages.en)(STATE.name);
+  try {
+    const audio = await tts(msg);
+    if (audio) audio.play();
+  } catch(e) { /* silent fail */ }
 }
 
 function updateSentUI() {
@@ -1374,6 +1435,15 @@ async function startCloning() {
     STATE.voiceId = data._id || data.id;
     setCloneStep('upload', 'done');
 
+    // Persist voiceId to server (non-blocking)
+    if (STATE.email && STATE.voiceId) {
+      fetch('/api/voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: STATE.email, voiceId: STATE.voiceId, name: STATE.name }),
+      }).catch(() => {});
+    }
+
     // Step 2
     setCloneStep('clone', 'working');
     await sleep(800);
@@ -1430,6 +1500,12 @@ function updateHome() {
       <div class="topic-name">${t.name}</div>
       <div class="topic-desc">${t.desc}</div>
     </div>`).join('');
+
+  // Auto-play welcome in cloned voice once per page load
+  if (STATE.voiceId && !STATE._homeWelcomePlayed) {
+    STATE._homeWelcomePlayed = true;
+    setTimeout(playClonedWelcome, 700);
+  }
 }
 
 function selectTopic(id) {
