@@ -1927,6 +1927,7 @@ const VOCAB_CARDS = {
 // INIT — load from localStorage
 // ============================================================
 function init() {
+  loadGameState(); // streak, XP, goal
   const saved = JSON.parse(localStorage.getItem('callingo_state') || '{}');
   if (saved.name) STATE.name = saved.name;
   if (saved.email) STATE.email = saved.email;
@@ -1975,51 +1976,17 @@ function validateNameForm() {
 // ============================================================
 function goNext(screenId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(screenId).classList.add('active');
+  const el = document.getElementById(screenId);
+  if (el) el.classList.add('active');
+  // Trigger renders for screens that need fresh data
+  if (screenId === 'screen-home')       { renderStreakXP(); renderDailyChallenge(); }
+  if (screenId === 'screen-history')    renderHistory();
+  if (screenId === 'screen-confidence') renderConfidence();
 }
 
 // ============================================================
 // SCREEN 1: NAME
 // ============================================================
-async function saveName() {
-  const val = document.getElementById('name-inp').value.trim();
-  const email = document.getElementById('email-inp').value.trim().toLowerCase();
-  if (val.length < 2) return;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    document.getElementById('name-err').textContent = 'Please enter a valid email';
-    document.getElementById('name-err').style.display = 'block';
-    return;
-  }
-  STATE.name = val;
-  STATE.email = email;
-
-  const btn = document.getElementById('name-btn');
-  const origLabel = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Checking…';
-
-  try {
-    const res = await fetch('/api/voice?email=' + encodeURIComponent(email));
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.voiceId) {
-        STATE.voiceId = data.voiceId;
-        saveState();
-        btn.disabled = false;
-        btn.textContent = origLabel;
-        updateHome();
-        goNext('screen-home');
-        return;
-      }
-    }
-  } catch(e) { /* fall through to onboarding */ }
-
-  btn.disabled = false;
-  btn.textContent = origLabel;
-  saveState();
-  goNext('screen-native-lang');
-}
-
 // ============================================================
 // SCREEN 2: NATIVE LANGUAGE
 // ============================================================
@@ -2302,6 +2269,8 @@ Keep the conversation about this topic naturally.
   document.querySelectorAll('.topic-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('start-call-btn').disabled = false;
   STATE.vocabCards = []; // No pre-built vocab for custom topics
+  const sb = document.getElementById('shadow-mode-btn');
+  if (sb) sb.disabled = false;
 }
 let vocabIdx = 0;
 let vocabFlipped = false;
@@ -2579,21 +2548,8 @@ function setMicState(state) {
 
 
 async function speakAI(text) {
-  const chunks = splitForVoice(text);
-
-  for (const chunk of chunks) {
-    const audio = await tts(chunk);
-
-    if (audio) {
-      await new Promise(resolve => {
-        audio.onended = resolve;
-        audio.onerror = resolve;
-        audio.play();
-      });
-    }
-
-    await sleep(150);
-  }
+  // Always respect the current speed setting
+  await speakAIAtRate(text, STATE.ttsSpeed === 'slow' ? 0.75 : STATE.ttsSpeed === 'fast' ? 1.3 : 1.0);
 }
 
 
@@ -2690,51 +2646,6 @@ async function skipFormalities() {
   // Warmup removed — nothing to skip
 }
 
-async function handleUserSpeech(text) {
-  addBubble('user', text);
-  STATE.callHistory.push({ role: 'user', content: text });
-  console.log('User said:', text);
-
-  setMicState('processing');
-  addTyping();
-
-  try {
-    const cleaned = text
-      .replace(/\buh+\b/gi, '')
-      .replace(/\bum+\b/gi, '')
-      .replace(/\ber+\b/gi, '')
-      .replace(/\bah+\b/gi, '')
-      .trim();
-
-    const bilingualReply = await callClaude(cleaned, STATE.correctionsEnabled);
-
-    let targetText = cleanAIText(bilingualReply.target || '');
-    let englishText = cleanAIText(bilingualReply.english || targetText);
-
-    // Trim to 2 sentences each
-    targetText = targetText.split(/[.!?]/).slice(0, 2).join('. ').trim();
-    englishText = englishText.split(/[.!?]/).slice(0, 2).join('. ').trim();
-
-    if (targetText && !targetText.match(/[.!?]$/)) targetText += '.';
-    if (englishText && !englishText.match(/[.!?]$/)) englishText += '.';
-
-    removeTyping();
-
-    // Store target language in history (for AI context continuity)
-    STATE.callHistory.push({ role: 'assistant', content: targetText });
-
-    // Show English in bubble with target language as subtitle, speak target language
-    addBubble('ai', englishText, targetText !== englishText ? targetText : null);
-    await speakAI(targetText);
-
-    setTimeout(startListening, 300);
-  } catch(e) {
-    removeTyping();
-    setMicState('idle');
-    setTimeout(startListening, 500);
-  }
-}
-
 function playFiller() {
   if (STATE.fillerAudios.length > 0) {
     const audio = STATE.fillerAudios[Math.floor(Math.random() * STATE.fillerAudios.length)];
@@ -2796,8 +2707,179 @@ function sleep(ms) {
 
 
 // ============================================================
-// API CALLS
+// API CALLS — STREAMING (fires TTS on first sentence immediately)
 // ============================================================
+
+// Shared audio queue so chunks play gaplessly in order
+const _audioQueue = [];
+let   _queueRunning = false;
+
+async function _runQueue() {
+  if (_queueRunning) return;
+  _queueRunning = true;
+  while (_audioQueue.length > 0) {
+    const { audio, rate } = _audioQueue.shift();
+    if (audio) {
+      audio.playbackRate = rate || 1.0;
+      await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+    }
+    await sleep(80);
+  }
+  _queueRunning = false;
+}
+
+function _clearQueue() {
+  _audioQueue.length = 0;
+  _queueRunning = false;
+}
+
+// Fire TTS for a chunk and push onto the queue — non-blocking
+function _enqueueTTS(text, rate) {
+  if (!text || !text.trim() || !STATE.voiceId) return;
+  tts(text).then(audio => {
+    if (audio) {
+      _audioQueue.push({ audio, rate });
+      _runQueue();
+    }
+  }).catch(() => {});
+}
+
+// Stream Claude response — calls onSentence(targetSentence, englishSentence) as each sentence arrives
+// calls onDone({ targetText, englishText }) when complete
+async function streamClaude(userText, correctionsEnabled, onSentence, onToken, onDone) {
+  const messages = [
+    ...STATE.callHistory.slice(-6),
+    { role: 'user', content: userText }
+  ];
+
+  const levelGuide = {
+    beginner:     'BEGINNER: very simple words, slow pace, encouraging, always end with a question.',
+    elementary:   'ELEMENTARY: simple everyday vocabulary, repeat key words, always end with a question.',
+    intermediate: 'INTERMEDIATE: normal vocabulary, correct gently, always end with a question.',
+    advanced:     'ADVANCED: natural vocabulary, idioms, correct naturally, always end with a question.',
+    fluent:       'FLUENT: natural fast speech, slang, idioms, always end with a question.',
+  };
+
+  const targetLang = STATE.practiceLang === 'de' ? 'German' : 'English';
+  const goalPersona = GOAL_PERSONA[STATE.goal] || GOAL_PERSONA.fun;
+
+  // For streaming we ask Claude to output two lines, not JSON
+  // LINE 1: target language reply
+  // LINE 2: English translation
+  // This is more streaming-friendly than JSON (we don't need to wait for closing brace)
+  const systemPrompt = [
+    STATE.selectedTopic.system,
+    'Level: ' + (levelGuide[STATE.level] || levelGuide.intermediate),
+    'Persona: ' + goalPersona,
+    correctionsEnabled
+      ? 'CORRECTIONS ON: gently correct grammar errors, keep it brief.'
+      : 'CORRECTIONS OFF: continue naturally, no corrections.',
+    `OUTPUT FORMAT (strict):
+Reply ONLY with exactly 2 lines, no labels, no JSON, no markdown:
+Line 1: your reply in ${targetLang} (1-2 short sentences max)
+Line 2: the English translation of line 1`,
+  ].join('\n\n');
+
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages,
+      system: systemPrompt,
+      max_tokens: 120,
+      temperature: 0.4,
+      stream: true,           // tell your server to enable streaming
+    })
+  });
+
+  if (!res.ok) throw new Error('Claude stream failed: ' + res.status);
+
+  // If server doesn't support streaming it returns full JSON — handle both
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('text/event-stream')) {
+    // Fallback: non-streaming server — parse as normal JSON
+    const data = await res.json();
+    const raw  = data.content?.[0]?.text || '';
+    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    const targetText  = cleanAIText(lines[0] || raw);
+    const englishText = cleanAIText(lines[1] || targetText);
+    onSentence(targetText, englishText);
+    onDone({ targetText, englishText });
+    return;
+  }
+
+  // True streaming — read SSE chunks
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let fullText = '';
+  let sentenceBuffer = '';
+  let linesDone = 0;          // 0 = building line1 (target), 1 = building line2 (english)
+  let targetAccum = '';
+  let englishAccum = '';
+  let firstSentenceFired = false;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop(); // keep incomplete line
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const data = line.slice(6).trim();
+      if (data === '[DONE]') break;
+      try {
+        const evt = JSON.parse(data);
+        // Anthropic streaming format
+        const token = evt.delta?.text || evt.choices?.[0]?.delta?.content || '';
+        if (!token) continue;
+
+        fullText += token;
+        onToken(fullText);
+
+        // Split incoming text into lines
+        for (const ch of token) {
+          if (ch === '\n') {
+            // Line boundary — switch from target to english
+            if (linesDone === 0) {
+              targetAccum = cleanAIText(sentenceBuffer.trim());
+              linesDone = 1;
+              sentenceBuffer = '';
+              // Fire TTS for the target line as soon as we have it
+              if (targetAccum && !firstSentenceFired) {
+                firstSentenceFired = true;
+                const rate = STATE.ttsSpeed === 'slow' ? 0.75 : STATE.ttsSpeed === 'fast' ? 1.3 : 1.0;
+                _enqueueTTS(targetAccum, rate);
+                onSentence(targetAccum, ''); // show target immediately, english coming
+              }
+            }
+          } else {
+            sentenceBuffer += ch;
+          }
+        }
+      } catch(e) { /* malformed chunk — skip */ }
+    }
+  }
+
+  // Flush remainder
+  if (linesDone === 0) {
+    targetAccum = cleanAIText((sentenceBuffer + buffer).trim());
+    englishAccum = targetAccum;
+    if (targetAccum && !firstSentenceFired) {
+      const rate = STATE.ttsSpeed === 'slow' ? 0.75 : STATE.ttsSpeed === 'fast' ? 1.3 : 1.0;
+      _enqueueTTS(targetAccum, rate);
+    }
+  } else {
+    englishAccum = cleanAIText((sentenceBuffer + buffer).trim()) || targetAccum;
+  }
+
+  onDone({ targetText: targetAccum, englishText: englishAccum });
+}
+
+// Keep non-streaming callClaude for non-call uses (report, SOS, word-tap, shadow scoring)
 async function callClaude(userText, correctionsEnabled) {
   const messages = [
     ...STATE.callHistory.slice(-6),
@@ -2813,7 +2895,6 @@ async function callClaude(userText, correctionsEnabled) {
   };
 
   const targetLang = STATE.practiceLang === 'de' ? 'German' : 'English';
-
   const goalPersona = GOAL_PERSONA[STATE.goal] || GOAL_PERSONA.fun;
   let systemPrompt = STATE.selectedTopic.system + '\n\nLevel guidance: ' + (levelGuide[STATE.level] || levelGuide.intermediate) + '\n\nPersona context: ' + goalPersona;
 
@@ -2833,12 +2914,7 @@ Keep both under 2 short sentences.`;
   const res = await fetch('/api/claude', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      messages,
-      system: systemPrompt,
-      max_tokens: 120,
-      temperature: 0.4
-    })
+    body: JSON.stringify({ messages, system: systemPrompt, max_tokens: 120, temperature: 0.4 })
   });
   if (!res.ok) throw new Error('Claude failed: ' + res.status);
   const data = await res.json();
@@ -2848,7 +2924,6 @@ Keep both under 2 short sentences.`;
     const parsed = JSON.parse(clean);
     return { target: parsed.target || parsed.english || '', english: parsed.english || parsed.target || '' };
   } catch(e) {
-    // Fallback: treat as plain text for both
     return { target: raw, english: raw };
   }
 }
@@ -2894,6 +2969,7 @@ async function browserTTS(text) {
 // ============================================================
 async function endCall() {
   stopListening();
+  _clearQueue();
   if (STATE.callTimer) clearInterval(STATE.callTimer);
   STATE.isSpeaking = false;
   speechSynthesis.cancel();
@@ -2924,12 +3000,18 @@ function saveCallRecording() {
 
   const recordings = JSON.parse(localStorage.getItem('callingo_recordings') || '[]');
   recordings.push(callData);
-  // Keep last 20 recordings
-  if (recordings.length > 20) {
-    recordings.shift();
-  }
+  if (recordings.length > 20) recordings.shift();
   localStorage.setItem('callingo_recordings', JSON.stringify(recordings));
-  console.log('Call saved:', callData);
+
+  // Streak + XP
+  updateStreak();
+  const xpGain = STATE.callMode === 'daily' ? 40 : 20;
+  awardXP(xpGain + Math.floor(STATE.callSecs / 30));
+  if (STATE.callMode === 'daily') {
+    STATE.dailyChallengeDate = todayStr();
+    saveGameState();
+  }
+  STATE.callMode = 'normal';
 }
 
 async function generateReport() {
@@ -3005,7 +3087,6 @@ function animateCallWave(on) {
 // UTILS
 // ============================================================
 function fmt(s) { return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function blobToBase64(blob) {
   return new Promise(resolve => {
     const r = new FileReader();
@@ -3552,81 +3633,99 @@ function renderConfidence() {
 }
 
 // ============================================================
-// PATCH: updateHome + goNext to trigger new feature renders
+// PATCH: handleUserSpeech — streaming version
+// TTS fires on first sentence ~1s after user stops speaking
+// Bubble text updates live as Claude streams
 // ============================================================
-const _origGoNext = goNext;
-function goNext(screenId) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById(screenId);
-  if (el) el.classList.add('active');
-  // Trigger renders
-  if (screenId === 'screen-home')       { renderStreakXP(); renderDailyChallenge(); }
-  if (screenId === 'screen-history')    renderHistory();
-  if (screenId === 'screen-confidence') renderConfidence();
-}
-
-// ============================================================
-// PATCH: saveCallRecording — attach score + update streak/XP
-// ============================================================
-const _origSaveCall = saveCallRecording;
-function saveCallRecording() {
-  _origSaveCall();
-  updateStreak();
-  const xpGain = STATE.callMode === 'daily' ? 40 : 20;
-  awardXP(xpGain + Math.floor(STATE.callSecs / 30)); // bonus XP per 30s
-  if (STATE.callMode === 'daily') {
-    STATE.dailyChallengeDate = todayStr();
-    saveGameState();
-  }
-  STATE.callMode = 'normal';
-}
-
-// ============================================================
-// PATCH: handleUserSpeech — add pronunciation scoring + word-tap + speed
-// ============================================================
-const _origHandleUserSpeech = handleUserSpeech;
 async function handleUserSpeech(text) {
-  // Get last AI message for pronunciation context
-  const lastAI = STATE.callHistory.filter(m=>m.role==='assistant').slice(-1)[0]?.content || '';
+  const lastAI = STATE.callHistory.filter(m => m.role === 'assistant').slice(-1)[0]?.content || '';
 
   addBubble('user', text);
   STATE.callHistory.push({ role: 'user', content: text });
-
   setMicState('processing');
   addTyping();
 
+  // Clear any leftover audio from previous turn
+  _clearQueue();
+
+  const cleaned = text
+    .replace(/\buh+\b/gi, '').replace(/\bum+\b/gi, '')
+    .replace(/\ber+\b/gi, '').replace(/\bah+\b/gi, '').trim();
+
+  // Create the AI bubble early so we can stream text into it
+  let aiBubble = null;
+  let targetFinal = '';
+  let englishFinal = '';
+  const rate = STATE.ttsSpeed === 'slow' ? 0.75 : STATE.ttsSpeed === 'fast' ? 1.3 : 1.0;
+
   try {
-    const cleaned = text.replace(/\buh+\b/gi,'').replace(/\bum+\b/gi,'').replace(/\ber+\b/gi,'').replace(/\bah+\b/gi,'').trim();
-    const bilingualReply = await callClaude(cleaned, STATE.correctionsEnabled);
+    await streamClaude(
+      cleaned,
+      STATE.correctionsEnabled,
 
-    let targetText  = cleanAIText(bilingualReply.target || '');
-    let englishText = cleanAIText(bilingualReply.english || targetText);
-    targetText  = targetText.split(/[.!?]/).slice(0,2).join('. ').trim();
-    englishText = englishText.split(/[.!?]/).slice(0,2).join('. ').trim();
-    if (targetText && !targetText.match(/[.!?]$/))  targetText  += '.';
-    if (englishText && !englishText.match(/[.!?]$/)) englishText += '.';
+      // onSentence — called as soon as first sentence is ready (target + english)
+      (targetSentence, englishSentence) => {
+        removeTyping();
+        setMicState('speaking');
+        // Show English immediately, German as subtitle
+        const displayText = englishSentence || targetSentence;
+        const subText     = (targetSentence && targetSentence !== displayText) ? targetSentence : null;
+        aiBubble = addBubble('ai', displayText, subText);
+        makeWordsTappable(aiBubble, displayText);
+      },
 
-    removeTyping();
-    STATE.callHistory.push({ role: 'assistant', content: targetText });
+      // onToken — live text update as Claude streams (updates bubble in real time)
+      (fullStreamedText) => {
+        // Update the bubble with whatever has streamed so far (target line)
+        if (aiBubble) {
+          const lines = fullStreamedText.split('\n');
+          const targetSoFar  = cleanAIText(lines[0] || '');
+          const englishSoFar = cleanAIText(lines[1] || '');
+          const display = englishSoFar || targetSoFar;
+          if (display) {
+            const mainDiv = aiBubble.querySelector('div');
+            if (mainDiv) mainDiv.textContent = display;
+          }
+        }
+      },
 
-    // Show English in bubble with German subtitle + make words tappable
-    const bub = addBubble('ai', englishText, targetText !== englishText ? targetText : null);
-    makeWordsTappable(bub, englishText);
+      // onDone — full response ready, fire TTS for english line too, then listen
+      ({ targetText, englishText }) => {
+        targetFinal  = targetText;
+        englishFinal = englishText || targetText;
 
-    // Pronunciation score on user's last bubble (non-blocking)
-    scorePronunciation(lastAI, text).then(result => {
-      if (result && result.score != null) {
-        const userBubbles = document.querySelectorAll('.bubble.user');
-        const lastUser    = userBubbles[userBubbles.length - 1];
-        if (lastUser) addPronBadge(lastUser, result.score);
+        STATE.callHistory.push({ role: 'assistant', content: targetFinal });
+
+        // Update bubble to final clean text
+        if (aiBubble) {
+          const langFlag = STATE.practiceLang === 'de' ? '🇩🇪' : '🇬🇧';
+          const subHtml  = (targetFinal && targetFinal !== englishFinal)
+            ? `<div class="bubble-sub">${langFlag} ${targetFinal}</div>` : '';
+          aiBubble.innerHTML = `<div>${englishFinal}</div>${subHtml}`;
+          makeWordsTappable(aiBubble, englishFinal);
+        }
+
+        // Pronunciation score (non-blocking)
+        scorePronunciation(lastAI, text).then(result => {
+          if (result?.score != null) {
+            const userBubbles = document.querySelectorAll('.bubble.user');
+            const lastUser    = userBubbles[userBubbles.length - 1];
+            if (lastUser) addPronBadge(lastUser, result.score);
+          }
+        });
+
+        // Wait for audio queue to finish playing, then listen
+        const waitForAudio = async () => {
+          // Poll until queue is drained
+          while (_queueRunning || _audioQueue.length > 0) {
+            await sleep(100);
+          }
+          setMicState('idle');
+          setTimeout(startListening, 200);
+        };
+        waitForAudio();
       }
-    });
-
-    // Speak at selected speed
-    const speedRate = STATE.ttsSpeed === 'slow' ? 0.75 : STATE.ttsSpeed === 'fast' ? 1.3 : 1.0;
-    await speakAIAtRate(targetText, speedRate);
-
-    setTimeout(startListening, 300);
+    );
   } catch(e) {
     removeTyping();
     setMicState('idle');
@@ -3635,28 +3734,34 @@ async function handleUserSpeech(text) {
 }
 
 async function speakAIAtRate(text, rate) {
+  // Split into chunks, enqueue each, then wait for the queue to drain
+  _clearQueue();
   const chunks = splitForVoice(text);
-  for (const chunk of chunks) {
-    const audio = await tts(chunk);
+  const r = rate || 1.0;
+
+  // Fire all TTS requests in parallel, preserve order via queue index
+  const pending = chunks.map((chunk, i) =>
+    tts(chunk).then(audio => ({ i, audio })).catch(() => ({ i, audio: null }))
+  );
+
+  // Collect in order and play
+  const results = await Promise.all(pending);
+  results.sort((a,b) => a.i - b.i);
+  for (const { audio } of results) {
     if (audio) {
-      audio.playbackRate = rate || 1.0;
-      await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+      audio.playbackRate = r;
+      await new Promise(res => { audio.onended = res; audio.onerror = res; audio.play(); });
     }
-    await sleep(150);
+    await sleep(80);
   }
 }
 
 // ============================================================
 // PATCH: init — load game state + show goal screen for new users
 // ============================================================
-const _origInit = init;
-function init() {
-  loadGameState();
-  _origInit();
-}
-
-// Override saveName to go to goal screen for brand new users
-const _origSaveName = saveName;
+// ============================================================
+// PATCH: saveName → goal screen for new users
+// ============================================================
 async function saveName() {
   // We call original but intercept the navigation to native-lang
   const val   = document.getElementById('name-inp').value.trim();
