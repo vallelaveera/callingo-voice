@@ -362,64 +362,6 @@ body{
 .report-item.vocab{border-left:3px solid var(--green);}
 .report-item.good{border-left:3px solid var(--gold);}
 
-/* VOCAB CARDS */
-#screen-vocab{background:var(--bg);}
-.vocab-deck{
-  position:relative;
-  width:100%;
-  height:260px;
-  margin:0 auto;
-}
-.vcard{
-  position:absolute;
-  inset:0;
-  border-radius:20px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  padding:28px;
-  cursor:pointer;
-  transition:transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.3s;
-  user-select:none;
-  -webkit-user-select:none;
-  transform-origin:center center;
-  backface-visibility:hidden;
-  touch-action:pan-y;
-}
-.vcard.front-face{
-  background:var(--s1);
-  border:1.5px solid var(--border);
-  box-shadow:0 4px 24px rgba(0,0,0,0.07);
-}
-.vcard.back-face{
-  background:var(--green-dim);
-  border:1.5px solid rgba(0,168,107,0.3);
-}
-.vcard.hidden{opacity:0;pointer-events:none;}
-.vcard.exit-left{transform:translateX(-110%) rotate(-8deg);opacity:0;}
-.vcard.exit-right{transform:translateX(110%) rotate(8deg);opacity:0;}
-.vcard.enter{transform:translateX(0) rotate(0deg);opacity:1;}
-.vcard-emoji{font-size:44px;margin-bottom:16px;}
-.vcard-word{font-size:28px;font-weight:800;color:var(--text);text-align:center;}
-.vcard-sub{font-size:13px;color:var(--sub);margin-top:8px;font-family:'DM Mono',monospace;text-align:center;}
-.vcard-translation{font-size:20px;font-weight:700;color:var(--green);text-align:center;margin-top:4px;}
-.vcard-example{font-size:12px;color:var(--sub);margin-top:10px;text-align:center;line-height:1.5;font-style:italic;}
-.vocab-dots{display:flex;gap:6px;justify-content:center;margin-top:16px;}
-.vdot{width:6px;height:6px;border-radius:50%;background:var(--border);transition:background 0.2s;}
-.vdot.active{background:var(--green);}
-.vocab-hint{
-  font-family:'DM Mono',monospace;font-size:10px;color:var(--sub);
-  letter-spacing:2px;text-align:center;margin-top:8px;
-}
-.vocab-swipe-row{display:flex;gap:12px;justify-content:center;margin-top:16px;}
-.swipe-arrow{
-  width:44px;height:44px;border-radius:50%;border:1px solid var(--border);
-  background:var(--s2);display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:18px;transition:all 0.15s;
-}
-.swipe-arrow:hover{border-color:var(--green);}
-
 /* ERROR */
 .err{
   font-family:'DM Mono',monospace;
@@ -778,37 +720,6 @@ body{
   </div>
 </div>
 
-<!-- ============ SCREEN: VOCAB PREP ============ -->
-<div id="screen-vocab" class="screen">
-  <div class="top-bar">
-    <button class="back-btn" onclick="goNext('screen-home')">←</button>
-    <span class="top-title" id="vocab-title">Key Words</span>
-    <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--sub);" id="vocab-counter">1 / 10</span>
-  </div>
-  <div class="scroll-content" style="gap:12px;">
-    <div>
-      <div class="subtext" id="vocab-subtitle">Swipe through these key words before your call.</div>
-    </div>
-
-    <div class="vocab-deck" id="vocab-deck">
-      <!-- Cards injected by JS -->
-    </div>
-
-    <div class="vocab-dots" id="vocab-dots"></div>
-    <div class="vocab-hint">TAP CARD TO SEE TRANSLATION · SWIPE TO NEXT</div>
-
-    <div class="vocab-swipe-row">
-      <button class="swipe-arrow" onclick="vocabPrev()">←</button>
-      <button class="swipe-arrow" onclick="vocabNext()">→</button>
-    </div>
-
-    <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
-      <button class="btn btn-primary" onclick="proceedToCall()">📞 Start Call →</button>
-      <button class="btn btn-outline" onclick="proceedToCall()" style="padding:10px;font-size:12px;">⏩ Skip vocab, just call</button>
-    </div>
-  </div>
-</div>
-
 <!-- ============ SCREEN: CALL ============ -->
 <div id="call-screen" class="screen">
   <div class="call-header">
@@ -899,7 +810,6 @@ const STATE = {
   voiceId: null,
   fillerAudios: [],
   selectedTopic: null,
-  vocabCards: [],
   callHistory: [],
   callSecs: 0,
   callTimer: null,
@@ -922,21 +832,15 @@ const STATE = {
 
 const WELCOME_VOICE_EMAIL = 'veera.reddy619@gmail.com';
 
-// Single in-flight promise — prevents double fetching and eliminates the 5s delay
-let _welcomeVoicePromise = null;
 async function loadWelcomeVoice() {
   if (STATE.welcomeVoiceId) return;
-  if (_welcomeVoicePromise) return _welcomeVoicePromise;
-  _welcomeVoicePromise = (async () => {
-    try {
-      const res = await fetch('/api/voice?email=' + encodeURIComponent(WELCOME_VOICE_EMAIL));
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.voiceId) STATE.welcomeVoiceId = data.voiceId;
-      }
-    } catch(e) { /* silent fail */ }
-  })();
-  return _welcomeVoicePromise;
+  try {
+    const res = await fetch('/api/voice?email=' + encodeURIComponent(WELCOME_VOICE_EMAIL));
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.voiceId) STATE.welcomeVoiceId = data.voiceId;
+    }
+  } catch(e) { /* silent fail — falls back to user's own voice */ }
 }
 
 // ============================================================
@@ -1396,172 +1300,9 @@ const WARMUP_TRANSITIONS = {
   en: 'Alright, let\'s get started. ',
 };
 
-// English display text for warmup questions (shown in bubbles regardless of target lang)
-const WARMUP_QUESTIONS_EN = {
-  beginner:     ['How are you today?', 'Did you sleep well?', 'What\'s the weather like?'],
-  elementary:   ['How are you doing today?', 'Did you sleep well last night?', 'What did you do yesterday?'],
-  intermediate: ['How have you been lately?', 'How did you sleep?', 'What\'s been keeping you busy?'],
-  advanced:     ['How\'s it going?', 'How was your week?', 'Anything interesting happening?'],
-  fluent:       ['What\'s up?', 'How\'s your week been?'],
-};
-
 const FILLERS = {
   de: [],
   en: [],
-};
-
-// ============================================================
-// VOCAB CARDS — topic-specific key words for pre-call prep
-// ============================================================
-const VOCAB_CARDS = {
-  de: {
-    cafe: [
-      { emoji:'☕', word:'Einen Kaffee, bitte', translation:'A coffee, please', example:'Einen Kaffee, bitte. — A coffee, please.' },
-      { emoji:'🥐', word:'Die Speisekarte', translation:'The menu', example:'Kann ich die Speisekarte haben? — Can I have the menu?' },
-      { emoji:'💳', word:'Die Rechnung', translation:'The bill', example:'Die Rechnung, bitte! — The bill, please!' },
-      { emoji:'🪑', word:'Ein Tisch für zwei', translation:'A table for two', example:'Haben Sie einen Tisch für zwei?' },
-      { emoji:'🥛', word:'Mit Milch', translation:'With milk', example:'Kaffee mit Milch, bitte.' },
-      { emoji:'🍰', word:'Etwas essen', translation:'Something to eat', example:'Ich möchte etwas essen.' },
-      { emoji:'👋', word:'Guten Morgen!', translation:'Good morning!', example:'Guten Morgen! — Said when entering.' },
-      { emoji:'😊', word:'Danke schön', translation:'Thank you very much', example:'Danke schön! — Very polite thanks.' },
-      { emoji:'❓', word:'Was empfehlen Sie?', translation:'What do you recommend?', example:'Was empfehlen Sie heute?' },
-      { emoji:'🔢', word:'Wie viel kostet das?', translation:'How much does that cost?', example:'Wie viel kostet das?' },
-    ],
-    airport: [
-      { emoji:'🛂', word:'Der Pass', translation:'The passport', example:'Ihren Pass, bitte. — Your passport, please.' },
-      { emoji:'🧳', word:'Das Gepäck', translation:'The luggage', example:'Wo ist das Gepäck?' },
-      { emoji:'🎫', word:'Das Ticket', translation:'The ticket', example:'Haben Sie Ihr Ticket?' },
-      { emoji:'🚪', word:'Das Gate', translation:'The gate', example:'Wo ist Gate 12?' },
-      { emoji:'⏰', word:'Der Flug', translation:'The flight', example:'Wann geht der Flug?' },
-      { emoji:'🔍', word:'Die Sicherheitskontrolle', translation:'Security check', example:'Bitte zur Sicherheitskontrolle.' },
-      { emoji:'💼', word:'Handgepäck', translation:'Hand luggage', example:'Das ist mein Handgepäck.' },
-      { emoji:'🌍', word:'Wohin fliegen Sie?', translation:'Where are you flying to?', example:'Wohin fliegen Sie heute?' },
-      { emoji:'🎟️', word:'Boarding-Zeit', translation:'Boarding time', example:'Wann ist die Boarding-Zeit?' },
-      { emoji:'🛫', word:'Guten Flug!', translation:'Have a good flight!', example:'Guten Flug! — Bon voyage!' },
-    ],
-    hotel: [
-      { emoji:'🔑', word:'Das Zimmer', translation:'The room', example:'Ich habe ein Zimmer reserviert.' },
-      { emoji:'📋', word:'Die Reservierung', translation:'The reservation', example:'Meine Reservierung ist auf den Namen...' },
-      { emoji:'🛏️', word:'Einchecken', translation:'To check in', example:'Ich möchte einchecken.' },
-      { emoji:'🚪', word:'Auschecken', translation:'To check out', example:'Ich möchte auschecken.' },
-      { emoji:'🛎️', word:'Der Zimmerservice', translation:'Room service', example:'Ich hätte gerne Zimmerservice.' },
-      { emoji:'🔒', word:'Der Schlüssel', translation:'The key', example:'Ich habe meinen Schlüssel vergessen.' },
-      { emoji:'🏊', word:'Das Frühstück', translation:'Breakfast', example:'Ist Frühstück inklusive?' },
-      { emoji:'📶', word:'Das WLAN-Passwort', translation:'The WiFi password', example:'Was ist das WLAN-Passwort?' },
-      { emoji:'🧹', word:'Das Handtuch', translation:'The towel', example:'Ich brauche mehr Handtücher.' },
-      { emoji:'⏰', word:'Wann ist Checkout?', translation:'When is checkout?', example:'Wann ist der Checkout?' },
-    ],
-    shopping: [
-      { emoji:'👕', word:'Ich suche...', translation:'I am looking for...', example:'Ich suche eine Jacke.' },
-      { emoji:'📏', word:'Die Größe', translation:'The size', example:'Welche Größe haben Sie?' },
-      { emoji:'🎨', word:'Die Farbe', translation:'The colour', example:'Gibt es das in Blau?' },
-      { emoji:'💶', word:'Wie viel kostet das?', translation:'How much is this?', example:'Wie viel kostet das?' },
-      { emoji:'🪞', word:'Die Umkleidekabine', translation:'The changing room', example:'Wo ist die Umkleidekabine?' },
-      { emoji:'🛒', word:'Ich nehme es', translation:'I will take it', example:'Ich nehme es, bitte.' },
-      { emoji:'💳', word:'Mit Karte zahlen', translation:'Pay by card', example:'Kann ich mit Karte zahlen?' },
-      { emoji:'🔄', word:'Umtauschen', translation:'To exchange', example:'Kann ich das umtauschen?' },
-      { emoji:'🏷️', word:'Im Angebot', translation:'On sale / Reduced', example:'Ist das im Angebot?' },
-      { emoji:'🎁', word:'Für ein Geschenk', translation:'As a gift', example:'Das ist für ein Geschenk.' },
-    ],
-    doctor: [
-      { emoji:'🤒', word:'Ich bin krank', translation:'I am sick', example:'Ich bin krank seit gestern.' },
-      { emoji:'🤕', word:'Ich habe Schmerzen', translation:'I am in pain', example:'Ich habe Schmerzen im Bauch.' },
-      { emoji:'🌡️', word:'Das Fieber', translation:'The fever', example:'Ich habe Fieber.' },
-      { emoji:'💊', word:'Das Medikament', translation:'The medication', example:'Brauche ich ein Medikament?' },
-      { emoji:'📅', word:'Seit wann?', translation:'Since when?', example:'Seit wann haben Sie die Schmerzen?' },
-      { emoji:'🫁', word:'Husten', translation:'Cough', example:'Ich habe starken Husten.' },
-      { emoji:'💉', word:'Die Allergie', translation:'The allergy', example:'Ich habe eine Allergie gegen...' },
-      { emoji:'🩺', word:'Die Untersuchung', translation:'The examination', example:'Bitte zur Untersuchung.' },
-      { emoji:'🏥', word:'Das Rezept', translation:'The prescription', example:'Ich brauche ein Rezept.' },
-      { emoji:'😴', word:'Ich schlafe schlecht', translation:'I sleep badly', example:'Ich schlafe sehr schlecht.' },
-    ],
-    job: [
-      { emoji:'👋', word:'Guten Tag!', translation:'Good day! (formal hello)', example:'Guten Tag, schön Sie kennenzulernen.' },
-      { emoji:'🎓', word:'Meine Erfahrung', translation:'My experience', example:'Ich habe 5 Jahre Erfahrung.' },
-      { emoji:'🏢', word:'Das Unternehmen', translation:'The company', example:'Ihr Unternehmen interessiert mich sehr.' },
-      { emoji:'💼', word:'Die Stelle', translation:'The position / job', example:'Ich bewerbe mich für diese Stelle.' },
-      { emoji:'🌟', word:'Meine Stärken', translation:'My strengths', example:'Meine Stärken sind...' },
-      { emoji:'📈', word:'Meine Ziele', translation:'My goals', example:'Meine Ziele sind...' },
-      { emoji:'🤝', word:'Ich bin motiviert', translation:'I am motivated', example:'Ich bin sehr motiviert.' },
-      { emoji:'🗓️', word:'Ab wann?', translation:'From when?', example:'Ab wann kann ich anfangen?' },
-      { emoji:'💰', word:'Das Gehalt', translation:'The salary', example:'Wie hoch ist das Gehalt?' },
-      { emoji:'❓', word:'Haben Sie Fragen?', translation:'Do you have questions?', example:'Haben Sie noch Fragen an uns?' },
-    ],
-  },
-  en: {
-    cafe: [
-      { emoji:'☕', word:'A coffee, please', translation:'Ein Kaffee, bitte', example:'A coffee, please. — Simple and polite.' },
-      { emoji:'🍳', word:'I would like...', translation:'Ich möchte...', example:'I would like eggs and toast.' },
-      { emoji:'💳', word:'The bill, please', translation:'Die Rechnung, bitte', example:'Could I have the bill, please?' },
-      { emoji:'🪑', word:'A table for two', translation:'Ein Tisch für zwei', example:'Do you have a table for two?' },
-      { emoji:'🥛', word:'Oat milk', translation:'Hafermilch', example:'Can I have oat milk in my coffee?' },
-      { emoji:'🍰', word:'What do you recommend?', translation:'Was empfehlen Sie?', example:'What do you recommend today?' },
-      { emoji:'👋', word:'Good morning!', translation:'Guten Morgen!', example:'Good morning! — Cheerful greeting.' },
-      { emoji:'😊', word:'Thank you so much', translation:'Vielen Dank', example:'Thank you so much, that was lovely.' },
-      { emoji:'🔢', word:'How much is that?', translation:'Wie viel kostet das?', example:'How much is that altogether?' },
-      { emoji:'🍽️', word:'Takeaway or eat in?', translation:'Zum Mitnehmen oder hier?', example:'Is that takeaway or eat in?' },
-    ],
-    airport: [
-      { emoji:'🛂', word:'My passport', translation:'Mein Pass', example:'Here is my passport.' },
-      { emoji:'🧳', word:'Checked luggage', translation:'Aufgegebenes Gepäck', example:'I have one piece of checked luggage.' },
-      { emoji:'🎫', word:'My boarding pass', translation:'Meine Bordkarte', example:'Can I see your boarding pass?' },
-      { emoji:'🚪', word:'Which gate?', translation:'Welches Gate?', example:'Which gate is my flight?' },
-      { emoji:'⏰', word:'My flight is delayed', translation:'Mein Flug hat Verspätung', example:'My flight is delayed by 2 hours.' },
-      { emoji:'🔍', word:'Security check', translation:'Sicherheitskontrolle', example:'Please proceed to security.' },
-      { emoji:'💼', word:'Carry-on bag', translation:'Handgepäck', example:'Is this too big for carry-on?' },
-      { emoji:'🌍', word:'Window seat', translation:'Fensterplatz', example:'Can I have a window seat?' },
-      { emoji:'🎟️', word:'Boarding time', translation:'Boarding-Zeit', example:'What is the boarding time?' },
-      { emoji:'🛫', word:'Have a safe flight!', translation:'Guten Flug!', example:'Have a safe flight! — Friendly farewell.' },
-    ],
-    hotel: [
-      { emoji:'🔑', word:'I have a reservation', translation:'Ich habe eine Reservierung', example:'I have a reservation under Smith.' },
-      { emoji:'📋', word:'Check-in', translation:'Einchecken', example:'I would like to check in, please.' },
-      { emoji:'🛏️', word:'Double room', translation:'Doppelzimmer', example:'I booked a double room.' },
-      { emoji:'🚪', word:'Check out', translation:'Auschecken', example:'What time is check-out?' },
-      { emoji:'🛎️', word:'Room service', translation:'Zimmerservice', example:'I would like room service.' },
-      { emoji:'🔒', word:'Room key', translation:'Zimmerschlüssel', example:'I have lost my room key.' },
-      { emoji:'🏊', word:'Is breakfast included?', translation:'Ist Frühstück inklusive?', example:'Is breakfast included in the price?' },
-      { emoji:'📶', word:'WiFi password', translation:'WLAN-Passwort', example:'What is the WiFi password?' },
-      { emoji:'🧹', word:'Extra towels', translation:'Zusätzliche Handtücher', example:'Could I have extra towels?' },
-      { emoji:'⏰', word:'Wake-up call', translation:'Weckruf', example:'Can I have a wake-up call at 7am?' },
-    ],
-    shopping: [
-      { emoji:'👕', word:'I am looking for...', translation:'Ich suche...', example:'I am looking for a jacket.' },
-      { emoji:'📏', word:'Do you have my size?', translation:'Haben Sie meine Größe?', example:'Do you have this in a medium?' },
-      { emoji:'🎨', word:'Do you have this in...?', translation:'Haben Sie das in...?', example:'Do you have this in blue?' },
-      { emoji:'💷', word:'How much is this?', translation:'Wie viel kostet das?', example:'How much is this, please?' },
-      { emoji:'🪞', word:'The changing room', translation:'Die Umkleidekabine', example:'Where is the changing room?' },
-      { emoji:'🛒', word:'I will take it', translation:'Ich nehme es', example:'I will take this one, thank you.' },
-      { emoji:'💳', word:'Can I pay by card?', translation:'Kann ich mit Karte zahlen?', example:'Can I pay by card, please?' },
-      { emoji:'🔄', word:'Can I exchange this?', translation:'Kann ich das umtauschen?', example:'Can I exchange this for a bigger size?' },
-      { emoji:'🏷️', word:'Is this on sale?', translation:'Ist das im Angebot?', example:'Is this item on sale?' },
-      { emoji:'🎁', word:'It is a gift', translation:'Es ist ein Geschenk', example:'Could you gift-wrap it, please?' },
-    ],
-    doctor: [
-      { emoji:'🤒', word:'I am not feeling well', translation:'Ich fühle mich nicht gut', example:'I have not been feeling well lately.' },
-      { emoji:'🤕', word:'I have a pain in...', translation:'Ich habe Schmerzen in...', example:'I have a pain in my stomach.' },
-      { emoji:'🌡️', word:'I have a fever', translation:'Ich habe Fieber', example:'I think I have a fever.' },
-      { emoji:'💊', word:'Do I need medicine?', translation:'Brauche ich Medikamente?', example:'Do I need any medicine?' },
-      { emoji:'📅', word:'Since yesterday', translation:'Seit gestern', example:'It started since yesterday morning.' },
-      { emoji:'🫁', word:'I have a cough', translation:'Ich habe Husten', example:'I have had a bad cough for days.' },
-      { emoji:'💉', word:'I am allergic to...', translation:'Ich bin allergisch gegen...', example:'I am allergic to penicillin.' },
-      { emoji:'🩺', word:'Where does it hurt?', translation:'Wo tut es weh?', example:'Can you show me where it hurts?' },
-      { emoji:'🏥', word:'A prescription', translation:'Ein Rezept', example:'Will I need a prescription?' },
-      { emoji:'😴', word:'I cannot sleep', translation:'Ich kann nicht schlafen', example:'I cannot sleep at night at all.' },
-    ],
-    job: [
-      { emoji:'👋', word:'Nice to meet you', translation:'Schön, Sie kennenzulernen', example:'Nice to meet you, thank you for this chance.' },
-      { emoji:'🎓', word:'My experience', translation:'Meine Erfahrung', example:'I have five years of experience.' },
-      { emoji:'🏢', word:'Your company', translation:'Ihr Unternehmen', example:'I admire your company very much.' },
-      { emoji:'💼', word:'This position', translation:'Diese Stelle', example:'I am applying for this position.' },
-      { emoji:'🌟', word:'My strengths are...', translation:'Meine Stärken sind...', example:'My strengths are communication and focus.' },
-      { emoji:'📈', word:'My goal is...', translation:'Mein Ziel ist...', example:'My goal is to grow with the team.' },
-      { emoji:'🤝', word:'I am a team player', translation:'Ich bin ein Teamplayer', example:'I am a strong team player.' },
-      { emoji:'🗓️', word:'When can I start?', translation:'Ab wann kann ich anfangen?', example:'When would I be able to start?' },
-      { emoji:'💰', word:'The salary', translation:'Das Gehalt', example:'Could we discuss the salary?' },
-      { emoji:'❓', word:'Do you have questions?', translation:'Haben Sie Fragen?', example:'Do you have any questions for me?' },
-    ],
-  },
 };
 
 // ============================================================
@@ -1708,9 +1449,11 @@ function initVoiceSetup() {
   playOnboardingWelcome();
 }
 
-async function playOnboardingWelcome() {
-  // Await the already-in-flight fetch — no double request, no delay
-  await loadWelcomeVoice();
+function playOnboardingWelcome() {
+  if (!STATE.welcomeVoiceId) {
+    loadWelcomeVoice().then(() => playOnboardingWelcome());
+    return;
+  }
   const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
   tts(msg, STATE.welcomeVoiceId).then(audio => {
     if (audio) audio.play();
@@ -1886,8 +1629,6 @@ function selectTopic(id) {
   event.currentTarget.classList.add('selected');
   document.getElementById('custom-topic-inp').value = '';
   document.getElementById('start-call-btn').disabled = false;
-  // Store vocab for this topic
-  STATE.vocabCards = (VOCAB_CARDS[STATE.practiceLang] || VOCAB_CARDS.de)[id] || [];
 }
 
 function selectCustomTopic() {
@@ -1933,147 +1674,6 @@ Keep the conversation about this topic naturally.
 
   document.querySelectorAll('.topic-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('start-call-btn').disabled = false;
-  STATE.vocabCards = []; // No pre-built vocab for custom topics
-}
-let vocabIdx = 0;
-let vocabFlipped = false;
-
-function showVocabScreen() {
-  if (!STATE.selectedTopic) return;
-  const cards = STATE.vocabCards || [];
-  if (cards.length === 0) {
-    // No vocab for this topic (e.g. custom) — go straight to call
-    launchCall();
-    return;
-  }
-  vocabIdx = 0;
-  vocabFlipped = false;
-
-  const langLabel = STATE.practiceLang === 'de' ? 'German' : 'English';
-  document.getElementById('vocab-title').textContent = `${STATE.selectedTopic.name} · Key Words`;
-  document.getElementById('vocab-subtitle').textContent = `${cards.length} words to know before your ${langLabel} call. Tap a card to see the translation.`;
-
-  renderVocabDeck();
-  goNext('screen-vocab');
-}
-
-function renderVocabDeck() {
-  const cards = STATE.vocabCards || [];
-  const deck = document.getElementById('vocab-deck');
-  deck.innerHTML = '';
-
-  cards.forEach((card, i) => {
-    const el = document.createElement('div');
-    el.className = 'vcard front-face' + (i !== vocabIdx ? ' hidden' : '');
-    el.id = 'vcard-' + i;
-    el.onclick = () => flipCard(i);
-
-    // Add swipe support
-    let startX = 0;
-    el.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
-    el.addEventListener('touchend', e => {
-      const dx = e.changedTouches[0].clientX - startX;
-      if (Math.abs(dx) > 50) { dx < 0 ? vocabNext() : vocabPrev(); }
-    }, { passive: true });
-
-    el.innerHTML = `
-      <div class="vcard-emoji">${card.emoji}</div>
-      <div class="vcard-word" id="vcard-word-${i}">${card.word}</div>
-      <div class="vcard-sub" id="vcard-sub-${i}">tap to flip</div>
-      <div class="vcard-translation" id="vcard-tr-${i}" style="display:none">${card.translation}</div>
-      <div class="vcard-example" id="vcard-ex-${i}" style="display:none">${card.example}</div>
-    `;
-    deck.appendChild(el);
-  });
-
-  updateVocabDots();
-  updateVocabCounter();
-}
-
-function flipCard(i) {
-  const word = document.getElementById('vcard-word-' + i);
-  const sub = document.getElementById('vcard-sub-' + i);
-  const tr = document.getElementById('vcard-tr-' + i);
-  const ex = document.getElementById('vcard-ex-' + i);
-  const card = document.getElementById('vcard-' + i);
-  if (!word) return;
-
-  vocabFlipped = !vocabFlipped;
-  if (vocabFlipped) {
-    card.classList.remove('front-face');
-    card.classList.add('back-face');
-    sub.style.display = 'none';
-    tr.style.display = 'block';
-    ex.style.display = 'block';
-  } else {
-    card.classList.remove('back-face');
-    card.classList.add('front-face');
-    sub.style.display = 'block';
-    tr.style.display = 'none';
-    ex.style.display = 'none';
-  }
-}
-
-function vocabNext() {
-  const cards = STATE.vocabCards || [];
-  if (vocabIdx >= cards.length - 1) return;
-  animateCard(vocabIdx, 'exit-left');
-  vocabIdx++;
-  vocabFlipped = false;
-  setTimeout(() => {
-    showCard(vocabIdx);
-    updateVocabDots();
-    updateVocabCounter();
-  }, 300);
-}
-
-function vocabPrev() {
-  if (vocabIdx <= 0) return;
-  animateCard(vocabIdx, 'exit-right');
-  vocabIdx--;
-  vocabFlipped = false;
-  setTimeout(() => {
-    showCard(vocabIdx);
-    updateVocabDots();
-    updateVocabCounter();
-  }, 300);
-}
-
-function animateCard(i, exitClass) {
-  const el = document.getElementById('vcard-' + i);
-  if (!el) return;
-  el.classList.add(exitClass);
-  setTimeout(() => { el.classList.add('hidden'); el.classList.remove(exitClass, 'front-face', 'back-face'); }, 320);
-}
-
-function showCard(i) {
-  const el = document.getElementById('vcard-' + i);
-  if (!el) return;
-  el.classList.remove('hidden', 'exit-left', 'exit-right', 'back-face');
-  el.classList.add('front-face');
-  // Reset flip state
-  const sub = document.getElementById('vcard-sub-' + i);
-  const tr = document.getElementById('vcard-tr-' + i);
-  const ex = document.getElementById('vcard-ex-' + i);
-  if (sub) sub.style.display = 'block';
-  if (tr) tr.style.display = 'none';
-  if (ex) ex.style.display = 'none';
-}
-
-function updateVocabDots() {
-  const cards = STATE.vocabCards || [];
-  document.getElementById('vocab-dots').innerHTML = cards.map((_, i) =>
-    `<div class="vdot ${i === vocabIdx ? 'active' : ''}"></div>`
-  ).join('');
-}
-
-function updateVocabCounter() {
-  const cards = STATE.vocabCards || [];
-  document.getElementById('vocab-counter').textContent = `${vocabIdx + 1} / ${cards.length}`;
-}
-
-function proceedToCall() {
-  launchCall();
 }
 
 // ============================================================
@@ -2081,11 +1681,6 @@ function proceedToCall() {
 // ============================================================
 async function startCall() {
   if (!STATE.selectedTopic) return;
-  // Show vocab prep screen first
-  showVocabScreen();
-}
-
-async function launchCall() {
   STATE.callHistory = [];
   STATE.callSecs = 0;
   STATE.warmupCount = 0;
@@ -2113,7 +1708,6 @@ async function launchCall() {
 
 async function askWarmupQuestion() {
   const questions = WARMUP_QUESTIONS[STATE.level]?.[STATE.practiceLang] || WARMUP_QUESTIONS.intermediate[STATE.practiceLang];
-  const questionsEn = WARMUP_QUESTIONS_EN[STATE.level] || WARMUP_QUESTIONS_EN.intermediate;
   document.getElementById('skip-btn').style.display = STATE.warmupPhase ? 'block' : 'none';
 
   if (STATE.warmupCount >= questions.length) {
@@ -2121,10 +1715,8 @@ async function askWarmupQuestion() {
     return;
   }
   const question = questions[STATE.warmupCount];
-  const questionEn = questionsEn[STATE.warmupCount] || question;
   STATE.questionsAsked.push({ question, timestamp: new Date().toISOString(), response: '' });
-  // Show English in bubble, speak target language
-  addBubble('ai', questionEn);
+  addBubble('ai', question);
   STATE.callHistory.push({ role: 'assistant', content: question });
   await speakAI(question);
   STATE.warmupCount++;
@@ -2134,18 +1726,11 @@ async function transitionToTopic() {
   STATE.warmupPhase = false;
   document.getElementById('skip-btn').style.display = 'none';
   const openings = {
-    de: { cafe: 'Guten Tag! Was möchten Sie?', airport: 'Guten Tag! Ihren Pass, bitte.', hotel: 'Willkommen! Haben Sie eine Reservierung?', shopping: 'Hallo! Kann ich Ihnen helfen?', doctor: 'Guten Tag! Was fehlt Ihnen?', job: 'Guten Tag! Erzählen Sie von sich.' },
-    en: { cafe: 'Hello! What would you like today?', airport: 'Hello! May I see your passport?', hotel: 'Welcome! Do you have a reservation?', shopping: 'Hi! Can I help you?', doctor: 'Hello! What brings you in today?', job: 'Hello! Tell me about yourself.' },
+    de: { cafe: 'Okay, lass uns anfangen. Guten Tag! Was moechten Sie?', airport: 'Okay, lass uns anfangen. Guten Tag! Ihren Pass bitte.', hotel: 'Okay, lass uns anfangen. Willkommen! Haben Sie eine Reservierung?', shopping: 'Okay, lass uns anfangen. Kann ich helfen?', doctor: 'Okay, lass uns anfangen. Guten Tag! Was fehlt Ihnen?', job: 'Okay, lass uns anfangen. Guten Tag! Erzaehlen Sie von sich.' },
+    en: { cafe: 'Alright, let\'s get started. Hello! What would you like?', airport: 'Alright, let\'s get started. Hello! May I see your passport?', hotel: 'Alright, let\'s get started. Welcome! Do you have a reservation?', shopping: 'Alright, let\'s get started. Hi! Can I help you?', doctor: 'Alright, let\'s get started. Hello! What brings you in today?', job: 'Alright, let\'s get started. Hello! Tell me about yourself.' },
   };
-  // English display versions for all topic openers
-  const openingsEn = {
-    de: { cafe: 'Good day! What would you like?', airport: 'Good day! Your passport, please.', hotel: 'Welcome! Do you have a reservation?', shopping: 'Hello! Can I help you?', doctor: 'Good day! What is the matter?', job: 'Good day! Tell me about yourself.' },
-    en: { cafe: 'Hello! What would you like today?', airport: 'Hello! May I see your passport?', hotel: 'Welcome! Do you have a reservation?', shopping: 'Hi! Can I help you?', doctor: 'Hello! What brings you in today?', job: 'Hello! Tell me about yourself.' },
-  };
-  const opener = openings[STATE.practiceLang]?.[STATE.selectedTopic.id] || 'How can I help?';
-  const openerEn = openingsEn[STATE.practiceLang]?.[STATE.selectedTopic.id] || opener;
-  // English in bubble, target lang spoken
-  addBubble('ai', openerEn);
+  const opener = openings[STATE.practiceLang]?.[STATE.selectedTopic.id] || 'Let\'s get started. How can I help?';
+  addBubble('ai', opener);
   STATE.callHistory.push({ role: 'assistant', content: opener });
   await speakAI(opener);
 }
@@ -2196,14 +1781,11 @@ async function speakAI(text) {
 }
 
 
-function addBubble(role, text, subText) {
+function addBubble(role, text) {
   const area = document.getElementById('call-messages');
   const b = document.createElement('div');
   b.className = 'bubble ' + role;
-  const subHtml = (role === 'ai' && subText)
-    ? `<div class="bubble-sub">🔊 ${subText}</div>`
-    : '';
-  b.innerHTML = `<div>${text}</div>${subHtml}`;
+  b.innerHTML = `<div>${text}</div>`;
   area.appendChild(b);
   area.scrollTop = area.scrollHeight;
   return b;
@@ -2311,27 +1893,28 @@ async function handleUserSpeech(text) {
       .replace(/\ber+\b/gi, '')
       .replace(/\bah+\b/gi, '')
       .trim();
+    console.log('After cleaning:', cleaned);
 
-    const bilingualReply = await callClaude(cleaned, STATE.warmupPhase, STATE.correctionsEnabled);
+    let reply = await callClaude(cleaned, STATE.warmupPhase, STATE.correctionsEnabled);
+    console.log('Claude raw:', reply);
 
-    let targetText = cleanAIText(bilingualReply.target || '');
-    let englishText = cleanAIText(bilingualReply.english || targetText);
+    reply = cleanAIText(reply);
+    console.log('After cleanAIText:', reply);
 
-    // Trim to 2 sentences each
-    targetText = targetText.split(/[.!?]/).slice(0, 2).join('. ').trim();
-    englishText = englishText.split(/[.!?]/).slice(0, 2).join('. ').trim();
+    reply = reply
+      .split(/[.!?]/)
+      .slice(0, 2)
+      .join('. ')
+      .trim();
+    console.log('After sentence trim:', reply);
 
-    if (targetText && !targetText.match(/[.!?]$/)) targetText += '.';
-    if (englishText && !englishText.match(/[.!?]$/)) englishText += '.';
-
+    if (reply && !reply.endsWith('.')) {
+      reply += '.';
+    }
     removeTyping();
-
-    // Store target language in history (for AI context continuity)
-    STATE.callHistory.push({ role: 'assistant', content: targetText });
-
-    // Show English in bubble with target language as subtitle, speak target language
-    addBubble('ai', englishText, targetText !== englishText ? targetText : null);
-    await speakAI(targetText);
+    STATE.callHistory.push({ role: 'assistant', content: reply });
+    addBubble('ai', reply);
+    await speakAI(reply);
 
     // Continue warmup or transition to topic
     if (STATE.warmupPhase) {
@@ -2423,23 +2006,14 @@ async function callClaude(userText, warmupPhase, correctionsEnabled) {
     fluent: 'The user is FLUENT. Speak naturally and fast. Use slang, idioms, and complex structures freely. No corrections needed—just chat. ALWAYS end with a question. Never use their name.'
   };
 
-  const targetLang = STATE.practiceLang === 'de' ? 'German' : 'English';
-
   let systemPrompt = STATE.selectedTopic.system + '\n\nLevel guidance: ' + (levelGuide[STATE.level] || levelGuide.intermediate);
-
-  systemPrompt += `\n\nBILINGUAL OUTPUT: You MUST respond ONLY with a valid JSON object in this exact shape:
-{"target":"<your reply in ${targetLang}>","english":"<English translation of your reply>"}
-No other text. No markdown. No explanation. Only the JSON object.
-The "target" field is what you say as the character, in ${targetLang}.
-The "english" field is the English translation so the learner can follow along.
-Keep both under 2 short sentences.`;
 
   if (warmupPhase) {
     systemPrompt += '\n\nWARMUP PHASE: You are just getting to know the user. Be friendly and welcoming. Listen to their answers and respond naturally. Do NOT ask the same type of question twice in a row.';
   }
 
   if (correctionsEnabled && !warmupPhase) {
-    systemPrompt += '\n\nCORRECTIONS ENABLED: If the user makes a grammatical error or uses incorrect vocabulary, gently correct them. Keep corrections brief and encouraging. Include the correction in your reply.';
+    systemPrompt += '\n\nCORRECTIONS ENABLED: If the user makes a grammatical error or uses incorrect vocabulary, gently correct them by saying "I think you mean..." or "Did you mean...?" Keep corrections brief and encouraging.';
   } else if (!correctionsEnabled) {
     systemPrompt += '\n\nCORRECTIONS DISABLED: Do not correct the user\'s grammar or mistakes. Just continue the conversation naturally.';
   }
@@ -2450,21 +2024,13 @@ Keep both under 2 short sentences.`;
     body: JSON.stringify({
       messages,
       system: systemPrompt,
-      max_tokens: 120,
+      max_tokens: 50,
       temperature: 0.4
     })
   });
   if (!res.ok) throw new Error('Claude failed: ' + res.status);
   const data = await res.json();
-  const raw = data.content?.[0]?.text || '{}';
-  try {
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
-    return { target: parsed.target || parsed.english || '', english: parsed.english || parsed.target || '' };
-  } catch(e) {
-    // Fallback: treat as plain text for both
-    return { target: raw, english: raw };
-  }
+  return data.content?.[0]?.text || '';
 }
 
 async function tts(text, voiceId) {
