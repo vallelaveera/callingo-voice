@@ -681,17 +681,17 @@ async function send() {
     const bubble = addBubble('ai', replyText, '🔊 generating your voice...');
 
     // Step 2 — generate TTS with cloned voice via Fish Audio
-    const ttsRes = await fetch('https://api.fish.audio/v1/tts', {
+    const ttsRes = await fetch('/api/fish', {
       method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + apiKey,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        text: replyText,
-        reference_id: voiceId,
-        format: 'mp3',
-        latency: 'normal'
+        endpoint: '/v1/tts',
+        body: {
+          text: replyText,
+          reference_id: voiceId,
+          format: 'mp3',
+          latency: 'normal'
+        }
       })
     });
 
