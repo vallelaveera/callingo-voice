@@ -835,7 +835,7 @@ You are a real-time German language tutor in a live voice call.
 
 Rules:
 - Speak ONLY German.
-- Maximum 8 words.
+- Maximum 10 words per sentence.
 - Only 1 short sentence.
 - Maximum 2 sentences.
 - Never use markdown.
@@ -886,7 +886,7 @@ You are a real-time German language tutor in a live voice call.
 
 Rules:
 - Speak ONLY German.
-- Maximum 8 words.
+- Maximum 10 words per sentence.
 - Only 1 short sentence.
 - Maximum 2 sentences.
 - Never use markdown.
@@ -918,7 +918,7 @@ You are a real-time German language tutor in a live voice call.
 
 Rules:
 - Speak ONLY German.
-- Maximum 8 words.
+- Maximum 10 words per sentence.
 - Only 1 short sentence.
 - Maximum 2 sentences.
 - Never use markdown.
@@ -946,7 +946,7 @@ You are a real-time German language tutor in a live voice call.
 
 Rules:
 - Speak ONLY German.
-- Maximum 8 words.
+- Maximum 10 words per sentence.
 - Only 1 short sentence.
 - Maximum 2 sentences.
 - Never use markdown.
@@ -974,7 +974,7 @@ You are a real-time German language tutor in a live voice call.
 
 Rules:
 - Speak ONLY German.
-- Maximum 8 words.
+- Maximum 10 words per sentence.
 - Only 1 short sentence.
 - Maximum 2 sentences.
 - Never use markdown.
@@ -1002,7 +1002,7 @@ You are a real-time German language tutor in a live voice call.
 
 Rules:
 - Speak ONLY German.
-- Maximum 8 words.
+- Maximum 10 words per sentence.
 - Only 1 short sentence.
 - Maximum 2 sentences.
 - Never use markdown.
@@ -1031,7 +1031,7 @@ You are a German interviewer.
 You are a real-time English tutor in a live voice call.
 
 Rules:
-- Maximum 8 words.
+- Maximum 10 words per sentence.
 - Only 1 short sentence.
 - Maximum 2 sentences.
 - Never use markdown.
@@ -1081,7 +1081,7 @@ You are a British cafe waiter.
 You are a real-time English tutor in a live voice call.
 
 Rules:
-- Maximum 8 words.
+- Maximum 10 words per sentence.
 - Only 1 short sentence.
 - Maximum 2 sentences.
 - Never use markdown.
@@ -1108,7 +1108,7 @@ You are airport staff.
 You are a real-time English tutor in a live voice call.
 
 Rules:
-- Maximum 8 words.
+- Maximum 10 words per sentence.
 - Only 1 short sentence.
 - Maximum 2 sentences.
 - Never use markdown.
@@ -1134,7 +1134,7 @@ You are a hotel receptionist.
 You are a real-time English tutor in a live voice call.
 
 Rules:
-- Maximum 8 words.
+- Maximum 10 words per sentence.
 - Only 1 short sentence.
 - Maximum 2 sentences.
 - Never use markdown.
@@ -1160,7 +1160,7 @@ You are a shop assistant.
 You are a real-time English tutor in a live voice call.
 
 Rules:
-- Maximum 8 words.
+- Maximum 10 words per sentence.
 - Only 1 short sentence.
 - Maximum 2 sentences.
 - Never use markdown.
@@ -1187,7 +1187,7 @@ You are a doctor.
 You are a real-time English tutor in a live voice call.
 
 Rules:
-- Maximum 8 words.
+- Maximum 10 words per sentence.
 - Only 1 short sentence.
 - Maximum 2 sentences.
 - Never use markdown.
@@ -1343,7 +1343,7 @@ function initVoiceSetup() {
   const el = document.getElementById('welcome-text');
   if (el) el.textContent = msg;
   // Narrate the instructions in Veera's voice
-  setTimeout(playOnboardingWelcome, 400);
+  setTimeout(playOnboardingWelcome, 200);
 }
 
 async function playOnboardingWelcome() {
@@ -1554,6 +1554,8 @@ async function startCall() {
   addBubble('ai', opener);
   STATE.callHistory.push({ role: 'assistant', content: opener });
   await speakAI(opener);
+  // Auto-start listening after opener
+  setTimeout(startListening, 500);
 }
 
 function setCallStatus(text) {
@@ -1665,12 +1667,10 @@ function stopListening() {
 }
 
 function toggleMic() {
-  if (STATE.isSpeaking) return;
-  if (STATE.isListening) {
+  // Manual stop only — auto-listening handles the normal flow
+  if (STATE.isListening && !STATE.isSpeaking) {
     stopListening();
     setMicState('idle');
-  } else {
-    startListening();
   }
 }
 
@@ -1716,9 +1716,12 @@ async function handleUserSpeech(text) {
     STATE.callHistory.push({ role: 'assistant', content: reply });
     addBubble('ai', reply);
     await speakAI(reply);
+    // Auto-resume listening after AI finishes
+    setTimeout(startListening, 300);
   } catch(e) {
     removeTyping();
     setMicState('idle');
+    setTimeout(startListening, 500);
   }
 }
 
@@ -1796,7 +1799,7 @@ async function callClaude(userText) {
     body: JSON.stringify({
       messages,
       system: STATE.selectedTopic.system,
-      max_tokens: 20,
+      max_tokens: 50,
       temperature: 0.4
     })
   });
