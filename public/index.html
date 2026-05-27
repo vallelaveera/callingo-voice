@@ -705,17 +705,25 @@ async function startCloning() {
 
     const combinedBlob = new Blob(recordings, { type: 'audio/webm' });
 
-    // Step 2 — upload to xAI to clone voice
+    // Step 2 — convert to base64 and send to proxy
     document.getElementById('cloning-status').textContent = 'Uploading to xAI...';
-    const formData = new FormData();
-    formData.append('files', combinedBlob, 'voice_sample.webm');
-    formData.append('name', 'My Callingo Voice');
-    formData.append('description', 'User voice clone for Callingo language learning');
+    const base64Audio = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.readAsDataURL(combinedBlob);
+    });
 
     const cloneRes = await fetch('/api/xai', {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}` },
-      body: formData
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        endpoint: '/v1/voices',
+        data: {
+          name: 'My Callingo Voice',
+          description: 'User voice clone for Callingo',
+          files: [{ data: base64Audio, format: 'webm' }]
+        }
+      })
     });
 
     if (!cloneRes.ok) {
