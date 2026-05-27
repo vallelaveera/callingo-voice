@@ -1261,8 +1261,8 @@ You are a job interviewer.
 
 
 const FILLERS = {
-  de: ['Hmm...', 'Ah...', 'Moment...', 'Ja...', 'Also...'],
-  en: ['Hmm...', 'Ah...', 'Let me think...', 'Right...', 'Well...'],
+  de: [],
+  en: [],
 };
 
 // ============================================================
@@ -1405,8 +1405,8 @@ function initVoiceSetup() {
   const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
   const el = document.getElementById('welcome-text');
   if (el) el.textContent = msg;
-  // Narrate the instructions in Veera's voice
-  setTimeout(playOnboardingWelcome, 20);
+  // Narrate the instructions in Veera's voice immediately
+  playOnboardingWelcome();
 }
 
 async function playOnboardingWelcome() {
@@ -1795,8 +1795,6 @@ async function handleUserSpeech(text) {
   STATE.callHistory.push({ role: 'user', content: text });
   console.log('User said:', text);
 
-  // Play filler instantly while thinking
-  playFiller();
   setMicState('processing');
   addTyping();
 
