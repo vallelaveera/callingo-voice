@@ -1,0 +1,42 @@
+const https = require('https');
+
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') { res.status(200).end(); return; }
+
+  try {
+    const payload = JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 200,
+      messages: req.body.messages
+    });
+
+    const result = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'api.anthropic.com',
+        path: '/v1/messages',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'Content-Length': Buffer.byteLength(payload),
+        },
+      };
+      const r = https.request(options, (response) => {
+        const chunks = [];
+        response.on('data', chunk => chunks.push(chunk));
+        response.on('end', () => resolve({ status: response.statusCode, body: Buffer.concat(chunks).toString() }));
+      });
+      r.on('error', reject);
+      r.write(payload);
+      r.end();
+    });
+
+    res.status(result.status).send(result.body);
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+};

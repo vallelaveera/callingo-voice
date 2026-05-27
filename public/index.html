@@ -661,15 +661,10 @@ async function send() {
 
   try {
     // Step 1 — get Claude response via Anthropic API
-    const chatRes = await fetch('https://api.anthropic.com/v1/messages', {
+    const chatRes = await fetch('/api/claude', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'anthropic-dangerous-allow-browser': 'true'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 200,
         messages: [{ role: 'user', content: text }]
       })
     });
