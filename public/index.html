@@ -3,26 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Callingo Voice Clone</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Voice Clone — Callingo</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#080c0a;
-  --surface:#0f1612;
-  --surface2:#162019;
-  --green:#00e676;
-  --green-dim:#00c853;
-  --green-glow:rgba(0,230,118,0.15);
-  --green-deep:rgba(0,230,118,0.06);
-  --text:#e8f5e9;
-  --sub:#4a6b52;
-  --border:#1e2f22;
-  --red:#ff5252;
-  --orange:#ffab40;
+  --bg:#06080a;
+  --s1:#0d1117;
+  --s2:#161b22;
+  --gold:#f5c542;
+  --gold-dim:rgba(245,197,66,0.12);
+  --gold-glow:rgba(245,197,66,0.06);
+  --text:#e6edf3;
+  --sub:#7d8590;
+  --border:#21262d;
+  --red:#ff6b6b;
+  --green:#3fb950;
 }
 body{
-  font-family:'Syne',sans-serif;
+  font-family:'DM Mono',monospace;
   background:var(--bg);
   color:var(--text);
   min-height:100vh;
@@ -31,367 +30,290 @@ body{
   justify-content:center;
   padding:20px;
   background-image:
-    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(0,230,118,0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 60% at 80% 90%, rgba(0,200,83,0.03) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245,197,66,0.05) 0%, transparent 60%);
 }
+#app{width:100%;max-width:480px;}
 
-#app{width:100%;max-width:520px;display:flex;flex-direction:column;gap:0;}
-
-/* SCREENS */
-.screen{display:none;flex-direction:column;gap:20px;animation:fadeIn 0.4s ease;}
+.screen{display:none;flex-direction:column;gap:24px;animation:rise 0.5s ease;}
 .screen.active{display:flex;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes rise{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 
 /* HEADER */
+.header{text-align:center;padding:8px 0;}
 .logo{
-  text-align:center;
-  padding:32px 0 8px;
-}
-.logo-mark{
-  font-size:11px;
+  font-family:'Instrument Serif',serif;
+  font-size:13px;
   letter-spacing:6px;
   color:var(--sub);
   text-transform:uppercase;
-  margin-bottom:8px;
+  margin-bottom:6px;
 }
-.logo-title{
-  font-size:28px;
-  font-weight:800;
-  background:linear-gradient(135deg,#00e676,#69f0ae);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  background-clip:text;
+.title{
+  font-family:'Instrument Serif',serif;
+  font-size:36px;
+  color:var(--text);
+  line-height:1.1;
 }
-.logo-sub{
-  font-size:13px;
-  color:var(--sub);
-  margin-top:6px;
-  font-family:'DM Mono',monospace;
-}
+.title em{color:var(--gold);font-style:italic;}
+.subtitle{font-size:11px;color:var(--sub);margin-top:8px;letter-spacing:1px;}
 
 /* CARD */
 .card{
-  background:var(--surface);
+  background:var(--s1);
   border:1px solid var(--border);
-  border-radius:20px;
+  border-radius:16px;
   padding:24px;
   position:relative;
-  overflow:hidden;
 }
-.card::before{
+.card::after{
   content:'';
   position:absolute;
-  top:0;left:0;right:0;
-  height:1px;
-  background:linear-gradient(90deg,transparent,var(--green),transparent);
-  opacity:0.3;
+  inset:0;border-radius:16px;
+  background:linear-gradient(135deg,rgba(245,197,66,0.03),transparent);
+  pointer-events:none;
 }
-.card-label{
-  font-size:10px;
+.card-tag{
+  font-size:9px;
   letter-spacing:3px;
+  color:var(--gold);
   text-transform:uppercase;
-  color:var(--sub);
-  margin-bottom:16px;
-  font-family:'DM Mono',monospace;
-}
-.card-title{
-  font-size:18px;
-  font-weight:700;
-  color:var(--text);
-  margin-bottom:6px;
-}
-.card-desc{
-  font-size:13px;
-  color:var(--sub);
-  line-height:1.6;
+  margin-bottom:14px;
+  opacity:0.7;
 }
 
-/* API KEY INPUT */
-.api-input{
+/* API KEY */
+.key-input{
   width:100%;
-  background:var(--surface2);
+  background:var(--s2);
   border:1px solid var(--border);
-  border-radius:12px;
-  padding:13px 16px;
-  font-size:14px;
+  border-radius:10px;
+  padding:12px 16px;
+  font-size:13px;
   color:var(--text);
   font-family:'DM Mono',monospace;
   outline:none;
   transition:border-color 0.2s;
-  margin-top:14px;
+  margin-top:12px;
 }
-.api-input:focus{border-color:var(--green);}
-.api-input::placeholder{color:var(--sub);}
+.key-input:focus{border-color:var(--gold);}
+.key-input::placeholder{color:var(--sub);}
 
-/* BUTTONS */
-.btn-primary{
-  width:100%;
-  padding:14px;
-  background:var(--green);
-  color:#000;
-  border:none;
-  border-radius:12px;
-  font-size:14px;
-  font-weight:700;
-  cursor:pointer;
-  font-family:'Syne',sans-serif;
-  transition:all 0.2s;
-  letter-spacing:0.5px;
-}
-.btn-primary:hover{background:var(--green-dim);transform:translateY(-1px);}
-.btn-primary:disabled{background:#1e2f22;color:var(--sub);cursor:default;transform:none;}
-.btn-secondary{
-  width:100%;
-  padding:13px;
-  background:transparent;
-  color:var(--sub);
+/* SENTENCE */
+.sentence-display{
+  background:var(--s2);
   border:1px solid var(--border);
   border-radius:12px;
-  font-size:13px;
-  cursor:pointer;
-  font-family:'Syne',sans-serif;
-  transition:all 0.2s;
-}
-.btn-secondary:hover{border-color:var(--green);color:var(--green);}
-
-/* SENTENCES */
-.sentence-box{
-  background:var(--surface2);
-  border:1px solid var(--border);
-  border-radius:14px;
   padding:20px;
   text-align:center;
 }
-.sentence-num{
-  font-size:10px;
+.sentence-count{
+  font-size:9px;
   letter-spacing:3px;
   color:var(--sub);
-  font-family:'DM Mono',monospace;
   margin-bottom:10px;
 }
 .sentence-text{
-  font-size:18px;
-  font-weight:600;
+  font-family:'Instrument Serif',serif;
+  font-size:20px;
   color:var(--text);
   line-height:1.5;
 }
-.progress-bar{
+.progress{
+  height:2px;
   background:var(--border);
-  border-radius:4px;
-  height:4px;
+  border-radius:2px;
   overflow:hidden;
-  margin-top:12px;
+  margin-top:14px;
 }
 .progress-fill{
   height:100%;
-  background:linear-gradient(90deg,var(--green),#69f0ae);
-  border-radius:4px;
+  background:var(--gold);
+  border-radius:2px;
   transition:width 0.4s ease;
 }
 
-/* MIC BUTTON */
-.mic-wrap{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:12px;
-}
+/* MIC */
+.mic-area{display:flex;flex-direction:column;align-items:center;gap:14px;}
 .mic-btn{
-  width:80px;
-  height:80px;
+  width:72px;height:72px;
   border-radius:50%;
-  border:2px solid var(--green);
-  background:var(--green-deep);
+  border:1.5px solid var(--gold);
+  background:var(--gold-glow);
   cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  display:flex;align-items:center;justify-content:center;
   transition:all 0.2s;
   position:relative;
 }
-.mic-btn:hover{background:var(--green-glow);}
+.mic-btn:hover{background:var(--gold-dim);}
 .mic-btn.recording{
-  background:rgba(255,82,82,0.1);
   border-color:var(--red);
-  animation:ripple 1.2s infinite;
+  background:rgba(255,107,107,0.08);
+  animation:rec-pulse 1.5s infinite;
 }
-@keyframes ripple{
-  0%{box-shadow:0 0 0 0 rgba(255,82,82,0.3);}
-  70%{box-shadow:0 0 0 16px rgba(255,82,82,0);}
-  100%{box-shadow:0 0 0 0 rgba(255,82,82,0);}
+@keyframes rec-pulse{
+  0%{box-shadow:0 0 0 0 rgba(255,107,107,0.3);}
+  70%{box-shadow:0 0 0 14px rgba(255,107,107,0);}
+  100%{box-shadow:0 0 0 0 rgba(255,107,107,0);}
 }
-.mic-btn svg{width:28px;height:28px;}
-.mic-label{font-size:12px;color:var(--sub);font-family:'DM Mono',monospace;}
+.mic-btn svg{width:26px;height:26px;}
+.mic-hint{font-size:11px;color:var(--sub);letter-spacing:1px;}
 
 /* WAVEFORM */
-.waveform{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:3px;
-  height:40px;
-}
-.wbar{
-  width:3px;
-  border-radius:2px;
-  background:var(--green);
-  transition:height 0.1s;
-  opacity:0.7;
-}
+.wave{display:flex;align-items:center;justify-content:center;gap:3px;height:36px;}
+.wbar{width:2px;border-radius:2px;background:var(--gold);opacity:0.4;transition:height 0.08s;}
 
-/* RECORDINGS LIST */
-.rec-list{display:flex;flex-direction:column;gap:8px;}
-.rec-item{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  background:var(--surface2);
+/* RECORDINGS */
+.rec-list{display:flex;flex-direction:column;gap:6px;}
+.rec-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  background:var(--s2);
   border:1px solid var(--border);
   border-radius:10px;
-  padding:10px 14px;
-}
-.rec-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:var(--green);flex-shrink:0;
-}
-.rec-dot.pending{background:var(--border);}
-.rec-text{font-size:12px;color:var(--sub);flex:1;font-family:'DM Mono',monospace;}
-.rec-status{font-size:11px;color:var(--green);}
-.rec-status.pending{color:var(--sub);}
-
-/* STATUS */
-.status-chip{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:4px 12px;
-  border-radius:20px;
   font-size:11px;
-  font-family:'DM Mono',monospace;
-  font-weight:500;
 }
-.status-chip.green{background:var(--green-deep);color:var(--green);border:1px solid rgba(0,230,118,0.2);}
-.status-chip.orange{background:rgba(255,171,64,0.08);color:var(--orange);border:1px solid rgba(255,171,64,0.2);}
-.status-chip.red{background:rgba(255,82,82,0.08);color:var(--red);border:1px solid rgba(255,82,82,0.2);}
-.pulse{
+.rec-dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0;}
+.rec-dot.done{background:var(--green);}
+.rec-label{flex:1;color:var(--sub);}
+.rec-status{color:var(--sub);}
+.rec-status.done{color:var(--green);}
+
+/* BUTTONS */
+.btn{
+  width:100%;padding:13px;
+  border:none;border-radius:10px;
+  font-size:12px;font-weight:500;
+  cursor:pointer;
+  font-family:'DM Mono',monospace;
+  letter-spacing:1px;
+  transition:all 0.2s;
+}
+.btn-gold{background:var(--gold);color:#000;}
+.btn-gold:hover{background:#f0bc30;}
+.btn-gold:disabled{background:var(--border);color:var(--sub);cursor:default;}
+.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border);}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+
+/* CLONING */
+.clone-progress{display:flex;flex-direction:column;gap:10px;}
+.clone-step{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;
+  background:var(--s2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  font-size:11px;
+}
+.step-icon{font-size:16px;flex-shrink:0;}
+.step-label{flex:1;color:var(--sub);}
+.step-status{font-size:11px;color:var(--sub);}
+.step-status.done{color:var(--green);}
+.step-status.working{color:var(--gold);}
+.spinner{
+  width:14px;height:14px;
+  border:2px solid var(--border);
+  border-top-color:var(--gold);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+  flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* VOICE ID DISPLAY */
+.voice-id-box{
+  background:var(--s2);
+  border:1px solid var(--gold);
+  border-radius:10px;
+  padding:14px 16px;
+  text-align:center;
+}
+.voice-id-label{font-size:9px;letter-spacing:3px;color:var(--sub);margin-bottom:6px;}
+.voice-id-val{font-size:12px;color:var(--gold);word-break:break-all;}
+
+/* CHAT */
+.chat-area{
+  display:flex;flex-direction:column;gap:8px;
+  max-height:300px;overflow-y:auto;
+  padding:4px 0;
+}
+.chat-area::-webkit-scrollbar{width:3px;}
+.chat-area::-webkit-scrollbar-thumb{background:var(--border);}
+.bubble{
+  max-width:82%;
+  border-radius:14px;
+  padding:10px 14px;
+  font-size:13px;
+  font-family:'DM Mono',monospace;
+  line-height:1.5;
+}
+.bubble.ai{
+  align-self:flex-start;
+  background:var(--s2);
+  border:1px solid var(--border);
+  color:var(--text);
+}
+.bubble.user{
+  align-self:flex-end;
+  background:var(--gold-dim);
+  border:1px solid rgba(245,197,66,0.2);
+  color:var(--text);
+}
+.bubble-meta{font-size:9px;color:var(--sub);margin-top:4px;letter-spacing:1px;}
+.typing{display:flex;gap:4px;align-items:center;padding:12px 14px;}
+.tdot{width:6px;height:6px;border-radius:50%;background:var(--sub);animation:td 1.2s infinite;}
+.tdot:nth-child(2){animation-delay:.2s;}
+.tdot:nth-child(3){animation-delay:.4s;}
+@keyframes td{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-6px);}}
+
+.chat-row{display:flex;gap:8px;}
+.chat-in{
+  flex:1;
+  background:var(--s2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:11px 14px;
+  font-size:13px;
+  color:var(--text);
+  font-family:'DM Mono',monospace;
+  outline:none;
+  transition:border-color 0.2s;
+}
+.chat-in:focus{border-color:var(--gold);}
+.chat-in::placeholder{color:var(--sub);}
+.chat-send{
+  background:var(--gold);
+  border:none;border-radius:10px;
+  padding:11px 16px;
+  color:#000;font-size:12px;font-weight:500;
+  cursor:pointer;font-family:'DM Mono',monospace;
+  transition:background 0.15s;
+  white-space:nowrap;
+}
+.chat-send:hover{background:#f0bc30;}
+.chat-send:disabled{background:var(--border);color:var(--sub);cursor:default;}
+
+.voice-badge{
+  display:flex;align-items:center;gap:8px;
+  background:var(--gold-glow);
+  border:1px solid rgba(245,197,66,0.2);
+  border-radius:10px;
+  padding:10px 14px;
+  font-size:11px;
+  color:var(--gold);
+}
+.badge-dot{
   width:6px;height:6px;border-radius:50%;
-  background:currentColor;
+  background:var(--gold);
   animation:pulse 1.5s infinite;
 }
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
 
-/* CHAT */
-.chat-area{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  max-height:320px;
-  overflow-y:auto;
-  padding:4px 0;
-}
-.chat-area::-webkit-scrollbar{width:3px;}
-.chat-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-
-.bubble{
-  max-width:80%;
-  border-radius:16px;
-  padding:11px 15px;
-}
-.bubble.ai{
-  align-self:flex-start;
-  background:var(--surface2);
-  border:1px solid var(--border);
-}
-.bubble.user{
-  align-self:flex-end;
-  background:var(--green-deep);
-  border:1px solid rgba(0,230,118,0.2);
-}
-.bubble-text{font-size:14px;color:var(--text);line-height:1.5;}
-.bubble-sub{font-size:10px;color:var(--sub);margin-top:4px;font-family:'DM Mono',monospace;}
-.bubble.user .bubble-sub{color:rgba(0,230,118,0.5);}
-
-/* TYPING */
-.typing{display:flex;gap:5px;align-items:center;padding:14px 16px;}
-.typing-dot{
-  width:7px;height:7px;border-radius:50%;
-  background:var(--sub);
-  animation:tdot 1.2s infinite;
-}
-.typing-dot:nth-child(2){animation-delay:0.2s;}
-.typing-dot:nth-child(3){animation-delay:0.4s;}
-@keyframes tdot{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-8px);}}
-
-/* CHAT INPUT */
-.chat-input-row{display:flex;gap:8px;}
-.chat-input{
-  flex:1;
-  background:var(--surface2);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:12px 14px;
-  font-size:14px;
-  color:var(--text);
-  font-family:'Syne',sans-serif;
-  outline:none;
-  transition:border-color 0.2s;
-}
-.chat-input:focus{border-color:var(--green);}
-.chat-input::placeholder{color:var(--sub);}
-.chat-send{
-  background:var(--green);
-  border:none;
-  border-radius:12px;
-  padding:12px 18px;
-  color:#000;
-  font-weight:700;
-  cursor:pointer;
-  font-family:'Syne',sans-serif;
-  font-size:13px;
-  transition:all 0.15s;
-  white-space:nowrap;
-}
-.chat-send:hover{background:var(--green-dim);}
-.chat-send:disabled{background:var(--border);color:var(--sub);cursor:default;}
-
-/* VOICE INDICATOR */
-.voice-badge{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  background:var(--green-deep);
-  border:1px solid rgba(0,230,118,0.2);
-  border-radius:12px;
-  padding:10px 14px;
-}
-.voice-badge-icon{font-size:18px;}
-.voice-badge-text{font-size:12px;color:var(--green);font-family:'DM Mono',monospace;}
-
-/* CLONING ANIMATION */
-.cloning-anim{
-  text-align:center;
-  padding:20px;
-}
-.cloning-ring{
-  width:70px;height:70px;
-  border-radius:50%;
-  border:3px solid var(--border);
-  border-top-color:var(--green);
-  animation:spin 1s linear infinite;
-  margin:0 auto 16px;
-}
-@keyframes spin{to{transform:rotate(360deg);}}
-.cloning-text{font-size:14px;color:var(--sub);font-family:'DM Mono',monospace;}
-
-/* ERROR */
-.error-msg{
-  font-size:12px;
-  color:var(--red);
-  font-family:'DM Mono',monospace;
+.err{
+  font-size:11px;color:var(--red);
   padding:8px 12px;
-  background:rgba(255,82,82,0.06);
+  background:rgba(255,107,107,0.06);
+  border:1px solid rgba(255,107,107,0.15);
   border-radius:8px;
-  border:1px solid rgba(255,82,82,0.15);
   display:none;
 }
 </style>
@@ -400,519 +322,403 @@ body{
 <div id="app">
 
 <!-- SCREEN 1: API KEY -->
-<div id="screen-key" class="screen active">
-  <div class="logo">
-    <div class="logo-mark">Callingo</div>
-    <div class="logo-title">Voice Clone</div>
-    <div class="logo-sub">hear yourself speak any language</div>
+<div id="s-key" class="screen active">
+  <div class="header">
+    <div class="logo">Callingo</div>
+    <div class="title">Clone Your <em>Voice</em></div>
+    <div class="subtitle">Read · Record · Clone · Converse</div>
   </div>
   <div class="card">
-    <div class="card-label">Step 01 — Setup</div>
-    <div class="card-title">Enter your xAI API key</div>
-    <div class="card-desc">Get a free key at console.x.ai — no credit card needed to start</div>
-    <input class="api-input" id="api-key-input" type="password" placeholder="xai-xxxxxxxxxxxxxxxx"/>
-    <div class="error-msg" id="key-error">Please enter a valid xAI API key</div>
+    <div class="card-tag">Step 01 — Authentication</div>
+    <div style="font-size:13px;color:var(--sub);line-height:1.6;">Enter your Fish Audio API key to get started.</div>
+    <input class="key-input" id="key-input" type="password" placeholder="fish_sk_xxxxxxxxxxxxxxxx"/>
+    <div class="err" id="key-err">Invalid key format</div>
   </div>
-  <button class="btn-primary" onclick="saveKey()">Continue →</button>
-  <button class="btn-secondary" onclick="useDemoMode()">Try demo mode (no API key)</button>
+  <button class="btn btn-gold" onclick="saveKey()">Continue →</button>
 </div>
 
-<!-- SCREEN 2: RECORD VOICE -->
-<div id="screen-record" class="screen">
-  <div class="logo">
-    <div class="logo-mark">Callingo</div>
-    <div class="logo-title">Record Your Voice</div>
-    <div class="logo-sub">read each sentence clearly</div>
+<!-- SCREEN 2: RECORD -->
+<div id="s-record" class="screen">
+  <div class="header">
+    <div class="logo">Callingo</div>
+    <div class="title">Read & <em>Record</em></div>
+    <div class="subtitle">Speak clearly · No background noise</div>
   </div>
 
   <div class="card">
-    <div class="card-label">Step 02 — Voice Sample</div>
-    <div class="sentence-num" id="sent-num">SENTENCE 1 / 5</div>
-    <div class="sentence-box">
+    <div class="card-tag">Step 02 — Voice Sample</div>
+    <div class="sentence-display">
+      <div class="sentence-count" id="sent-count">SENTENCE 1 / 2</div>
       <div class="sentence-text" id="sent-text">Loading...</div>
     </div>
-    <div class="progress-bar" style="margin-top:16px;">
-      <div class="progress-fill" id="rec-progress" style="width:0%"></div>
+    <div class="progress" style="margin-top:16px;">
+      <div class="progress-fill" id="rec-prog" style="width:0%"></div>
     </div>
   </div>
 
-  <div class="mic-wrap">
+  <div class="mic-area">
     <button class="mic-btn" id="mic-btn" onclick="toggleRecord()">
-      <svg viewBox="0 0 24 24" fill="none" id="mic-icon">
-        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="#00e676"/>
-        <path d="M19 10a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V22h2v-3.06A9 9 0 0 0 21 10z" fill="#00e676"/>
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="#f5c542"/>
+        <path d="M19 10a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V22h2v-3.06A9 9 0 0 0 21 10z" fill="#f5c542"/>
       </svg>
     </button>
-    <div class="waveform" id="waveform">
-      <div class="wbar" style="height:4px"></div>
-      <div class="wbar" style="height:4px"></div>
-      <div class="wbar" style="height:4px"></div>
-      <div class="wbar" style="height:4px"></div>
-      <div class="wbar" style="height:4px"></div>
-      <div class="wbar" style="height:4px"></div>
-      <div class="wbar" style="height:4px"></div>
-      <div class="wbar" style="height:4px"></div>
-      <div class="wbar" style="height:4px"></div>
-      <div class="wbar" style="height:4px"></div>
-      <div class="wbar" style="height:4px"></div>
-      <div class="wbar" style="height:4px"></div>
+    <div class="wave" id="wave">
+      <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
     </div>
-    <div class="mic-label" id="mic-label">Tap to start recording</div>
+    <div class="mic-hint" id="mic-hint">TAP TO START RECORDING</div>
   </div>
 
   <div class="rec-list" id="rec-list"></div>
 
-  <button class="btn-primary" id="clone-btn" disabled onclick="startCloning()">
+  <button class="btn btn-gold" id="clone-btn" disabled onclick="startClone()">
     Clone My Voice →
   </button>
-  <div class="error-msg" id="rec-error"></div>
+  <div class="err" id="rec-err"></div>
 </div>
 
 <!-- SCREEN 3: CLONING -->
-<div id="screen-cloning" class="screen">
-  <div class="logo">
-    <div class="logo-mark">Callingo</div>
-    <div class="logo-title">Cloning Voice</div>
-    <div class="logo-sub">this takes about 30 seconds</div>
+<div id="s-cloning" class="screen">
+  <div class="header">
+    <div class="logo">Callingo</div>
+    <div class="title">Cloning <em>Voice</em></div>
+    <div class="subtitle">This takes about 10 seconds</div>
   </div>
   <div class="card">
-    <div class="cloning-anim">
-      <div class="cloning-ring"></div>
-      <div class="cloning-text" id="cloning-status">Uploading voice sample...</div>
-    </div>
-    <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;" id="clone-steps">
-      <div class="rec-item" id="step-upload">
-        <div class="rec-dot pending" id="dot-upload"></div>
-        <div class="rec-text">Uploading audio sample</div>
-        <div class="rec-status pending" id="status-upload">waiting</div>
+    <div class="card-tag">Step 03 — Processing</div>
+    <div class="clone-progress" id="clone-steps">
+      <div class="clone-step" id="cs-upload">
+        <div class="step-icon">📤</div>
+        <div class="step-label">Uploading audio to Fish Audio</div>
+        <div class="step-status" id="ss-upload">waiting</div>
       </div>
-      <div class="rec-item" id="step-clone">
-        <div class="rec-dot pending" id="dot-clone"></div>
-        <div class="rec-text">Cloning voice model</div>
-        <div class="rec-status pending" id="status-clone">waiting</div>
+      <div class="clone-step" id="cs-clone">
+        <div class="step-icon">🧬</div>
+        <div class="step-label">Cloning voice model</div>
+        <div class="step-status" id="ss-clone">waiting</div>
       </div>
-      <div class="rec-item" id="step-test">
-        <div class="rec-dot pending" id="dot-test"></div>
-        <div class="rec-text">Generating test audio</div>
-        <div class="rec-status pending" id="status-test">waiting</div>
+      <div class="clone-step" id="cs-ready">
+        <div class="step-icon">✅</div>
+        <div class="step-label">Voice ID ready</div>
+        <div class="step-status" id="ss-ready">waiting</div>
       </div>
     </div>
   </div>
+  <div class="err" id="clone-err"></div>
 </div>
 
 <!-- SCREEN 4: CHAT -->
-<div id="screen-chat" class="screen">
-  <div class="logo" style="padding:20px 0 4px;">
-    <div class="logo-mark">Callingo</div>
-    <div class="logo-title">Your Voice Clone</div>
+<div id="s-chat" class="screen">
+  <div class="header" style="padding:4px 0;">
+    <div class="logo">Callingo</div>
+    <div class="title">Your <em>Voice</em></div>
   </div>
 
   <div class="voice-badge">
-    <div class="voice-badge-icon">🎙️</div>
-    <div style="flex:1;">
-      <div class="voice-badge-text">Replies in your cloned voice</div>
-      <div style="font-size:10px;color:var(--sub);margin-top:2px;font-family:'DM Mono',monospace;" id="voice-id-display"></div>
-    </div>
-    <div class="status-chip green"><div class="pulse"></div>live</div>
+    <div class="badge-dot"></div>
+    <div style="flex:1;">Speaking in your cloned voice</div>
+    <div style="font-size:9px;color:rgba(245,197,66,0.5);" id="vid-short"></div>
   </div>
 
-  <div class="card" style="padding:16px;">
+  <div class="card" style="padding:14px;">
     <div class="chat-area" id="chat-area"></div>
   </div>
 
   <div style="display:flex;flex-direction:column;gap:8px;">
-    <div class="chat-input-row">
-      <input class="chat-input" id="chat-input"
-        placeholder="Ask anything… I'll reply in your voice"
-        onkeydown="if(event.key==='Enter')sendChat()"/>
-      <button class="chat-send" id="chat-send-btn" onclick="sendChat()">Send</button>
+    <div class="chat-row">
+      <input class="chat-in" id="chat-in"
+        placeholder="Ask anything..."
+        onkeydown="if(event.key==='Enter')send()"/>
+      <button class="chat-send" id="send-btn" onclick="send()">Send</button>
     </div>
-    <div style="display:flex;gap:8px;">
-      <button class="btn-secondary" onclick="showScreen('screen-record')" style="flex:1;padding:10px;font-size:12px;">Re-record voice</button>
-      <button class="btn-secondary" onclick="showScreen('screen-key')" style="flex:1;padding:10px;font-size:12px;">Change API key</button>
-    </div>
+    <button class="btn btn-outline" onclick="goTo('s-record')" style="padding:10px;font-size:11px;">Re-record voice</button>
   </div>
-  <div class="error-msg" id="chat-error"></div>
+  <div class="err" id="chat-err"></div>
 </div>
 
 </div>
 
 <script>
+// ---- CONFIG ----
 const SENTENCES = [
-  "The quick brown fox jumps over the lazy dog near the river bank.",
-  "She sells seashells by the seashore every single summer morning.",
-  "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
-  "Peter Piper picked a peck of perfectly pickled peppers from the garden.",
-  "I enjoy learning new languages because communication connects people across the world."
+  "The morning light filters through the window as I prepare for a new day of learning.",
+  "Every language opens a door to a new world of culture, connection, and understanding."
 ];
 
+// ---- STATE ----
 let apiKey = '';
-let demoMode = false;
 let recordings = [];
+let voiceId = null;
 let mediaRecorder = null;
 let isRecording = false;
-let currentSentence = 0;
+let currentSent = 0;
 let audioChunks = [];
-let waveInterval = null;
-let clonedVoiceId = null;
 let stream = null;
+let waveInt = null;
 
-function showScreen(id) {
+// ---- NAV ----
+function goTo(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
 function saveKey() {
-  const val = document.getElementById('api-key-input').value.trim();
-  if (!val.startsWith('xai-') && val.length < 10) {
-    document.getElementById('key-error').style.display = 'block';
+  const v = document.getElementById('key-input').value.trim();
+  if (!v || v.length < 10) {
+    document.getElementById('key-err').style.display = 'block';
     return;
   }
-  apiKey = val;
-  document.getElementById('key-error').style.display = 'none';
-  initRecordScreen();
-  showScreen('screen-record');
+  apiKey = v;
+  document.getElementById('key-err').style.display = 'none';
+  initRecord();
+  goTo('s-record');
 }
 
-function useDemoMode() {
-  demoMode = true;
-  apiKey = 'demo';
-  initRecordScreen();
-  showScreen('screen-record');
-}
-
-function initRecordScreen() {
+// ---- RECORD ----
+function initRecord() {
   recordings = [];
-  currentSentence = 0;
-  updateSentenceUI();
+  currentSent = 0;
+  updateSentUI();
   renderRecList();
 }
 
-function updateSentenceUI() {
-  document.getElementById('sent-num').textContent = `SENTENCE ${currentSentence + 1} / ${SENTENCES.length}`;
-  document.getElementById('sent-text').textContent = SENTENCES[currentSentence];
-  document.getElementById('rec-progress').style.width = (currentSentence / SENTENCES.length * 100) + '%';
+function updateSentUI() {
+  document.getElementById('sent-count').textContent = `SENTENCE ${currentSent + 1} / ${SENTENCES.length}`;
+  document.getElementById('sent-text').textContent = SENTENCES[currentSent];
+  document.getElementById('rec-prog').style.width = (currentSent / SENTENCES.length * 100) + '%';
 }
 
 function renderRecList() {
-  const list = document.getElementById('rec-list');
-  list.innerHTML = SENTENCES.map((s, i) => `
-    <div class="rec-item">
-      <div class="rec-dot ${recordings[i] ? '' : 'pending'}"></div>
-      <div class="rec-text">${s.substring(0, 40)}…</div>
-      <div class="rec-status ${recordings[i] ? '' : 'pending'}">${recordings[i] ? '✓ recorded' : 'pending'}</div>
+  document.getElementById('rec-list').innerHTML = SENTENCES.map((s, i) => `
+    <div class="rec-row">
+      <div class="rec-dot ${recordings[i] ? 'done' : ''}"></div>
+      <div class="rec-label">${s.substring(0, 45)}…</div>
+      <div class="rec-status ${recordings[i] ? 'done' : ''}">${recordings[i] ? '✓' : '–'}</div>
     </div>`).join('');
-
-  const allDone = recordings.length === SENTENCES.length && recordings.every(r => r);
-  document.getElementById('clone-btn').disabled = !allDone;
+  document.getElementById('clone-btn').disabled = recordings.length < SENTENCES.length || !recordings.every(Boolean);
 }
 
 async function toggleRecord() {
-  if (isRecording) {
-    stopRecording();
-  } else {
-    await startRecording();
-  }
+  if (isRecording) stopRec();
+  else await startRec();
 }
 
-async function startRecording() {
+async function startRec() {
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-    mediaRecorder.onstop = handleRecordingStop;
-    mediaRecorder.start();
-    isRecording = true;
-
-    const btn = document.getElementById('mic-btn');
-    btn.classList.add('recording');
-    document.getElementById('mic-label').textContent = 'Recording… tap to stop';
-    startWave();
   } catch(e) {
-    document.getElementById('rec-error').textContent = '⚠️ Microphone access denied. Please allow mic and try again.';
-    document.getElementById('rec-error').style.display = 'block';
+    showErr('rec-err', '⚠️ Mic access denied — open via https:// URL');
+    return;
   }
+  audioChunks = [];
+  mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+  mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+  mediaRecorder.onstop = onRecStop;
+  mediaRecorder.start();
+  isRecording = true;
+  document.getElementById('mic-btn').classList.add('recording');
+  document.getElementById('mic-hint').textContent = 'RECORDING... TAP TO STOP';
+  startWave(true);
 }
 
-function stopRecording() {
-  if (mediaRecorder && isRecording) {
-    mediaRecorder.stop();
-    stream?.getTracks().forEach(t => t.stop());
-    isRecording = false;
-    stopWave();
-    const btn = document.getElementById('mic-btn');
-    btn.classList.remove('recording');
-    document.getElementById('mic-label').textContent = 'Processing…';
-  }
+function stopRec() {
+  if (!mediaRecorder || !isRecording) return;
+  mediaRecorder.stop();
+  stream?.getTracks().forEach(t => t.stop());
+  isRecording = false;
+  stopWave();
+  document.getElementById('mic-btn').classList.remove('recording');
+  document.getElementById('mic-hint').textContent = 'PROCESSING...';
 }
 
-function handleRecordingStop() {
+function onRecStop() {
   const blob = new Blob(audioChunks, { type: 'audio/webm' });
-  recordings[currentSentence] = blob;
-
-  document.getElementById('mic-label').textContent = '✓ Recorded!';
+  recordings[currentSent] = blob;
+  document.getElementById('mic-hint').textContent = '✓ RECORDED!';
   setTimeout(() => {
-    currentSentence++;
-    if (currentSentence < SENTENCES.length) {
-      updateSentenceUI();
-      document.getElementById('mic-label').textContent = 'Tap to start recording';
+    currentSent++;
+    if (currentSent < SENTENCES.length) {
+      updateSentUI();
+      document.getElementById('mic-hint').textContent = 'TAP TO START RECORDING';
     } else {
-      document.getElementById('mic-label').textContent = 'All sentences recorded!';
-      document.getElementById('rec-progress').style.width = '100%';
+      document.getElementById('rec-prog').style.width = '100%';
+      document.getElementById('mic-hint').textContent = 'ALL DONE — CLONE NOW';
     }
     renderRecList();
-  }, 600);
+  }, 700);
 }
 
-function startWave() {
-  const bars = document.querySelectorAll('.wbar');
-  waveInterval = setInterval(() => {
-    bars.forEach(b => {
-      b.style.height = (4 + Math.random() * 30) + 'px';
-      b.style.opacity = isRecording ? '0.9' : '0.3';
-    });
-  }, 100);
+function startWave(on) {
+  clearInterval(waveInt);
+  if (on) {
+    waveInt = setInterval(() => {
+      document.querySelectorAll('.wbar').forEach(b => {
+        b.style.height = (4 + Math.random() * 28) + 'px';
+        b.style.opacity = '0.9';
+      });
+    }, 100);
+  }
 }
 
 function stopWave() {
-  clearInterval(waveInterval);
+  clearInterval(waveInt);
   document.querySelectorAll('.wbar').forEach(b => { b.style.height = '4px'; b.style.opacity = '0.3'; });
 }
 
-function setStep(step, status) {
-  const dot = document.getElementById('dot-' + step);
-  const st = document.getElementById('status-' + step);
-  dot.classList.remove('pending');
-  if (status === 'done') { dot.style.background = '#00e676'; st.textContent = '✓ done'; st.className = 'rec-status'; }
-  else if (status === 'working') { dot.style.background = '#ffab40'; st.textContent = '…'; st.className = 'rec-status'; st.style.color = '#ffab40'; }
-  else if (status === 'error') { dot.style.background = '#ff5252'; st.textContent = 'failed'; st.className = 'rec-status'; st.style.color = '#ff5252'; }
+// ---- CLONE ----
+function setStep(id, status) {
+  const el = document.getElementById('ss-' + id);
+  el.textContent = status === 'working' ? '...' : status === 'done' ? '✓ done' : 'waiting';
+  el.className = 'step-status ' + (status === 'done' ? 'done' : status === 'working' ? 'working' : '');
 }
 
-async function startCloning() {
-  showScreen('screen-cloning');
-
-  if (demoMode) {
-    // Demo mode — simulate cloning
-    await simulateCloning();
-    return;
-  }
+async function startClone() {
+  goTo('s-cloning');
+  hideErr('clone-err');
 
   try {
-    // Step 1 — combine recordings into one blob
+    // Step 1 — combine blobs
     setStep('upload', 'working');
-    document.getElementById('cloning-status').textContent = 'Combining recordings...';
+    const combined = new Blob(recordings, { type: 'audio/webm' });
 
-    const combinedBlob = new Blob(recordings, { type: 'audio/webm' });
+    // Step 2 — send to Fish Audio
+    const form = new FormData();
+    form.append('voices', combined, 'voice_sample.webm');
+    form.append('visibility', 'private');
+    form.append('name', 'My Callingo Voice');
 
-    // Step 2 — convert to base64 and send to proxy
-    document.getElementById('cloning-status').textContent = 'Uploading to xAI...';
-    const base64Audio = await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(',')[1]);
-      reader.readAsDataURL(combinedBlob);
-    });
-
-    const cloneRes = await fetch('/api/xai', {
+    const res = await fetch('https://api.fish.audio/model', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        endpoint: '/v1/voices',
-        data: {
-          name: 'My Callingo Voice',
-          description: 'User voice clone for Callingo',
-          files: [{ data: base64Audio, format: 'webm' }]
-        }
-      })
+      headers: { 'Authorization': 'Bearer ' + apiKey },
+      body: form
     });
 
-    if (!cloneRes.ok) {
-      const err = await cloneRes.json();
-      throw new Error(err.error?.message || 'Clone failed: ' + cloneRes.status);
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new Error(e.message || 'Clone failed: ' + res.status);
     }
 
-    const cloneData = await cloneRes.json();
-    clonedVoiceId = cloneData.voice_id || cloneData.id;
+    const data = await res.json();
     setStep('upload', 'done');
-
-    // Step 3 — clone processing
     setStep('clone', 'working');
-    document.getElementById('cloning-status').textContent = 'Cloning your voice...';
-    await sleep(2000);
+
+    await sleep(1000);
+    voiceId = data._id || data.id;
     setStep('clone', 'done');
-
-    // Step 4 — test generation
-    setStep('test', 'working');
-    document.getElementById('cloning-status').textContent = 'Generating test audio...';
-
-    const testAudio = await generateSpeech('Hello! Your voice has been cloned. You will now hear yourself speaking.', clonedVoiceId);
-    setStep('test', 'done');
-    document.getElementById('cloning-status').textContent = '✓ Voice cloned successfully!';
-
+    setStep('ready', 'working');
     await sleep(500);
-    testAudio.play();
-    await sleep(3000);
+    setStep('ready', 'done');
+
+    await sleep(600);
     initChat();
 
   } catch(e) {
-    document.getElementById('cloning-status').textContent = '❌ ' + e.message;
-    setStep('upload', 'error');
-    setTimeout(() => showScreen('screen-record'), 3000);
+    showErr('clone-err', '❌ ' + e.message);
+    setTimeout(() => goTo('s-record'), 3000);
   }
 }
 
-async function simulateCloning() {
-  setStep('upload', 'working');
-  document.getElementById('cloning-status').textContent = 'Uploading voice sample...';
-  await sleep(1500);
-  setStep('upload', 'done');
-
-  setStep('clone', 'working');
-  document.getElementById('cloning-status').textContent = 'Cloning your voice...';
-  await sleep(2000);
-  setStep('clone', 'done');
-
-  setStep('test', 'working');
-  document.getElementById('cloning-status').textContent = 'Generating test audio...';
-  await sleep(1500);
-  setStep('test', 'done');
-
-  clonedVoiceId = 'demo-voice-id';
-  document.getElementById('cloning-status').textContent = '✓ Demo mode ready!';
-  await sleep(800);
-  initChat();
-}
-
-async function generateSpeech(text, voiceId) {
-  const res = await fetch('/api/xai', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'grok-tts-1',
-      input: text,
-      voice: voiceId,
-      response_format: 'mp3'
-    })
-  });
-
-  if (!res.ok) throw new Error('TTS failed: ' + res.status);
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
-  return new Audio(url);
-}
-
+// ---- CHAT ----
 function initChat() {
-  showScreen('screen-chat');
-  document.getElementById('voice-id-display').textContent = 'voice_id: ' + (clonedVoiceId?.substring(0, 20) || 'demo') + '...';
-
-  addBubble('ai', "Your voice has been cloned! 🎙️ Ask me anything — I'll reply in your own voice.", "AI · Speaking in your voice");
+  goTo('s-chat');
+  document.getElementById('vid-short').textContent = voiceId.substring(0, 12) + '...';
+  addBubble('ai', 'Your voice has been cloned! 🎙️ I\'ll reply in your own voice. Try asking me something — in any language!', 'AI · cloned voice ready');
 }
 
-function addBubble(role, text, sub) {
+function addBubble(role, text, meta) {
   const area = document.getElementById('chat-area');
   const b = document.createElement('div');
   b.className = 'bubble ' + role;
-  b.innerHTML = `<div class="bubble-text">${text}</div>${sub ? `<div class="bubble-sub">${sub}</div>` : ''}`;
+  b.innerHTML = `<div>${text}</div>${meta ? `<div class="bubble-meta">${meta}</div>` : ''}`;
   area.appendChild(b);
   area.scrollTop = area.scrollHeight;
-  return b;
 }
 
 function addTyping() {
   const area = document.getElementById('chat-area');
   const t = document.createElement('div');
-  t.className = 'bubble ai';
-  t.id = 'typing-bubble';
-  t.innerHTML = '<div class="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
-  area.appendChild(t);
-  area.scrollTop = area.scrollHeight;
+  t.className = 'bubble ai'; t.id = 'typing';
+  t.innerHTML = '<div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>';
+  area.appendChild(t); area.scrollTop = area.scrollHeight;
 }
 
-function removeTyping() {
-  document.getElementById('typing-bubble')?.remove();
-}
+function removeTyping() { document.getElementById('typing')?.remove(); }
 
-async function sendChat() {
-  const input = document.getElementById('chat-input');
-  const text = input.value.trim();
+async function send() {
+  const inp = document.getElementById('chat-in');
+  const text = inp.value.trim();
   if (!text) return;
-  input.value = '';
-
-  document.getElementById('chat-send-btn').disabled = true;
+  inp.value = '';
+  document.getElementById('send-btn').disabled = true;
   addBubble('user', text, 'You');
   addTyping();
+  hideErr('chat-err');
 
   try {
-    // Step 1 — get text response from xAI
-    let responseText = '';
+    // Step 1 — get Claude response via Anthropic API
+    const chatRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-dangerous-allow-browser': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: text }]
+      })
+    });
 
-    if (demoMode) {
-      await sleep(1200);
-      const demoReplies = [
-        "That's a great question! In demo mode I can show you how the conversation flows — with a real API key, you'd hear this in your own cloned voice.",
-        "Interesting! The voice cloning system captures your unique accent, tone and speaking style from the sentences you recorded.",
-        "With a real xAI API key, every word I say would be generated in your own voice. Imagine learning German and hearing yourself speak it fluently!",
-        "The system works by analyzing your voice patterns and applying them to any text — in any language you're learning.",
-      ];
-      responseText = demoReplies[Math.floor(Math.random() * demoReplies.length)];
-    } else {
-      const chatRes = await fetch('/api/xai', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'grok-3-mini',
-          messages: [
-            { role: 'system', content: 'You are a helpful language learning assistant. Keep responses concise and conversational — 1-3 sentences max. The user is testing a voice cloning feature.' },
-            { role: 'user', content: text }
-          ],
-          max_tokens: 150
-        })
-      });
-
-      if (!chatRes.ok) throw new Error('Chat failed: ' + chatRes.status);
-      const chatData = await chatRes.json();
-      responseText = chatData.choices[0].message.content;
-    }
+    const chatData = await chatRes.json();
+    const replyText = chatData.content?.[0]?.text || 'Sorry, I could not respond.';
 
     removeTyping();
-    const bubble = addBubble('ai', responseText, '🎙️ Your cloned voice');
+    const bubble = addBubble('ai', replyText, '🔊 generating your voice...');
 
-    // Step 2 — generate speech in cloned voice
-    if (!demoMode) {
-      try {
-        const audio = await generateSpeech(responseText, clonedVoiceId);
-        bubble.querySelector('.bubble-sub').textContent = '🔊 Playing in your voice…';
-        audio.play();
-        audio.onended = () => {
-          bubble.querySelector('.bubble-sub').textContent = '🎙️ Your cloned voice';
-        };
-      } catch(e) {
-        bubble.querySelector('.bubble-sub').textContent = '⚠️ Audio generation failed';
-      }
-    } else {
-      // Demo: use browser TTS
-      const u = new SpeechSynthesisUtterance(responseText);
-      u.rate = 0.9;
-      speechSynthesis.speak(u);
-    }
+    // Step 2 — generate TTS with cloned voice via Fish Audio
+    const ttsRes = await fetch('https://api.fish.audio/v1/tts', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text: replyText,
+        reference_id: voiceId,
+        format: 'mp3',
+        latency: 'normal'
+      })
+    });
+
+    if (!ttsRes.ok) throw new Error('TTS failed: ' + ttsRes.status);
+
+    const audioBlob = await ttsRes.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    bubble.querySelector('.bubble-meta').textContent = '🎙️ Speaking in your voice';
+    audio.play();
+    audio.onended = () => {
+      bubble.querySelector('.bubble-meta').textContent = '🎙️ Your cloned voice';
+    };
 
   } catch(e) {
     removeTyping();
-    document.getElementById('chat-error').textContent = '❌ ' + e.message;
-    document.getElementById('chat-error').style.display = 'block';
-    setTimeout(() => { document.getElementById('chat-error').style.display = 'none'; }, 4000);
+    showErr('chat-err', '❌ ' + e.message);
   }
 
-  document.getElementById('chat-send-btn').disabled = false;
-  document.getElementById('chat-input').focus();
+  document.getElementById('send-btn').disabled = false;
+  document.getElementById('chat-in').focus();
 }
 
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.style.display = 'block';
+}
+function hideErr(id) { document.getElementById(id).style.display = 'none'; }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 </script>
 </body>
