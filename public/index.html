@@ -552,10 +552,47 @@ body{
   </div>
 </div>
 
+<!-- ============ SCREEN: LEVEL ============ -->
+<div id="screen-level" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-practice-lang')">←</button>
+    <span class="top-title">Your Level</span>
+    <span></span>
+  </div>
+  <div class="scroll-content">
+    <div>
+      <div class="headline" style="font-size:24px;">What's your <em>level?</em></div>
+      <div class="subtext" style="margin-top:8px;">We'll adjust the conversation difficulty</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <button class="lang-btn" onclick="selectLevel('beginner')" style="text-align:left;padding:16px;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px;">🌱 Beginner</div>
+        <div style="font-size:12px;color:var(--sub);line-height:1.4;">Learning basics. Need simple words and slow pace. Lots of repetition.</div>
+      </button>
+      <button class="lang-btn" onclick="selectLevel('elementary')" style="text-align:left;padding:16px;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px;">📚 Elementary</div>
+        <div style="font-size:12px;color:var(--sub);line-height:1.4;">Know common phrases. Can handle everyday topics. Need some help.</div>
+      </button>
+      <button class="lang-btn" onclick="selectLevel('intermediate')" style="text-align:left;padding:16px;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px;">⭐ Intermediate</div>
+        <div style="font-size:12px;color:var(--sub);line-height:1.4;">Comfortable with most topics. Can have real conversations. Minor mistakes OK.</div>
+      </button>
+      <button class="lang-btn" onclick="selectLevel('advanced')" style="text-align:left;padding:16px;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px;">🚀 Advanced</div>
+        <div style="font-size:12px;color:var(--sub);line-height:1.4;">Near-fluent. Complex topics. Challenge me with difficult words.</div>
+      </button>
+      <button class="lang-btn" onclick="selectLevel('fluent')" style="text-align:left;padding:16px;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px;">💫 Fluent</div>
+        <div style="font-size:12px;color:var(--sub);line-height:1.4;">Native-level. Any topic. No filters. Natural speed and slang.</div>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ SCREEN: VOICE SETUP ============ -->
 <div id="screen-voice" class="screen">
   <div class="top-bar">
-    <button class="back-btn" onclick="goNext('screen-practice-lang')">←</button>
+    <button class="back-btn" onclick="goNext('screen-level')">←</button>
     <span class="top-title" id="voice-top-title">Your Voice</span>
     <span></span>
   </div>
@@ -673,6 +710,10 @@ body{
       📞 Start Call
     </button>
 
+    <button class="btn btn-outline" onclick="goNext('screen-level')" style="padding:10px;font-size:12px;">
+      🌍 Change language or level
+    </button>
+
     <button class="btn btn-outline" onclick="goNext('screen-voice')" style="padding:10px;font-size:12px;">
       🎙️ Re-record voice
     </button>
@@ -761,6 +802,7 @@ const STATE = {
   email: '',
   nativeLang: 'en',
   practiceLang: 'de',
+  level: 'intermediate',
   voiceId: null,
   fillerAudios: [],
   selectedTopic: null,
@@ -1232,6 +1274,7 @@ function init() {
   if (saved.email) STATE.email = saved.email;
   if (saved.nativeLang) STATE.nativeLang = saved.nativeLang;
   if (saved.practiceLang) STATE.practiceLang = saved.practiceLang;
+  if (saved.level) STATE.level = saved.level;
   if (saved.voiceId) STATE.voiceId = saved.voiceId;
 
   // Pre-fetch the shared welcome voice (Veera's clone) — non-blocking
@@ -1256,6 +1299,7 @@ function saveState() {
     email: STATE.email,
     nativeLang: STATE.nativeLang,
     practiceLang: STATE.practiceLang,
+    level: STATE.level,
     voiceId: STATE.voiceId,
   }));
 }
@@ -1334,6 +1378,15 @@ function selectNativeLang(code, name, native) {
 function selectPracticeLang(code, name, native) {
   STATE.practiceLang = code;
   document.querySelectorAll('#screen-practice-lang .lang-btn').forEach(b => b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  setTimeout(() => {
+    goNext('screen-level');
+  }, 300);
+}
+
+function selectLevel(lvl) {
+  STATE.level = lvl;
+  document.querySelectorAll('#screen-level .lang-btn').forEach(b => b.classList.remove('selected'));
   event.currentTarget.classList.add('selected');
   setTimeout(() => {
     initVoiceSetup();
@@ -1514,7 +1567,8 @@ function updateHome() {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   document.getElementById('home-greeting').textContent = `${greeting}, ${STATE.name}!`;
   document.getElementById('home-sub').textContent = `Ready to practice ${STATE.practiceLang === 'de' ? 'German' : 'English'}?`;
-  document.getElementById('practice-lang-label').textContent = STATE.practiceLang === 'de' ? 'German · Deutsch' : 'English · English';
+  const levelLabel = {beginner:'Beginner',elementary:'Elementary',intermediate:'Intermediate',advanced:'Advanced',fluent:'Fluent'}[STATE.level] || 'Intermediate';
+  document.getElementById('practice-lang-label').textContent = (STATE.practiceLang === 'de' ? 'German · Deutsch' : 'English · English') + ' · ' + levelLabel;
   document.getElementById('voice-badge-text').textContent = `🎙️ ${STATE.name}'s voice · ready`;
 
   // Build topics
@@ -1852,12 +1906,23 @@ async function callClaude(userText) {
     ...STATE.callHistory.slice(-6),
     { role: 'user', content: userText }
   ];
+
+  const levelGuide = {
+    beginner: 'The user is a BEGINNER. Use very simple words only (100 most common words). Repeat often. Slow pace. Be encouraging.',
+    elementary: 'The user is at ELEMENTARY level. Use simple everyday vocabulary. Repeat key words. Speak slowly. Encourage them.',
+    intermediate: 'The user is INTERMEDIATE. Use normal vocabulary and speed. Correct gently if needed. Challenge them slightly.',
+    advanced: 'The user is ADVANCED. Use natural vocabulary and speed. Use idioms and complex structures. Correct them naturally.',
+    fluent: 'The user is FLUENT. Speak naturally and fast. Use slang, idioms, and complex structures freely. No corrections needed—just chat.'
+  };
+
+  const systemPrompt = STATE.selectedTopic.system + '\n\nLevel guidance: ' + (levelGuide[STATE.level] || levelGuide.intermediate);
+
   const res = await fetch('/api/claude', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       messages,
-      system: STATE.selectedTopic.system,
+      system: systemPrompt,
       max_tokens: 50,
       temperature: 0.4
     })
