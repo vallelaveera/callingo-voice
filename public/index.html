@@ -1685,6 +1685,7 @@ function toggleMute() {
 async function handleUserSpeech(text) {
   addBubble('user', text);
   STATE.callHistory.push({ role: 'user', content: text });
+  console.log('User said:', text);
 
   // Play filler instantly while thinking
   playFiller();
@@ -1698,16 +1699,20 @@ async function handleUserSpeech(text) {
       .replace(/\ber+\b/gi, '')
       .replace(/\bah+\b/gi, '')
       .trim();
+    console.log('After cleaning:', cleaned);
 
     let reply = await callClaude(cleaned);
+    console.log('Claude raw:', reply);
 
     reply = cleanAIText(reply);
+    console.log('After cleanAIText:', reply);
 
     reply = reply
       .split(/[.!?]/)
       .slice(0, 2)
       .join('. ')
       .trim();
+    console.log('After sentence trim:', reply);
 
     if (reply && !reply.endsWith('.')) {
       reply += '.';
