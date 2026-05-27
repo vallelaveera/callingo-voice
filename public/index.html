@@ -586,15 +586,16 @@ async function startClone() {
     const combined = new Blob(recordings, { type: 'audio/webm' });
 
     // Step 2 — send to Fish Audio
-    const form = new FormData();
-    form.append('voices', combined, 'voice_sample.webm');
-    form.append('visibility', 'private');
-    form.append('name', 'My Callingo Voice');
+    const base64 = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.readAsDataURL(combined);
+    });
 
-    const res = await fetch('https://api.fish.audio/model', {
+    const res = await fetch('/api/fish-clone', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + apiKey },
-      body: form
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ audioBase64: base64, name: 'My Callingo Voice' })
     });
 
     if (!res.ok) {
