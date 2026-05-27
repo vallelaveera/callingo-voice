@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Callingo Voice Clone</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080c0a;
+  --surface:#0f1612;
+  --surface2:#162019;
+  --green:#00e676;
+  --green-dim:#00c853;
+  --green-glow:rgba(0,230,118,0.15);
+  --green-deep:rgba(0,230,118,0.06);
+  --text:#e8f5e9;
+  --sub:#4a6b52;
+  --border:#1e2f22;
+  --red:#ff5252;
+  --orange:#ffab40;
+}
+body{
+  font-family:'Syne',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(0,230,118,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 80% 90%, rgba(0,200,83,0.03) 0%, transparent 60%);
+}
+
+#app{width:100%;max-width:520px;display:flex;flex-direction:column;gap:0;}
+
+/* SCREENS */
+.screen{display:none;flex-direction:column;gap:20px;animation:fadeIn 0.4s ease;}
+.screen.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+/* HEADER */
+.logo{
+  text-align:center;
+  padding:32px 0 8px;
+}
+.logo-mark{
+  font-size:11px;
+  letter-spacing:6px;
+  color:var(--sub);
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+.logo-title{
+  font-size:28px;
+  font-weight:800;
+  background:linear-gradient(135deg,#00e676,#69f0ae);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.logo-sub{
+  font-size:13px;
+  color:var(--sub);
+  margin-top:6px;
+  font-family:'DM Mono',monospace;
+}
+
+/* CARD */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:24px;
+  position:relative;
+  overflow:hidden;
+}
+.card::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--green),transparent);
+  opacity:0.3;
+}
+.card-label{
+  font-size:10px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--sub);
+  margin-bottom:16px;
+  font-family:'DM Mono',monospace;
+}
+.card-title{
+  font-size:18px;
+  font-weight:700;
+  color:var(--text);
+  margin-bottom:6px;
+}
+.card-desc{
+  font-size:13px;
+  color:var(--sub);
+  line-height:1.6;
+}
+
+/* API KEY INPUT */
+.api-input{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:13px 16px;
+  font-size:14px;
+  color:var(--text);
+  font-family:'DM Mono',monospace;
+  outline:none;
+  transition:border-color 0.2s;
+  margin-top:14px;
+}
+.api-input:focus{border-color:var(--green);}
+.api-input::placeholder{color:var(--sub);}
+
+/* BUTTONS */
+.btn-primary{
+  width:100%;
+  padding:14px;
+  background:var(--green);
+  color:#000;
+  border:none;
+  border-radius:12px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  font-family:'Syne',sans-serif;
+  transition:all 0.2s;
+  letter-spacing:0.5px;
+}
+.btn-primary:hover{background:var(--green-dim);transform:translateY(-1px);}
+.btn-primary:disabled{background:#1e2f22;color:var(--sub);cursor:default;transform:none;}
+.btn-secondary{
+  width:100%;
+  padding:13px;
+  background:transparent;
+  color:var(--sub);
+  border:1px solid var(--border);
+  border-radius:12px;
+  font-size:13px;
+  cursor:pointer;
+  font-family:'Syne',sans-serif;
+  transition:all 0.2s;
+}
+.btn-secondary:hover{border-color:var(--green);color:var(--green);}
+
+/* SENTENCES */
+.sentence-box{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:20px;
+  text-align:center;
+}
+.sentence-num{
+  font-size:10px;
+  letter-spacing:3px;
+  color:var(--sub);
+  font-family:'DM Mono',monospace;
+  margin-bottom:10px;
+}
+.sentence-text{
+  font-size:18px;
+  font-weight:600;
+  color:var(--text);
+  line-height:1.5;
+}
+.progress-bar{
+  background:var(--border);
+  border-radius:4px;
+  height:4px;
+  overflow:hidden;
+  margin-top:12px;
+}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--green),#69f0ae);
+  border-radius:4px;
+  transition:width 0.4s ease;
+}
+
+/* MIC BUTTON */
+.mic-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+.mic-btn{
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  border:2px solid var(--green);
+  background:var(--green-deep);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all 0.2s;
+  position:relative;
+}
+.mic-btn:hover{background:var(--green-glow);}
+.mic-btn.recording{
+  background:rgba(255,82,82,0.1);
+  border-color:var(--red);
+  animation:ripple 1.2s infinite;
+}
+@keyframes ripple{
+  0%{box-shadow:0 0 0 0 rgba(255,82,82,0.3);}
+  70%{box-shadow:0 0 0 16px rgba(255,82,82,0);}
+  100%{box-shadow:0 0 0 0 rgba(255,82,82,0);}
+}
+.mic-btn svg{width:28px;height:28px;}
+.mic-label{font-size:12px;color:var(--sub);font-family:'DM Mono',monospace;}
+
+/* WAVEFORM */
+.waveform{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  height:40px;
+}
+.wbar{
+  width:3px;
+  border-radius:2px;
+  background:var(--green);
+  transition:height 0.1s;
+  opacity:0.7;
+}
+
+/* RECORDINGS LIST */
+.rec-list{display:flex;flex-direction:column;gap:8px;}
+.rec-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px 14px;
+}
+.rec-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);flex-shrink:0;
+}
+.rec-dot.pending{background:var(--border);}
+.rec-text{font-size:12px;color:var(--sub);flex:1;font-family:'DM Mono',monospace;}
+.rec-status{font-size:11px;color:var(--green);}
+.rec-status.pending{color:var(--sub);}
+
+/* STATUS */
+.status-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 12px;
+  border-radius:20px;
+  font-size:11px;
+  font-family:'DM Mono',monospace;
+  font-weight:500;
+}
+.status-chip.green{background:var(--green-deep);color:var(--green);border:1px solid rgba(0,230,118,0.2);}
+.status-chip.orange{background:rgba(255,171,64,0.08);color:var(--orange);border:1px solid rgba(255,171,64,0.2);}
+.status-chip.red{background:rgba(255,82,82,0.08);color:var(--red);border:1px solid rgba(255,82,82,0.2);}
+.pulse{
+  width:6px;height:6px;border-radius:50%;
+  background:currentColor;
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* CHAT */
+.chat-area{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  max-height:320px;
+  overflow-y:auto;
+  padding:4px 0;
+}
+.chat-area::-webkit-scrollbar{width:3px;}
+.chat-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+.bubble{
+  max-width:80%;
+  border-radius:16px;
+  padding:11px 15px;
+}
+.bubble.ai{
+  align-self:flex-start;
+  background:var(--surface2);
+  border:1px solid var(--border);
+}
+.bubble.user{
+  align-self:flex-end;
+  background:var(--green-deep);
+  border:1px solid rgba(0,230,118,0.2);
+}
+.bubble-text{font-size:14px;color:var(--text);line-height:1.5;}
+.bubble-sub{font-size:10px;color:var(--sub);margin-top:4px;font-family:'DM Mono',monospace;}
+.bubble.user .bubble-sub{color:rgba(0,230,118,0.5);}
+
+/* TYPING */
+.typing{display:flex;gap:5px;align-items:center;padding:14px 16px;}
+.typing-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--sub);
+  animation:tdot 1.2s infinite;
+}
+.typing-dot:nth-child(2){animation-delay:0.2s;}
+.typing-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes tdot{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-8px);}}
+
+/* CHAT INPUT */
+.chat-input-row{display:flex;gap:8px;}
+.chat-input{
+  flex:1;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px 14px;
+  font-size:14px;
+  color:var(--text);
+  font-family:'Syne',sans-serif;
+  outline:none;
+  transition:border-color 0.2s;
+}
+.chat-input:focus{border-color:var(--green);}
+.chat-input::placeholder{color:var(--sub);}
+.chat-send{
+  background:var(--green);
+  border:none;
+  border-radius:12px;
+  padding:12px 18px;
+  color:#000;
+  font-weight:700;
+  cursor:pointer;
+  font-family:'Syne',sans-serif;
+  font-size:13px;
+  transition:all 0.15s;
+  white-space:nowrap;
+}
+.chat-send:hover{background:var(--green-dim);}
+.chat-send:disabled{background:var(--border);color:var(--sub);cursor:default;}
+
+/* VOICE INDICATOR */
+.voice-badge{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:var(--green-deep);
+  border:1px solid rgba(0,230,118,0.2);
+  border-radius:12px;
+  padding:10px 14px;
+}
+.voice-badge-icon{font-size:18px;}
+.voice-badge-text{font-size:12px;color:var(--green);font-family:'DM Mono',monospace;}
+
+/* CLONING ANIMATION */
+.cloning-anim{
+  text-align:center;
+  padding:20px;
+}
+.cloning-ring{
+  width:70px;height:70px;
+  border-radius:50%;
+  border:3px solid var(--border);
+  border-top-color:var(--green);
+  animation:spin 1s linear infinite;
+  margin:0 auto 16px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.cloning-text{font-size:14px;color:var(--sub);font-family:'DM Mono',monospace;}
+
+/* ERROR */
+.error-msg{
+  font-size:12px;
+  color:var(--red);
+  font-family:'DM Mono',monospace;
+  padding:8px 12px;
+  background:rgba(255,82,82,0.06);
+  border-radius:8px;
+  border:1px solid rgba(255,82,82,0.15);
+  display:none;
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- SCREEN 1: API KEY -->
+<div id="screen-key" class="screen active">
+  <div class="logo">
+    <div class="logo-mark">Callingo</div>
+    <div class="logo-title">Voice Clone</div>
+    <div class="logo-sub">hear yourself speak any language</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Step 01 — Setup</div>
+    <div class="card-title">Enter your xAI API key</div>
+    <div class="card-desc">Get a free key at console.x.ai — no credit card needed to start</div>
+    <input class="api-input" id="api-key-input" type="password" placeholder="xai-xxxxxxxxxxxxxxxx"/>
+    <div class="error-msg" id="key-error">Please enter a valid xAI API key</div>
+  </div>
+  <button class="btn-primary" onclick="saveKey()">Continue →</button>
+  <button class="btn-secondary" onclick="useDemoMode()">Try demo mode (no API key)</button>
+</div>
+
+<!-- SCREEN 2: RECORD VOICE -->
+<div id="screen-record" class="screen">
+  <div class="logo">
+    <div class="logo-mark">Callingo</div>
+    <div class="logo-title">Record Your Voice</div>
+    <div class="logo-sub">read each sentence clearly</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Step 02 — Voice Sample</div>
+    <div class="sentence-num" id="sent-num">SENTENCE 1 / 5</div>
+    <div class="sentence-box">
+      <div class="sentence-text" id="sent-text">Loading...</div>
+    </div>
+    <div class="progress-bar" style="margin-top:16px;">
+      <div class="progress-fill" id="rec-progress" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="mic-wrap">
+    <button class="mic-btn" id="mic-btn" onclick="toggleRecord()">
+      <svg viewBox="0 0 24 24" fill="none" id="mic-icon">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="#00e676"/>
+        <path d="M19 10a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V22h2v-3.06A9 9 0 0 0 21 10z" fill="#00e676"/>
+      </svg>
+    </button>
+    <div class="waveform" id="waveform">
+      <div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div>
+      <div class="wbar" style="height:4px"></div>
+    </div>
+    <div class="mic-label" id="mic-label">Tap to start recording</div>
+  </div>
+
+  <div class="rec-list" id="rec-list"></div>
+
+  <button class="btn-primary" id="clone-btn" disabled onclick="startCloning()">
+    Clone My Voice →
+  </button>
+  <div class="error-msg" id="rec-error"></div>
+</div>
+
+<!-- SCREEN 3: CLONING -->
+<div id="screen-cloning" class="screen">
+  <div class="logo">
+    <div class="logo-mark">Callingo</div>
+    <div class="logo-title">Cloning Voice</div>
+    <div class="logo-sub">this takes about 30 seconds</div>
+  </div>
+  <div class="card">
+    <div class="cloning-anim">
+      <div class="cloning-ring"></div>
+      <div class="cloning-text" id="cloning-status">Uploading voice sample...</div>
+    </div>
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;" id="clone-steps">
+      <div class="rec-item" id="step-upload">
+        <div class="rec-dot pending" id="dot-upload"></div>
+        <div class="rec-text">Uploading audio sample</div>
+        <div class="rec-status pending" id="status-upload">waiting</div>
+      </div>
+      <div class="rec-item" id="step-clone">
+        <div class="rec-dot pending" id="dot-clone"></div>
+        <div class="rec-text">Cloning voice model</div>
+        <div class="rec-status pending" id="status-clone">waiting</div>
+      </div>
+      <div class="rec-item" id="step-test">
+        <div class="rec-dot pending" id="dot-test"></div>
+        <div class="rec-text">Generating test audio</div>
+        <div class="rec-status pending" id="status-test">waiting</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 4: CHAT -->
+<div id="screen-chat" class="screen">
+  <div class="logo" style="padding:20px 0 4px;">
+    <div class="logo-mark">Callingo</div>
+    <div class="logo-title">Your Voice Clone</div>
+  </div>
+
+  <div class="voice-badge">
+    <div class="voice-badge-icon">🎙️</div>
+    <div style="flex:1;">
+      <div class="voice-badge-text">Replies in your cloned voice</div>
+      <div style="font-size:10px;color:var(--sub);margin-top:2px;font-family:'DM Mono',monospace;" id="voice-id-display"></div>
+    </div>
+    <div class="status-chip green"><div class="pulse"></div>live</div>
+  </div>
+
+  <div class="card" style="padding:16px;">
+    <div class="chat-area" id="chat-area"></div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div class="chat-input-row">
+      <input class="chat-input" id="chat-input"
+        placeholder="Ask anything… I'll reply in your voice"
+        onkeydown="if(event.key==='Enter')sendChat()"/>
+      <button class="chat-send" id="chat-send-btn" onclick="sendChat()">Send</button>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-secondary" onclick="showScreen('screen-record')" style="flex:1;padding:10px;font-size:12px;">Re-record voice</button>
+      <button class="btn-secondary" onclick="showScreen('screen-key')" style="flex:1;padding:10px;font-size:12px;">Change API key</button>
+    </div>
+  </div>
+  <div class="error-msg" id="chat-error"></div>
+</div>
+
+</div>
+
+<script>
+const SENTENCES = [
+  "The quick brown fox jumps over the lazy dog near the river bank.",
+  "She sells seashells by the seashore every single summer morning.",
+  "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
+  "Peter Piper picked a peck of perfectly pickled peppers from the garden.",
+  "I enjoy learning new languages because communication connects people across the world."
+];
+
+let apiKey = '';
+let demoMode = false;
+let recordings = [];
+let mediaRecorder = null;
+let isRecording = false;
+let currentSentence = 0;
+let audioChunks = [];
+let waveInterval = null;
+let clonedVoiceId = null;
+let stream = null;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function saveKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (!val.startsWith('xai-') && val.length < 10) {
+    document.getElementById('key-error').style.display = 'block';
+    return;
+  }
+  apiKey = val;
+  document.getElementById('key-error').style.display = 'none';
+  initRecordScreen();
+  showScreen('screen-record');
+}
+
+function useDemoMode() {
+  demoMode = true;
+  apiKey = 'demo';
+  initRecordScreen();
+  showScreen('screen-record');
+}
+
+function initRecordScreen() {
+  recordings = [];
+  currentSentence = 0;
+  updateSentenceUI();
+  renderRecList();
+}
+
+function updateSentenceUI() {
+  document.getElementById('sent-num').textContent = `SENTENCE ${currentSentence + 1} / ${SENTENCES.length}`;
+  document.getElementById('sent-text').textContent = SENTENCES[currentSentence];
+  document.getElementById('rec-progress').style.width = (currentSentence / SENTENCES.length * 100) + '%';
+}
+
+function renderRecList() {
+  const list = document.getElementById('rec-list');
+  list.innerHTML = SENTENCES.map((s, i) => `
+    <div class="rec-item">
+      <div class="rec-dot ${recordings[i] ? '' : 'pending'}"></div>
+      <div class="rec-text">${s.substring(0, 40)}…</div>
+      <div class="rec-status ${recordings[i] ? '' : 'pending'}">${recordings[i] ? '✓ recorded' : 'pending'}</div>
+    </div>`).join('');
+
+  const allDone = recordings.length === SENTENCES.length && recordings.every(r => r);
+  document.getElementById('clone-btn').disabled = !allDone;
+}
+
+async function toggleRecord() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    await startRecording();
+  }
+}
+
+async function startRecording() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = handleRecordingStop;
+    mediaRecorder.start();
+    isRecording = true;
+
+    const btn = document.getElementById('mic-btn');
+    btn.classList.add('recording');
+    document.getElementById('mic-label').textContent = 'Recording… tap to stop';
+    startWave();
+  } catch(e) {
+    document.getElementById('rec-error').textContent = '⚠️ Microphone access denied. Please allow mic and try again.';
+    document.getElementById('rec-error').style.display = 'block';
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && isRecording) {
+    mediaRecorder.stop();
+    stream?.getTracks().forEach(t => t.stop());
+    isRecording = false;
+    stopWave();
+    const btn = document.getElementById('mic-btn');
+    btn.classList.remove('recording');
+    document.getElementById('mic-label').textContent = 'Processing…';
+  }
+}
+
+function handleRecordingStop() {
+  const blob = new Blob(audioChunks, { type: 'audio/webm' });
+  recordings[currentSentence] = blob;
+
+  document.getElementById('mic-label').textContent = '✓ Recorded!';
+  setTimeout(() => {
+    currentSentence++;
+    if (currentSentence < SENTENCES.length) {
+      updateSentenceUI();
+      document.getElementById('mic-label').textContent = 'Tap to start recording';
+    } else {
+      document.getElementById('mic-label').textContent = 'All sentences recorded!';
+      document.getElementById('rec-progress').style.width = '100%';
+    }
+    renderRecList();
+  }, 600);
+}
+
+function startWave() {
+  const bars = document.querySelectorAll('.wbar');
+  waveInterval = setInterval(() => {
+    bars.forEach(b => {
+      b.style.height = (4 + Math.random() * 30) + 'px';
+      b.style.opacity = isRecording ? '0.9' : '0.3';
+    });
+  }, 100);
+}
+
+function stopWave() {
+  clearInterval(waveInterval);
+  document.querySelectorAll('.wbar').forEach(b => { b.style.height = '4px'; b.style.opacity = '0.3'; });
+}
+
+function setStep(step, status) {
+  const dot = document.getElementById('dot-' + step);
+  const st = document.getElementById('status-' + step);
+  dot.classList.remove('pending');
+  if (status === 'done') { dot.style.background = '#00e676'; st.textContent = '✓ done'; st.className = 'rec-status'; }
+  else if (status === 'working') { dot.style.background = '#ffab40'; st.textContent = '…'; st.className = 'rec-status'; st.style.color = '#ffab40'; }
+  else if (status === 'error') { dot.style.background = '#ff5252'; st.textContent = 'failed'; st.className = 'rec-status'; st.style.color = '#ff5252'; }
+}
+
+async function startCloning() {
+  showScreen('screen-cloning');
+
+  if (demoMode) {
+    // Demo mode — simulate cloning
+    await simulateCloning();
+    return;
+  }
+
+  try {
+    // Step 1 — combine recordings into one blob
+    setStep('upload', 'working');
+    document.getElementById('cloning-status').textContent = 'Combining recordings...';
+
+    const combinedBlob = new Blob(recordings, { type: 'audio/webm' });
+
+    // Step 2 — upload to xAI to clone voice
+    document.getElementById('cloning-status').textContent = 'Uploading to xAI...';
+    const formData = new FormData();
+    formData.append('files', combinedBlob, 'voice_sample.webm');
+    formData.append('name', 'My Callingo Voice');
+    formData.append('description', 'User voice clone for Callingo language learning');
+
+    const cloneRes = await fetch('/api/xai', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      body: formData
+    });
+
+    if (!cloneRes.ok) {
+      const err = await cloneRes.json();
+      throw new Error(err.error?.message || 'Clone failed: ' + cloneRes.status);
+    }
+
+    const cloneData = await cloneRes.json();
+    clonedVoiceId = cloneData.voice_id || cloneData.id;
+    setStep('upload', 'done');
+
+    // Step 3 — clone processing
+    setStep('clone', 'working');
+    document.getElementById('cloning-status').textContent = 'Cloning your voice...';
+    await sleep(2000);
+    setStep('clone', 'done');
+
+    // Step 4 — test generation
+    setStep('test', 'working');
+    document.getElementById('cloning-status').textContent = 'Generating test audio...';
+
+    const testAudio = await generateSpeech('Hello! Your voice has been cloned. You will now hear yourself speaking.', clonedVoiceId);
+    setStep('test', 'done');
+    document.getElementById('cloning-status').textContent = '✓ Voice cloned successfully!';
+
+    await sleep(500);
+    testAudio.play();
+    await sleep(3000);
+    initChat();
+
+  } catch(e) {
+    document.getElementById('cloning-status').textContent = '❌ ' + e.message;
+    setStep('upload', 'error');
+    setTimeout(() => showScreen('screen-record'), 3000);
+  }
+}
+
+async function simulateCloning() {
+  setStep('upload', 'working');
+  document.getElementById('cloning-status').textContent = 'Uploading voice sample...';
+  await sleep(1500);
+  setStep('upload', 'done');
+
+  setStep('clone', 'working');
+  document.getElementById('cloning-status').textContent = 'Cloning your voice...';
+  await sleep(2000);
+  setStep('clone', 'done');
+
+  setStep('test', 'working');
+  document.getElementById('cloning-status').textContent = 'Generating test audio...';
+  await sleep(1500);
+  setStep('test', 'done');
+
+  clonedVoiceId = 'demo-voice-id';
+  document.getElementById('cloning-status').textContent = '✓ Demo mode ready!';
+  await sleep(800);
+  initChat();
+}
+
+async function generateSpeech(text, voiceId) {
+  const res = await fetch('/api/xai', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'grok-tts-1',
+      input: text,
+      voice: voiceId,
+      response_format: 'mp3'
+    })
+  });
+
+  if (!res.ok) throw new Error('TTS failed: ' + res.status);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  return new Audio(url);
+}
+
+function initChat() {
+  showScreen('screen-chat');
+  document.getElementById('voice-id-display').textContent = 'voice_id: ' + (clonedVoiceId?.substring(0, 20) || 'demo') + '...';
+
+  addBubble('ai', "Your voice has been cloned! 🎙️ Ask me anything — I'll reply in your own voice.", "AI · Speaking in your voice");
+}
+
+function addBubble(role, text, sub) {
+  const area = document.getElementById('chat-area');
+  const b = document.createElement('div');
+  b.className = 'bubble ' + role;
+  b.innerHTML = `<div class="bubble-text">${text}</div>${sub ? `<div class="bubble-sub">${sub}</div>` : ''}`;
+  area.appendChild(b);
+  area.scrollTop = area.scrollHeight;
+  return b;
+}
+
+function addTyping() {
+  const area = document.getElementById('chat-area');
+  const t = document.createElement('div');
+  t.className = 'bubble ai';
+  t.id = 'typing-bubble';
+  t.innerHTML = '<div class="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+  area.appendChild(t);
+  area.scrollTop = area.scrollHeight;
+}
+
+function removeTyping() {
+  document.getElementById('typing-bubble')?.remove();
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  document.getElementById('chat-send-btn').disabled = true;
+  addBubble('user', text, 'You');
+  addTyping();
+
+  try {
+    // Step 1 — get text response from xAI
+    let responseText = '';
+
+    if (demoMode) {
+      await sleep(1200);
+      const demoReplies = [
+        "That's a great question! In demo mode I can show you how the conversation flows — with a real API key, you'd hear this in your own cloned voice.",
+        "Interesting! The voice cloning system captures your unique accent, tone and speaking style from the sentences you recorded.",
+        "With a real xAI API key, every word I say would be generated in your own voice. Imagine learning German and hearing yourself speak it fluently!",
+        "The system works by analyzing your voice patterns and applying them to any text — in any language you're learning.",
+      ];
+      responseText = demoReplies[Math.floor(Math.random() * demoReplies.length)];
+    } else {
+      const chatRes = await fetch('/api/xai', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'grok-3-mini',
+          messages: [
+            { role: 'system', content: 'You are a helpful language learning assistant. Keep responses concise and conversational — 1-3 sentences max. The user is testing a voice cloning feature.' },
+            { role: 'user', content: text }
+          ],
+          max_tokens: 150
+        })
+      });
+
+      if (!chatRes.ok) throw new Error('Chat failed: ' + chatRes.status);
+      const chatData = await chatRes.json();
+      responseText = chatData.choices[0].message.content;
+    }
+
+    removeTyping();
+    const bubble = addBubble('ai', responseText, '🎙️ Your cloned voice');
+
+    // Step 2 — generate speech in cloned voice
+    if (!demoMode) {
+      try {
+        const audio = await generateSpeech(responseText, clonedVoiceId);
+        bubble.querySelector('.bubble-sub').textContent = '🔊 Playing in your voice…';
+        audio.play();
+        audio.onended = () => {
+          bubble.querySelector('.bubble-sub').textContent = '🎙️ Your cloned voice';
+        };
+      } catch(e) {
+        bubble.querySelector('.bubble-sub').textContent = '⚠️ Audio generation failed';
+      }
+    } else {
+      // Demo: use browser TTS
+      const u = new SpeechSynthesisUtterance(responseText);
+      u.rate = 0.9;
+      speechSynthesis.speak(u);
+    }
+
+  } catch(e) {
+    removeTyping();
+    document.getElementById('chat-error').textContent = '❌ ' + e.message;
+    document.getElementById('chat-error').style.display = 'block';
+    setTimeout(() => { document.getElementById('chat-error').style.display = 'none'; }, 4000);
+  }
+
+  document.getElementById('chat-send-btn').disabled = false;
+  document.getElementById('chat-input').focus();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
