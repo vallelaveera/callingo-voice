@@ -814,6 +814,14 @@ Rules:
 - Speak ONLY German.
 - Maximum 8 words.
 - Only 1 short sentence.
+- Maximum 2 sentences.
+- Never use markdown.
+- Never use bullet points.
+- Never use numbered lists.
+- Never use asterisks.
+- Speak like a real phone call.
+- Ask only ONE thing at a time.
+- Responses should sound natural when read aloud.
 - Never give long explanations.
 - Never explain your reasoning.
 - Never ask multiple questions.
@@ -857,6 +865,14 @@ Rules:
 - Speak ONLY German.
 - Maximum 8 words.
 - Only 1 short sentence.
+- Maximum 2 sentences.
+- Never use markdown.
+- Never use bullet points.
+- Never use numbered lists.
+- Never use asterisks.
+- Speak like a real phone call.
+- Ask only ONE thing at a time.
+- Responses should sound natural when read aloud.
 - Never give long explanations.
 - Never explain your reasoning.
 - Never ask multiple questions.
@@ -881,6 +897,14 @@ Rules:
 - Speak ONLY German.
 - Maximum 8 words.
 - Only 1 short sentence.
+- Maximum 2 sentences.
+- Never use markdown.
+- Never use bullet points.
+- Never use numbered lists.
+- Never use asterisks.
+- Speak like a real phone call.
+- Ask only ONE thing at a time.
+- Responses should sound natural when read aloud.
 - Assume transcription mistakes are common.
 - Never overexplain.
 - Keep conversation natural and fast.
@@ -901,6 +925,14 @@ Rules:
 - Speak ONLY German.
 - Maximum 8 words.
 - Only 1 short sentence.
+- Maximum 2 sentences.
+- Never use markdown.
+- Never use bullet points.
+- Never use numbered lists.
+- Never use asterisks.
+- Speak like a real phone call.
+- Ask only ONE thing at a time.
+- Responses should sound natural when read aloud.
 - Assume transcription mistakes are common.
 - Never overanalyze unclear phrases.
 - Keep conversation flowing naturally.
@@ -921,6 +953,14 @@ Rules:
 - Speak ONLY German.
 - Maximum 8 words.
 - Only 1 short sentence.
+- Maximum 2 sentences.
+- Never use markdown.
+- Never use bullet points.
+- Never use numbered lists.
+- Never use asterisks.
+- Speak like a real phone call.
+- Ask only ONE thing at a time.
+- Responses should sound natural when read aloud.
 - Assume transcription mistakes are common.
 - Never give long explanations.
 - Ask very short questions.
@@ -941,6 +981,14 @@ Rules:
 - Speak ONLY German.
 - Maximum 8 words.
 - Only 1 short sentence.
+- Maximum 2 sentences.
+- Never use markdown.
+- Never use bullet points.
+- Never use numbered lists.
+- Never use asterisks.
+- Speak like a real phone call.
+- Ask only ONE thing at a time.
+- Responses should sound natural when read aloud.
 - Keep conversation professional and natural.
 - Assume speech-to-text mistakes are common.
 - Never overexplain.
@@ -962,6 +1010,14 @@ You are a real-time English tutor in a live voice call.
 Rules:
 - Maximum 8 words.
 - Only 1 short sentence.
+- Maximum 2 sentences.
+- Never use markdown.
+- Never use bullet points.
+- Never use numbered lists.
+- Never use asterisks.
+- Speak like a real phone call.
+- Ask only ONE thing at a time.
+- Responses should sound natural when read aloud.
 - Never give detailed explanations.
 - Never explain reasoning.
 - Never ask multiple questions.
@@ -1004,6 +1060,14 @@ You are a real-time English tutor in a live voice call.
 Rules:
 - Maximum 8 words.
 - Only 1 short sentence.
+- Maximum 2 sentences.
+- Never use markdown.
+- Never use bullet points.
+- Never use numbered lists.
+- Never use asterisks.
+- Speak like a real phone call.
+- Ask only ONE thing at a time.
+- Responses should sound natural when read aloud.
 - Never overexplain.
 - Assume speech-to-text mistakes are common.
 - Keep conversation moving naturally.
@@ -1023,6 +1087,14 @@ You are a real-time English tutor in a live voice call.
 Rules:
 - Maximum 8 words.
 - Only 1 short sentence.
+- Maximum 2 sentences.
+- Never use markdown.
+- Never use bullet points.
+- Never use numbered lists.
+- Never use asterisks.
+- Speak like a real phone call.
+- Ask only ONE thing at a time.
+- Responses should sound natural when read aloud.
 - Assume transcription mistakes are common.
 - Never ask multiple questions.
 
@@ -1041,6 +1113,14 @@ You are a real-time English tutor in a live voice call.
 Rules:
 - Maximum 8 words.
 - Only 1 short sentence.
+- Maximum 2 sentences.
+- Never use markdown.
+- Never use bullet points.
+- Never use numbered lists.
+- Never use asterisks.
+- Speak like a real phone call.
+- Ask only ONE thing at a time.
+- Responses should sound natural when read aloud.
 - Keep replies natural and fast.
 - Assume speech-to-text mistakes are common.
 
@@ -1059,6 +1139,14 @@ You are a real-time English tutor in a live voice call.
 Rules:
 - Maximum 8 words.
 - Only 1 short sentence.
+- Maximum 2 sentences.
+- Never use markdown.
+- Never use bullet points.
+- Never use numbered lists.
+- Never use asterisks.
+- Speak like a real phone call.
+- Ask only ONE thing at a time.
+- Responses should sound natural when read aloud.
 - Ask short questions only.
 - Never overexplain.
 - Assume speech-to-text mistakes are common.
@@ -1078,6 +1166,14 @@ You are a real-time English tutor in a live voice call.
 Rules:
 - Maximum 8 words.
 - Only 1 short sentence.
+- Maximum 2 sentences.
+- Never use markdown.
+- Never use bullet points.
+- Never use numbered lists.
+- Never use asterisks.
+- Speak like a real phone call.
+- Ask only ONE thing at a time.
+- Responses should sound natural when read aloud.
 - Keep replies professional and natural.
 - Assume speech-to-text mistakes are common.
 - Never overexplain.
@@ -1522,7 +1618,19 @@ async function handleUserSpeech(text) {
       .replace(/\bah+\b/gi, '')
       .trim();
 
-    const reply = await callClaude(cleaned);
+    let reply = await callClaude(cleaned);
+
+    reply = cleanAIText(reply);
+
+    reply = reply
+      .split(/[.!?]/)
+      .slice(0, 2)
+      .join('. ')
+      .trim();
+
+    if (reply && !reply.endsWith('.')) {
+      reply += '.';
+    }
     removeTyping();
     STATE.callHistory.push({ role: 'assistant', content: reply });
     await speakAI(reply);
@@ -1542,6 +1650,30 @@ function playFiller() {
     } catch(e) {}
   }
 }
+
+// ============================================================
+// AI RESPONSE CLEANER
+// ============================================================
+
+function cleanAIText(text) {
+  return text
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    .replace(/`/g, '')
+    .replace(/^\s*[-•]\s*/gm, '')
+    .replace(/^\s*\d+\.\s*/gm, '')
+    .replace(/\s+/g, ' ')
+    .replace(/I'd be happy to help/gi, '')
+    .replace(/Great!/gi, '')
+    .replace(/Certainly!/gi, '')
+    .replace(/Of course!/gi, '')
+    .replace(
+      /To give you the most useful preparation assistance.*?:/gi,
+      'What role are you interviewing for?'
+    )
+    .trim();
+}
+
 
 // ============================================================
 // API CALLS
