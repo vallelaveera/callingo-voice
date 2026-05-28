@@ -945,9 +945,9 @@ body{
       📞 Start Call
     </button>
 
-    <!-- Shadowing mode -->
-    <button class="btn btn-outline" id="shadow-mode-btn" disabled onclick="startShadowMode()" style="padding:12px;font-size:12px;">
-      🔁 Shadowing Mode
+    <!-- Pronounce It -->
+    <button class="btn btn-outline" id="pronounce-mode-btn" disabled onclick="startShadowMode()" style="padding:12px;font-size:12px;">
+      🎤 Pronounce It
     </button>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -991,7 +991,8 @@ body{
 
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
       <button class="btn btn-primary" onclick="proceedToCall()">📞 Start Call →</button>
-      <button class="btn btn-outline" onclick="proceedToCall()" style="padding:10px;font-size:12px;">⏩ Skip vocab, just call</button>
+      <button class="btn btn-outline" onclick="proceedToPronounce()" style="padding:12px;font-size:13px;">🎤 Pronounce It first →</button>
+      <button class="btn btn-outline" onclick="proceedToCall()" style="padding:10px;font-size:12px;">⏩ Skip, just call</button>
     </div>
   </div>
 </div>
@@ -1146,15 +1147,15 @@ body{
   </div>
 </div>
 
-<!-- ============ SCREEN: SHADOWING MODE ============ -->
+<!-- ============ SCREEN: PRONOUNCE IT ============ -->
 <div id="screen-shadow" class="screen">
   <div class="top-bar">
-    <button class="back-btn" onclick="goNext('screen-home')">←</button>
-    <span class="top-title">🔁 Shadowing</span>
-    <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--sub);" id="shadow-counter">1 / 5</span>
+    <button class="back-btn" id="shadow-back-btn" onclick="exitPronounceIt()">←</button>
+    <span class="top-title">🎤 Pronounce It</span>
+    <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--sub);" id="shadow-counter">1 / 20</span>
   </div>
   <div class="scroll-content" style="gap:16px;">
-    <div class="subtext">Listen to the phrase, then tap the mic to repeat it. Score 80+ to advance.</div>
+    <div class="subtext">Listen to each phrase — it will record you automatically. Just speak after the beep.</div>
 
     <div class="shadow-phrase">
       <div class="shadow-phrase-target" id="shadow-target">—</div>
@@ -1166,24 +1167,26 @@ body{
         <div class="shadow-score-num" id="shadow-score-num">—</div>
       </div>
       <div class="shadow-result">
-        <div class="shadow-result-label" id="shadow-result-label">READY TO LISTEN</div>
-        <div class="shadow-result-text" id="shadow-result-text">Tap play to hear the phrase</div>
+        <div class="shadow-result-label" id="shadow-result-label">GETTING READY…</div>
+        <div class="shadow-result-text" id="shadow-result-text"></div>
       </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
-      <button class="btn btn-outline" onclick="playShadowPhrase()" id="shadow-play-btn" style="width:auto;padding:12px 28px;">
-        🔊 Play phrase
-      </button>
-      <button class="mic-btn disabled" id="shadow-mic" onclick="recordShadow()" style="width:72px;height:72px;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="currentColor"/><path d="M19 10a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V22h2v-3.06A9 9 0 0 0 21 10z" fill="currentColor"/></svg>
-      </button>
-      <div class="mic-hint" id="shadow-hint">PLAY FIRST, THEN REPEAT</div>
+    <!-- Auto-record status indicator -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+      <div id="shadow-status-icon" style="width:72px;height:72px;border-radius:50%;border:3px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;transition:all 0.3s;">
+        🔊
+      </div>
+      <div class="mic-hint" id="shadow-hint">LOADING…</div>
     </div>
 
+    <button class="btn btn-outline" onclick="playShadowPhrase()" id="shadow-play-btn" style="padding:10px 24px;font-size:13px;">
+      🔊 Hear again
+    </button>
+
     <div style="display:flex;gap:10px;">
-      <button class="btn btn-outline" onclick="nextShadowPhrase()" style="flex:1;padding:12px;font-size:12px;">⏭ Next phrase</button>
-      <button class="btn btn-primary" onclick="goNext('screen-home')" style="flex:1;padding:12px;font-size:12px;">✓ Done</button>
+      <button class="btn btn-outline" onclick="nextShadowPhrase()" style="flex:1;padding:12px;font-size:12px;">⏭ Skip</button>
+      <button class="btn btn-primary" id="shadow-done-btn" onclick="exitPronounceIt()" style="flex:1;padding:12px;font-size:12px;">✓ Done</button>
     </div>
 
     <div class="err" id="shadow-err"></div>
@@ -1277,6 +1280,7 @@ const STATE = {
   shadowIdx: 0,
   shadowPlayed: false,
   callMode: 'normal',       // normal | shadow | daily
+  silenceStrikes: 0,        // nudge count — auto-cut at 2
 };
 
 const WELCOME_VOICE_EMAIL = 'veera.reddy619@gmail.com';
@@ -2245,7 +2249,7 @@ function selectTopic(id) {
   event.currentTarget.classList.add('selected');
   document.getElementById('custom-topic-inp').value = '';
   document.getElementById('start-call-btn').disabled = false;
-  const sb = document.getElementById('shadow-mode-btn');
+  const sb = document.getElementById('pronounce-mode-btn');
   if (sb) sb.disabled = false;
   // Store vocab for this topic
   STATE.vocabCards = (VOCAB_CARDS[STATE.practiceLang] || VOCAB_CARDS.de)[id] || [];
@@ -2295,7 +2299,7 @@ Keep the conversation about this topic naturally.
   document.querySelectorAll('.topic-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('start-call-btn').disabled = false;
   STATE.vocabCards = []; // No pre-built vocab for custom topics
-  const sb = document.getElementById('shadow-mode-btn');
+  const sb = document.getElementById('pronounce-mode-btn');
   if (sb) sb.disabled = false;
 }
 let vocabIdx = 0;
@@ -2343,7 +2347,7 @@ function renderVocabDeck() {
       <div class="vcard-emoji">${card.emoji}</div>
       <div class="vcard-word" id="vcard-word-${i}">${card.word}</div>
       <div class="vcard-sub" id="vcard-sub-${i}">tap card to see translation</div>
-      <button onclick="event.stopPropagation();playVocabAudio(${i})" id="vcard-spk-${i}"
+      <button onclick="event.stopPropagation();playVocabAndPronounce(${i})" id="vcard-spk-${i}"
         style="margin-top:12px;background:var(--green-dim);border:1px solid rgba(0,168,107,0.3);
                border-radius:20px;padding:6px 16px;font-size:13px;cursor:pointer;color:var(--green);">
         🔊 Hear it
@@ -2472,6 +2476,9 @@ async function startCall() {
 }
 
 async function launchCall() {
+  _callActive = true;
+  STATE.silenceStrikes = 0;
+  _nudgeAudio = null;
   STATE.callHistory = [];
   STATE.callSecs = 0;
   STATE.warmupPhase = false;
@@ -2490,6 +2497,9 @@ async function launchCall() {
     STATE.callSecs++;
     document.getElementById('call-timer').textContent = fmt(STATE.callSecs);
   }, 1000);
+
+  // Pre-cache nudge audio in background
+  setTimeout(preCacheNudgeAudio, 2000);
 
   // Go straight to topic — no warmup questions
   setCallStatus('🔊 AI is speaking...');
@@ -2680,6 +2690,7 @@ async function startListening() {
     const data = new Uint8Array(_analyser.frequencyBinCount);
     let lastSoundAt = Date.now();
     let userHasSpoken = false;
+    let nudgeTimer = setTimeout(() => _onSilenceNudge(), 4000); // nudge after 4s of nothing
 
     _silenceCheck = setInterval(() => {
       if (!_analyser) return;
@@ -2689,8 +2700,11 @@ async function startListening() {
       if (vol > 10) {
         userHasSpoken = true;
         lastSoundAt = Date.now();
+        clearTimeout(nudgeTimer); // cancel nudge — they spoke
+        nudgeTimer = null;
       } else if (userHasSpoken && Date.now() - lastSoundAt > SILENCE_THRESHOLD_MS) {
         // User spoke and then went silent — send it
+        clearTimeout(nudgeTimer);
         _stopRecording();
       }
     }, 100);
@@ -2713,10 +2727,12 @@ async function _onRecordingDone() {
   clearInterval(_silenceCheck);
   _silenceCheck = null;
 
+  // Don't process if call has ended
+  if (!_callActive) return;
+
   const elapsed = Date.now() - _recordStart;
   if (elapsed < MIN_RECORD_MS || _audioChunks.length === 0) {
-    // Too short — probably silence — just restart listening
-    setTimeout(startListening, 200);
+    if (_callActive) setTimeout(startListening, 200);
     return;
   }
 
@@ -2742,7 +2758,7 @@ async function _onRecordingDone() {
 
     if (!text || text.length < 2) {
       // Empty transcription — listen again
-      setTimeout(startListening, 300);
+      if (_callActive) setTimeout(startListening, 300);
       return;
     }
 
@@ -2755,6 +2771,8 @@ async function _onRecordingDone() {
     setTimeout(startListening, 500);
   }
 }
+
+let _callActive = false; // guards against recording callbacks firing after call ends
 
 function stopListening() {
   STATE.isListening = false;
@@ -2824,8 +2842,58 @@ function playFiller() {
 }
 
 // ============================================================
-// AI RESPONSE CLEANER
+// SILENCE NUDGE — plays a short prompt, cuts call after 2 tries
 // ============================================================
+let _nudgeAudio = null; // pre-cached nudge TTS
+
+async function preCacheNudgeAudio() {
+  if (_nudgeAudio || !STATE.voiceId) return;
+  const nudges = {
+    de: 'Hmm? Bitte antworten.',
+    en: 'Hmm? Go ahead.',
+  };
+  try {
+    const msg   = nudges[STATE.practiceLang] || nudges.en;
+    const audio = await tts(msg);
+    if (audio) _nudgeAudio = audio;
+  } catch(e) {}
+}
+
+async function _onSilenceNudge() {
+  if (!_callActive) return;
+  STATE.silenceStrikes = (STATE.silenceStrikes || 0) + 1;
+
+  if (STATE.silenceStrikes >= 2) {
+    // 2 strikes — end the call gracefully
+    _stopRecording();
+    stopListening();
+    // Show a brief message in the bubble then end
+    addBubble('ai', 'It seems you\'re not there. Ending the call now.',
+      STATE.practiceLang === 'de' ? 'Es scheint, du bist nicht da. Ich beende das Gespräch.' : null);
+    await sleep(1200);
+    endCall();
+    return;
+  }
+
+  // Strike 1 — play nudge audio + show subtle hint
+  setCallStatus('💬 Say something…');
+  if (_nudgeAudio) {
+    try {
+      _nudgeAudio.currentTime = 0;
+      await new Promise(r => { _nudgeAudio.onended = r; _nudgeAudio.onerror = r; _nudgeAudio.play(); });
+    } catch(e) {}
+  } else {
+    // Fallback — text hint only
+    addBubble('ai', '…', STATE.practiceLang === 'de' ? '…' : null);
+  }
+  // Pulse the mic button visually
+  const mic = document.getElementById('main-mic');
+  if (mic) {
+    mic.style.transform = 'scale(1.15)';
+    setTimeout(() => { if (mic) mic.style.transform = ''; }, 600);
+  }
+  setCallStatus('🎤 Your turn — say anything');
+}
 
 function cleanAIText(text) {
   return text
@@ -3134,6 +3202,7 @@ async function browserTTS(text) {
 // END CALL + REPORT
 // ============================================================
 async function endCall() {
+  _callActive = false;
   stopListening();
   _clearQueue();
   STATE.isSpeaking = false;
@@ -3743,173 +3812,240 @@ const SHADOW_PHRASES = {
 };
 
 // ============================================================
-// SHADOWING MODE — fully rebuilt
+// PRONOUNCE IT — fully rebuilt with auto-record
 // ============================================================
+
+let _pronounceReturnScreen = 'screen-home'; // where Done/Back goes
+
+function exitPronounceIt() {
+  // Stop any in-progress recording
+  _shadowRecording = false;
+  if (_shadowRecorder?.state === 'recording') {
+    try { _shadowRecorder.stop(); } catch(e) {}
+  }
+  goNext(_pronounceReturnScreen);
+}
+
 function startShadowMode() {
   if (!STATE.selectedTopic) return;
-  const phrases = (SHADOW_PHRASES[STATE.practiceLang] || SHADOW_PHRASES.de)[STATE.selectedTopic.id] || [];
+  _pronounceReturnScreen = 'screen-home';
+  _launchPronounceIt(
+    (SHADOW_PHRASES[STATE.practiceLang] || SHADOW_PHRASES.de)[STATE.selectedTopic.id] || [],
+    'screen-home'
+  );
+}
+
+// Called from vocab screen — "Pronounce It first →"
+function proceedToPronounce() {
+  if (!STATE.selectedTopic) return;
+  _pronounceReturnScreen = 'vocab-to-call'; // special flag → go to call after
+  _launchPronounceIt(
+    (SHADOW_PHRASES[STATE.practiceLang] || SHADOW_PHRASES.de)[STATE.selectedTopic.id] || [],
+    'screen-vocab'
+  );
+}
+
+function _launchPronounceIt(phrases, returnScreen) {
   STATE.shadowPhrases = phrases;
   STATE.shadowIdx     = 0;
   STATE.shadowPlayed  = false;
   STATE.callMode      = 'shadow';
+  _pronounceReturnScreen = returnScreen;
+  // Update done button behaviour
+  const doneBtn = document.getElementById('shadow-done-btn');
+  if (doneBtn) doneBtn.onclick = () => {
+    _shadowRecording = false;
+    if (_shadowRecorder?.state === 'recording') { try { _shadowRecorder.stop(); } catch(e) {} }
+    if (_pronounceReturnScreen === 'vocab-to-call') {
+      launchCall();
+    } else {
+      goNext('screen-home');
+    }
+  };
+  const backBtn = document.getElementById('shadow-back-btn');
+  if (backBtn) backBtn.onclick = exitPronounceIt;
   renderShadowPhrase();
   goNext('screen-shadow');
-  // Auto-play first phrase after a brief moment
-  setTimeout(playShadowPhrase, 800);
+  setTimeout(playShadowPhrase, 600);
 }
 
 function renderShadowPhrase() {
   const phrases = STATE.shadowPhrases;
   const p = phrases[STATE.shadowIdx];
   if (!p) return;
-  document.getElementById('shadow-target').textContent    = p.t;
-  document.getElementById('shadow-en').textContent        = p.e;
-  document.getElementById('shadow-counter').textContent   = `${STATE.shadowIdx + 1} / ${phrases.length}`;
-  document.getElementById('shadow-score-num').textContent = '—';
-  document.getElementById('shadow-score-num').style.color = 'var(--green)';
-  document.getElementById('shadow-result-label').textContent = 'GETTING READY…';
+  document.getElementById('shadow-target').textContent      = p.t;
+  document.getElementById('shadow-en').textContent          = p.e;
+  document.getElementById('shadow-counter').textContent     = `${STATE.shadowIdx + 1} / ${phrases.length}`;
+  document.getElementById('shadow-score-num').textContent   = '—';
+  document.getElementById('shadow-score-num').style.color   = 'var(--green)';
+  document.getElementById('shadow-result-label').textContent = 'LISTEN…';
   document.getElementById('shadow-result-text').textContent  = '';
   document.getElementById('shadow-ring').style.background    = `conic-gradient(var(--green) 0%, var(--border) 0%)`;
-  document.getElementById('shadow-mic').classList.add('disabled');
-  document.getElementById('shadow-hint').textContent = 'LISTEN FIRST';
+  setShadowIcon('🔊', 'var(--border)', 'LISTEN CAREFULLY');
   const err = document.getElementById('shadow-err');
   if (err) { err.style.display = 'none'; err.textContent = ''; }
   STATE.shadowPlayed = false;
+}
+
+function setShadowIcon(emoji, borderColor, hint) {
+  const icon = document.getElementById('shadow-status-icon');
+  if (icon) {
+    icon.textContent   = emoji;
+    icon.style.border  = `3px solid ${borderColor}`;
+  }
+  const h = document.getElementById('shadow-hint');
+  if (h) h.textContent = hint;
 }
 
 async function playShadowPhrase() {
   const p = STATE.shadowPhrases[STATE.shadowIdx];
   if (!p) return;
   const playBtn = document.getElementById('shadow-play-btn');
-  const micBtn  = document.getElementById('shadow-mic');
   if (playBtn) playBtn.disabled = true;
+  setShadowIcon('🔊', 'var(--green)', 'LISTEN…');
   document.getElementById('shadow-result-label').textContent = '🔊 LISTEN…';
   document.getElementById('shadow-result-text').textContent  = p.t;
-  document.getElementById('shadow-hint').textContent = 'LISTEN CAREFULLY';
   try {
     const audio = await tts(p.t);
-    if (audio) {
-      await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
-    }
+    if (audio) await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
   } catch(e) {}
   if (playBtn) playBtn.disabled = false;
-  micBtn.classList.remove('disabled');
-  document.getElementById('shadow-result-label').textContent = '🎤 YOUR TURN';
-  document.getElementById('shadow-result-text').textContent  = 'Tap the mic and repeat exactly';
-  document.getElementById('shadow-hint').textContent = 'TAP MIC TO REPEAT';
+
+  // Auto-record after 800ms pause
+  document.getElementById('shadow-result-label').textContent = 'GET READY…';
+  document.getElementById('shadow-result-text').textContent  = 'Recording starts in…';
+  setShadowIcon('⏳', 'var(--gold)', 'RECORDING IN 1 SECOND…');
   STATE.shadowPlayed = true;
+  await sleep(800);
+  _autoRecord();
 }
 
-let _shadowRecorder = null;
-let _shadowChunks   = [];
+let _shadowRecorder  = null;
+let _shadowChunks    = [];
 let _shadowRecording = false;
+let _shadowSilenceCheck = null;
+let _shadowAudioCtx  = null;
 
-async function recordShadow() {
-  if (!STATE.shadowPlayed) {
-    document.getElementById('shadow-hint').textContent = 'PLAY THE PHRASE FIRST';
-    return;
-  }
-  const micBtn = document.getElementById('shadow-mic');
-  if (micBtn.classList.contains('disabled')) return;
+async function _autoRecord() {
+  if (_shadowRecording) return;
+  _shadowRecording = true;
+  setShadowIcon('🔴', 'var(--red)', 'RECORDING — SPEAK NOW');
+  document.getElementById('shadow-result-label').textContent = '🎤 SPEAK NOW';
+  document.getElementById('shadow-result-text').textContent  = STATE.shadowPhrases[STATE.shadowIdx]?.t || '';
 
-  // If already recording — stop
-  if (_shadowRecording) {
-    _shadowRecording = false;
-    if (_shadowRecorder && _shadowRecorder.state === 'recording') {
-      _shadowRecorder.stop();
-    }
-    return;
-  }
-
-  // Start recording
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    _shadowChunks   = [];
-    _shadowRecording = true;
+    _shadowChunks = [];
+
+    // Silence detection
+    if (_shadowAudioCtx) { try { await _shadowAudioCtx.close(); } catch(e) {} }
+    _shadowAudioCtx  = new (window.AudioContext || window.webkitAudioContext)();
+    const source     = _shadowAudioCtx.createMediaStreamSource(stream);
+    const analyser   = _shadowAudioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    source.connect(analyser);
 
     const mimeType = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4']
       .find(m => MediaRecorder.isTypeSupported(m)) || '';
     _shadowRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
     _shadowRecorder.ondataavailable = e => { if (e.data.size > 0) _shadowChunks.push(e.data); };
     _shadowRecorder.onstop = () => _onShadowRecordDone(stream);
-    _shadowRecorder.start();
+    _shadowRecorder.start(100);
 
-    micBtn.classList.add('recording');
-    document.getElementById('shadow-hint').textContent = 'RECORDING… TAP TO STOP';
-    document.getElementById('shadow-result-label').textContent = '🔴 RECORDING';
-    document.getElementById('shadow-result-text').textContent  = 'Speak the phrase now…';
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    let lastSoundAt = Date.now();
+    let userSpoke   = false;
+    // Nudge after 3s if user hasn't said anything
+    const pronounceNudge = setTimeout(() => {
+      if (!userSpoke && _shadowRecording) {
+        setShadowIcon('👆', 'var(--gold)', 'SAY THE PHRASE OUT LOUD');
+        document.getElementById('shadow-result-label').textContent = 'SPEAK UP — WE\'RE LISTENING';
+      }
+    }, 3000);
 
-    // Auto-stop after 8 seconds max
+    _shadowSilenceCheck = setInterval(() => {
+      if (!_shadowRecording) { clearInterval(_shadowSilenceCheck); clearTimeout(pronounceNudge); return; }
+      analyser.getByteFrequencyData(data);
+      const vol = data.reduce((a, b) => a + b, 0) / data.length;
+      if (vol > 10) {
+        userSpoke = true;
+        clearTimeout(pronounceNudge); // cancel nudge — they spoke
+        lastSoundAt = Date.now();
+      } else if (userSpoke && Date.now() - lastSoundAt > 1200) {
+        clearInterval(_shadowSilenceCheck);
+        _shadowRecording = false;
+        if (_shadowRecorder?.state === 'recording') _shadowRecorder.stop();
+      }
+    }, 100);
+
+    // Max 8s safety
     setTimeout(() => {
       if (_shadowRecording) {
+        clearInterval(_shadowSilenceCheck);
         _shadowRecording = false;
         if (_shadowRecorder?.state === 'recording') _shadowRecorder.stop();
       }
     }, 8000);
 
   } catch(err) {
-    document.getElementById('shadow-err').textContent = '⚠️ Mic access needed';
-    document.getElementById('shadow-err').style.display = 'block';
+    _shadowRecording = false;
+    setShadowIcon('⚠️', 'var(--red)', 'MIC ACCESS NEEDED');
+    document.getElementById('shadow-result-label').textContent = 'MIC BLOCKED';
+    document.getElementById('shadow-result-text').textContent  = 'Please allow microphone access';
   }
 }
 
 async function _onShadowRecordDone(stream) {
-  // Stop all tracks
   stream.getTracks().forEach(t => t.stop());
-  const micBtn = document.getElementById('shadow-mic');
-  micBtn.classList.remove('recording');
-  document.getElementById('shadow-hint').textContent = 'SCORING…';
-  document.getElementById('shadow-result-label').textContent = '⏳ ANALYSING';
+  setShadowIcon('⏳', 'var(--sub)', 'SCORING…');
+  document.getElementById('shadow-result-label').textContent = '⏳ SCORING…';
   document.getElementById('shadow-result-text').textContent  = '';
 
-  if (_shadowChunks.length === 0) {
-    document.getElementById('shadow-result-label').textContent = 'NO AUDIO — TRY AGAIN';
-    document.getElementById('shadow-hint').textContent = 'TAP MIC TO TRY AGAIN';
+  if (!_shadowChunks.length) {
+    setShadowIcon('🔊', 'var(--border)', 'TRY AGAIN');
+    document.getElementById('shadow-result-label').textContent = 'NOTHING HEARD';
+    document.getElementById('shadow-result-text').textContent  = 'Tap "Hear again" then speak';
     return;
   }
 
   try {
-    // Send to Groq Whisper
     const mimeType = _shadowRecorder?.mimeType || 'audio/webm';
-    const blob = new Blob(_shadowChunks, { type: mimeType });
+    const blob     = new Blob(_shadowChunks, { type: mimeType });
     const arrayBuf = await blob.arrayBuffer();
-    const lang = STATE.practiceLang || 'en';
+    const lang     = STATE.practiceLang || 'en';
 
     const res = await fetch(`/api/transcribe?lang=${lang}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/octet-stream' },
       body: arrayBuf,
     });
-
     if (!res.ok) throw new Error('Transcribe failed');
     const data = await res.json();
     const said = (data.text || '').trim();
 
     if (!said) {
+      setShadowIcon('🔊', 'var(--border)', 'TAP HEAR AGAIN');
       document.getElementById('shadow-result-label').textContent = 'COULDN\'T HEAR YOU';
-      document.getElementById('shadow-result-text').textContent  = 'Try again — speak clearly';
-      document.getElementById('shadow-hint').textContent = 'TAP MIC TO TRY AGAIN';
+      document.getElementById('shadow-result-text').textContent  = 'Try again, speak clearly';
       return;
     }
 
-    // Score it
     const result = await scoreShadow(STATE.shadowPhrases[STATE.shadowIdx].t, said);
     showShadowScore(result, said);
-
-    // Award XP
     if (result.score >= 80) awardXP(10);
     else if (result.score >= 50) awardXP(5);
-
-    // Auto-advance on high score after a pause
-    if (result.score >= 85) {
-      setTimeout(nextShadowPhrase, 2000);
-    }
+    // Auto-advance on high score
+    if (result.score >= 85) setTimeout(nextShadowPhrase, 2200);
 
   } catch(err) {
-    document.getElementById('shadow-result-label').textContent = 'ERROR — TRY AGAIN';
-    document.getElementById('shadow-hint').textContent = 'TAP MIC TO TRY AGAIN';
+    setShadowIcon('🔊', 'var(--border)', 'ERROR — TAP HEAR AGAIN');
+    document.getElementById('shadow-result-label').textContent = 'ERROR';
+    document.getElementById('shadow-result-text').textContent  = 'Tap "Hear again" to retry';
   }
 }
+
+// Keep recordShadow as no-op (manual button removed, keeping for safety)
+function recordShadow() {}
 
 async function scoreShadow(target, said) {
   try {
@@ -3918,47 +4054,133 @@ async function scoreShadow(target, said) {
       body: JSON.stringify({
         messages: [{ role: 'user', content:
           `Target: "${target}"\nUser said: "${said}"\n` +
-          `Score pronunciation accuracy 0-100. Consider: word accuracy, completeness, order.\n` +
-          `Return ONLY JSON: {"score":<0-100>,"feedback":"<one short encouraging sentence>","said":"${said}"}` }],
+          `Score pronunciation accuracy 0-100. Consider word accuracy, completeness, order.\n` +
+          `Return ONLY JSON: {"score":<0-100>,"feedback":"<one short encouraging sentence>"}` }],
         system: 'You are a pronunciation coach. Return only valid JSON.',
         max_tokens: 80,
       })
     });
     const data   = await res.json();
-    const parsed = JSON.parse((data.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim());
-    return parsed;
-  } catch(e) { return { score: 60, feedback: 'Good effort! Keep practicing.', said }; }
+    return JSON.parse((data.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim());
+  } catch(e) { return { score: 60, feedback: 'Good effort! Keep going.' }; }
 }
 
 function showShadowScore(result, said) {
   const score    = result.score || 0;
   const feedback = result.feedback || '';
-  const pct   = score / 100;
-  const color = score >= 80 ? 'var(--green)' : score >= 50 ? 'var(--gold)' : 'var(--red)';
-
+  const pct      = score / 100;
+  const color    = score >= 80 ? 'var(--green)' : score >= 50 ? 'var(--gold)' : 'var(--red)';
+  const emoji    = score >= 80 ? '🎉' : score >= 50 ? '👍' : '💪';
   document.getElementById('shadow-ring').style.background =
     `conic-gradient(${color} ${pct * 360}deg, var(--border) 0deg)`;
   document.getElementById('shadow-score-num').textContent = score;
   document.getElementById('shadow-score-num').style.color = color;
-
-  const label = score >= 80 ? '🎉 EXCELLENT!' : score >= 50 ? '👍 GOOD EFFORT' : '💪 TRY AGAIN';
-  document.getElementById('shadow-result-label').textContent = label;
-  // Show what they said + feedback
+  document.getElementById('shadow-result-label').textContent =
+    score >= 80 ? '🎉 EXCELLENT!' : score >= 50 ? '👍 GOOD EFFORT' : '💪 TRY AGAIN';
   document.getElementById('shadow-result-text').textContent = `"${said}" · ${feedback}`;
-  document.getElementById('shadow-hint').textContent =
-    score >= 85 ? 'Perfect! Moving to next…' : 'Tap play to hear again or next phrase';
+  setShadowIcon(emoji, color, score >= 85 ? 'GREAT! NEXT PHRASE…' : 'TAP HEAR AGAIN OR SKIP');
 }
 
 function nextShadowPhrase() {
+  clearInterval(_shadowSilenceCheck);
   _shadowRecording = false;
   if (STATE.shadowIdx < STATE.shadowPhrases.length - 1) {
     STATE.shadowIdx++;
     renderShadowPhrase();
-    // Auto-play next phrase
     setTimeout(playShadowPhrase, 400);
   } else {
     awardXP(20);
-    goNext('screen-home');
+    if (_pronounceReturnScreen === 'vocab-to-call') {
+      launchCall();
+    } else {
+      goNext('screen-home');
+    }
+  }
+}
+
+// ============================================================
+// PRONOUNCE IT FOR VOCAB CARDS
+// ============================================================
+async function playVocabAndPronounce(i) {
+  const cards = STATE.vocabCards || [];
+  const card  = cards[i];
+  if (!card) return;
+  const btn = document.getElementById('vcard-spk-' + i);
+  if (btn) { btn.textContent = '🔊…'; btn.disabled = true; }
+
+  try {
+    const audio = await tts(card.word);
+    if (audio) await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+  } catch(e) {}
+
+  // Auto-record after hearing
+  if (btn) { btn.textContent = '🎤 Say it…'; }
+  await sleep(600);
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const chunks = [];
+    const mimeType = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus']
+      .find(m => MediaRecorder.isTypeSupported(m)) || '';
+    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+
+    // Silence detection for vocab
+    const audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
+    const source    = audioCtx.createMediaStreamSource(stream);
+    const analyser  = audioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    source.connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    let lastSound = Date.now(), spoke = false;
+
+    recorder.start(100);
+    const check = setInterval(() => {
+      analyser.getByteFrequencyData(data);
+      const vol = data.reduce((a,b)=>a+b,0)/data.length;
+      if (vol > 10) { spoke = true; lastSound = Date.now(); }
+      else if (spoke && Date.now()-lastSound > 1000) {
+        clearInterval(check);
+        recorder.stop();
+      }
+    }, 100);
+    setTimeout(() => { clearInterval(check); if (recorder.state==='recording') recorder.stop(); }, 5000);
+
+    await new Promise(resolve => { recorder.onstop = resolve; });
+    stream.getTracks().forEach(t => t.stop());
+    audioCtx.close();
+
+    if (!chunks.length) { if (btn) { btn.textContent = '🔊 Hear it'; btn.disabled = false; } return; }
+
+    const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
+    const arrayBuf = await blob.arrayBuffer();
+    const res = await fetch(`/api/transcribe?lang=${STATE.practiceLang || 'en'}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: arrayBuf,
+    });
+    const transcribed = await res.json();
+    const said = (transcribed.text || '').trim();
+
+    // Simple word match score
+    const targetWords = card.word.toLowerCase().split(' ');
+    const saidWords   = said.toLowerCase().split(' ');
+    const matches     = targetWords.filter(w => saidWords.some(s => s.includes(w) || w.includes(s)));
+    const score       = Math.round((matches.length / targetWords.length) * 100);
+    const color       = score >= 80 ? '#1D9E75' : score >= 50 ? '#BA7517' : '#E24B4A';
+    const emoji       = score >= 80 ? '🎉' : score >= 50 ? '👍' : '🔄';
+    if (btn) {
+      btn.textContent  = `${emoji} ${score}/100`;
+      btn.style.color  = color;
+      btn.style.borderColor = color;
+      btn.disabled = false;
+      // Reset after 3s
+      setTimeout(() => {
+        btn.textContent  = '🔊 Hear it';
+        btn.style.color  = '';
+        btn.style.borderColor = '';
+      }, 3000);
+    }
+  } catch(err) {
+    if (btn) { btn.textContent = '🔊 Hear it'; btn.disabled = false; }
   }
 }
 
@@ -4163,6 +4385,7 @@ async function handleUserSpeech(text) {
 
   addBubble('user', text);
   STATE.callHistory.push({ role: 'user', content: text });
+  STATE.silenceStrikes = 0; // reset — they responded
   setMicState('processing');
   addTyping();
 
