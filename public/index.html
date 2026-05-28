@@ -888,26 +888,41 @@ body{
 
 <!-- ============ SCREEN: HOME ============ -->
 <div id="screen-home" class="screen">
-  <div class="scroll-content">
-    <div>
-      <div class="logo" style="margin-bottom:8px;">Callingo</div>
-      <div class="headline" id="home-greeting">Good morning!</div>
-      <div class="subtext" id="home-sub" style="margin-top:6px;">Ready to practice?</div>
+
+  <!-- Sticky top header -->
+  <div style="position:sticky;top:0;z-index:10;background:var(--bg);padding:16px 20px 12px;border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div class="logo">Callingo</div>
+        <div style="font-size:18px;font-weight:800;margin-top:2px;" id="home-greeting">Good morning!</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:1px;" id="home-sub">Ready to practice?</div>
+      </div>
+      <!-- Quick-access icon buttons -->
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="goNext('screen-history')" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--s1);font-size:16px;cursor:pointer;" title="Call History">📋</button>
+        <button onclick="goNext('screen-confidence')" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--s1);font-size:16px;cursor:pointer;" title="Progress">📈</button>
+        <button onclick="goNext('screen-level')" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--s1);font-size:16px;cursor:pointer;" title="Settings">⚙️</button>
+      </div>
     </div>
 
-    <!-- Streak + XP -->
-    <div class="streak-bar" id="streak-bar">
-      <div class="streak-fire" id="streak-fire">🔥</div>
-      <div class="streak-info">
-        <div class="streak-num"><span id="streak-count">0</span> day streak</div>
-        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xp-bar" style="width:0%"></div></div>
-        <div class="xp-label"><span id="xp-count">0</span> XP · level up at <span id="xp-next">100</span></div>
+    <!-- Compact streak + XP row -->
+    <div style="display:flex;align-items:center;gap:10px;margin-top:10px;background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:8px 12px;">
+      <div style="font-size:20px;" id="streak-fire">🔥</div>
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <div style="font-size:12px;font-weight:700;"><span id="streak-count">0</span> day streak</div>
+          <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--sub);"><span id="xp-count">0</span> XP</div>
+        </div>
+        <div class="xp-bar-wrap" style="margin-top:4px;"><div class="xp-bar-fill" id="xp-bar" style="width:0%"></div></div>
       </div>
-      <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--sub);text-align:right;">
-        <div id="streak-best" style="font-weight:700;font-size:13px;color:var(--text);"></div>
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--sub);text-align:center;">
+        <div style="font-weight:700;font-size:13px;color:var(--text);" id="streak-best"></div>
         <div>best</div>
       </div>
     </div>
+  </div>
+
+  <div class="scroll-content" style="padding-top:12px;">
 
     <!-- Daily Challenge -->
     <div class="daily-badge" id="daily-badge" onclick="startDailyChallenge()">
@@ -916,52 +931,46 @@ body{
         <div class="daily-title" id="daily-title">Daily Challenge</div>
         <div class="daily-sub" id="daily-sub">Complete today's challenge for 2× XP</div>
       </div>
-      <div class="daily-done" id="daily-done"></div>
+      <div class="daily-done" id="daily-done">→</div>
     </div>
 
+    <!-- Voice badge -->
     <div class="voice-badge" id="voice-badge">
       <div class="badge-dot"></div>
       <div class="badge-text" id="voice-badge-text">Your voice is ready</div>
     </div>
 
-    <!-- Practice language + topic -->
+    <!-- Topic selector -->
     <div class="card">
-      <div class="card-label">Choose a topic to practice</div>
-      <div style="font-size:13px;color:var(--sub);margin-bottom:14px;" id="practice-lang-label">German · Deutsch</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+        <div class="card-label">Choose a topic</div>
+        <div style="font-size:11px;color:var(--sub);font-family:'DM Mono',monospace;" id="practice-lang-label">German</div>
+      </div>
       <div class="topic-grid" id="topic-grid"></div>
-
-      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-        <div style="font-size:11px;color:var(--sub);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">Or pick your own</div>
-        <input class="inp" id="custom-topic-inp" type="text" placeholder="e.g., Cooking, Sports, Travel…"
-          style="margin-bottom:8px;"
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;">
+        <input class="inp" id="custom-topic-inp" type="text" placeholder="Custom topic…"
+          style="flex:1;margin-bottom:0;"
           onkeydown="if(event.key==='Enter')selectCustomTopic()"/>
-        <button class="btn btn-outline" onclick="selectCustomTopic()" style="padding:10px;font-size:12px;">
-          ✏️ Use custom topic
-        </button>
+        <button class="btn btn-outline" onclick="selectCustomTopic()" style="padding:10px 14px;font-size:12px;white-space:nowrap;">✏️ Go</button>
       </div>
     </div>
 
-    <button class="btn btn-primary" id="start-call-btn" disabled onclick="startCall()">
-      📞 Start Call
-    </button>
-
-    <!-- Pronounce It -->
-    <button class="btn btn-outline" id="pronounce-mode-btn" disabled onclick="startShadowMode()" style="padding:12px;font-size:12px;">
-      🎤 Pronounce It
-    </button>
-
+    <!-- PRIMARY ACTIONS — Start Call + Practise Pronunciation side by side -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <button class="btn btn-outline" onclick="goNext('screen-history')" style="padding:10px;font-size:11px;">📋 Call History</button>
-      <button class="btn btn-outline" onclick="goNext('screen-confidence')" style="padding:10px;font-size:11px;">📈 Progress</button>
+      <button class="btn btn-primary" id="start-call-btn" disabled onclick="startCall()" style="padding:14px 10px;font-size:13px;">
+        📞 Start Call
+      </button>
+      <button class="btn btn-outline" id="pronounce-mode-btn" disabled onclick="startShadowMode()"
+        style="padding:14px 10px;font-size:12px;border-color:var(--green);color:var(--green);">
+        🎤 Practise<br>Pronunciation
+      </button>
     </div>
 
-    <button class="btn btn-outline" onclick="goNext('screen-level')" style="padding:10px;font-size:12px;">
-      🌍 Change language or level
-    </button>
+    <!-- Utility row -->
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-outline" onclick="goNext('screen-voice')" style="flex:1;padding:10px;font-size:11px;">🎙️ Re-record voice</button>
+    </div>
 
-    <button class="btn btn-outline" onclick="goNext('screen-voice')" style="padding:10px;font-size:12px;">
-      🎙️ Re-record voice
-    </button>
   </div>
 </div>
 
@@ -991,7 +1000,7 @@ body{
 
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
       <button class="btn btn-primary" onclick="proceedToCall()">📞 Start Call →</button>
-      <button class="btn btn-outline" onclick="proceedToPronounce()" style="padding:12px;font-size:13px;">🎤 Pronounce It first →</button>
+      <button class="btn btn-outline" onclick="proceedToPronounce()" style="padding:12px;font-size:13px;">🎤 Practise Pronunciation →</button>
       <button class="btn btn-outline" onclick="proceedToCall()" style="padding:10px;font-size:12px;">⏩ Skip, just call</button>
     </div>
   </div>
@@ -1151,7 +1160,7 @@ body{
 <div id="screen-shadow" class="screen">
   <div class="top-bar">
     <button class="back-btn" id="shadow-back-btn" onclick="exitPronounceIt()">←</button>
-    <span class="top-title">🎤 Pronounce It</span>
+    <span class="top-title">🎤 Practise Pronunciation</span>
     <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--sub);" id="shadow-counter">1 / 20</span>
   </div>
   <div class="scroll-content" style="gap:16px;">
@@ -1979,6 +1988,20 @@ function validateNameForm() {
 // NAVIGATION
 // ============================================================
 function goNext(screenId) {
+  // If leaving the pronounce-it screen, stop all audio/recording
+  const current = document.querySelector('.screen.active');
+  if (current?.id === 'screen-shadow' && screenId !== 'screen-shadow') {
+    _shadowActive = false;
+    if (_shadowCurrentAudio) {
+      try { _shadowCurrentAudio.pause(); _shadowCurrentAudio.currentTime = 0; } catch(e) {}
+      _shadowCurrentAudio = null;
+    }
+    clearInterval(_shadowSilenceCheck);
+    _shadowSilenceCheck = null;
+    _shadowRecording = false;
+    if (_shadowRecorder?.state === 'recording') { try { _shadowRecorder.stop(); } catch(e) {} }
+    if (_shadowAudioCtx) { try { _shadowAudioCtx.close(); } catch(e) {} _shadowAudioCtx = null; }
+  }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(screenId);
   if (el) el.classList.add('active');
@@ -3818,12 +3841,25 @@ const SHADOW_PHRASES = {
 let _pronounceReturnScreen = 'screen-home'; // where Done/Back goes
 
 function exitPronounceIt() {
-  // Stop any in-progress recording
+  _shadowActive    = false;
   _shadowRecording = false;
+  // Stop any playing TTS audio immediately
+  if (_shadowCurrentAudio) {
+    try { _shadowCurrentAudio.pause(); _shadowCurrentAudio.currentTime = 0; } catch(e) {}
+    _shadowCurrentAudio = null;
+  }
+  // Stop recording + silence detection
+  clearInterval(_shadowSilenceCheck);
+  _shadowSilenceCheck = null;
   if (_shadowRecorder?.state === 'recording') {
     try { _shadowRecorder.stop(); } catch(e) {}
   }
-  goNext(_pronounceReturnScreen);
+  if (_shadowAudioCtx) {
+    try { _shadowAudioCtx.close(); } catch(e) {}
+    _shadowAudioCtx = null;
+  }
+  const dest = _pronounceReturnScreen === 'vocab-to-call' ? 'screen-vocab' : (_pronounceReturnScreen || 'screen-home');
+  goNext(dest);
 }
 
 function startShadowMode() {
@@ -3846,6 +3882,7 @@ function proceedToPronounce() {
 }
 
 function _launchPronounceIt(phrases, returnScreen) {
+  _shadowActive = true;
   STATE.shadowPhrases = phrases;
   STATE.shadowIdx     = 0;
   STATE.shadowPlayed  = false;
@@ -3898,6 +3935,7 @@ function setShadowIcon(emoji, borderColor, hint) {
 }
 
 async function playShadowPhrase() {
+  if (!_shadowActive) return;
   const p = STATE.shadowPhrases[STATE.shadowIdx];
   if (!p) return;
   const playBtn = document.getElementById('shadow-play-btn');
@@ -3907,8 +3945,13 @@ async function playShadowPhrase() {
   document.getElementById('shadow-result-text').textContent  = p.t;
   try {
     const audio = await tts(p.t);
-    if (audio) await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+    if (audio && _shadowActive) {
+      _shadowCurrentAudio = audio;
+      await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+      _shadowCurrentAudio = null;
+    }
   } catch(e) {}
+  if (!_shadowActive) return; // navigated away while audio played
   if (playBtn) playBtn.disabled = false;
 
   // Auto-record after 800ms pause
@@ -3917,7 +3960,7 @@ async function playShadowPhrase() {
   setShadowIcon('⏳', 'var(--gold)', 'RECORDING IN 1 SECOND…');
   STATE.shadowPlayed = true;
   await sleep(800);
-  _autoRecord();
+  if (_shadowActive) _autoRecord();
 }
 
 let _shadowRecorder  = null;
@@ -3925,9 +3968,11 @@ let _shadowChunks    = [];
 let _shadowRecording = false;
 let _shadowSilenceCheck = null;
 let _shadowAudioCtx  = null;
+let _shadowActive    = false;   // true while pronounce-it screen is active
+let _shadowCurrentAudio = null; // reference to currently playing TTS so we can stop it
 
 async function _autoRecord() {
-  if (_shadowRecording) return;
+  if (_shadowRecording || !_shadowActive) return;
   _shadowRecording = true;
   setShadowIcon('🔴', 'var(--red)', 'RECORDING — SPEAK NOW');
   document.getElementById('shadow-result-label').textContent = '🎤 SPEAK NOW';
@@ -4035,7 +4080,7 @@ async function _onShadowRecordDone(stream) {
     if (result.score >= 80) awardXP(10);
     else if (result.score >= 50) awardXP(5);
     // Auto-advance on high score
-    if (result.score >= 85) setTimeout(nextShadowPhrase, 2200);
+    if (result.score >= 85 && _shadowActive) setTimeout(nextShadowPhrase, 2200);
 
   } catch(err) {
     setShadowIcon('🔊', 'var(--border)', 'ERROR — TAP HEAR AGAIN');
@@ -4082,6 +4127,7 @@ function showShadowScore(result, said) {
 }
 
 function nextShadowPhrase() {
+  if (!_shadowActive) return;
   clearInterval(_shadowSilenceCheck);
   _shadowRecording = false;
   if (STATE.shadowIdx < STATE.shadowPhrases.length - 1) {
