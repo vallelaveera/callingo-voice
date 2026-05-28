@@ -3905,7 +3905,6 @@ async function speakAIAtRate(text, rate) {
 // PATCH: saveName → goal screen for new users
 // ============================================================
 async function saveName() {
-  // We call original but intercept the navigation to native-lang
   const val   = document.getElementById('name-inp').value.trim();
   const email = document.getElementById('email-inp').value.trim().toLowerCase();
   if (val.length < 2) return;
@@ -3914,14 +3913,16 @@ async function saveName() {
     document.getElementById('name-err').style.display = 'block';
     return;
   }
+
+  const btn = document.getElementById('name-btn');
+  const origLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Checking…';
+
   STATE.name  = val;
   STATE.email = email;
 
-  // Start pre-caching welcome audio immediately in background
-  // By the time user picks language + level, audio will be ready
+  // Pre-cache welcome audio in background while user goes through onboarding
   setTimeout(preCacheWelcomeAudio, 0);
-  const origLabel = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Checking…';
 
   try {
     const res = await fetch('/api/voice?email=' + encodeURIComponent(email));
@@ -3940,7 +3941,6 @@ async function saveName() {
 
   btn.disabled = false; btn.textContent = origLabel;
   saveState();
-  // New user → goal screen first, then native lang
   goNext('screen-goal');
 }
 
