@@ -982,7 +982,7 @@ body{
     </div>
 
     <div class="vocab-dots" id="vocab-dots"></div>
-    <div class="vocab-hint">TAP CARD TO SEE TRANSLATION · SWIPE TO NEXT</div>
+    <div class="vocab-hint">TAP CARD TO FLIP · 🔊 TO HEAR · SWIPE TO NEXT</div>
 
     <div class="vocab-swipe-row">
       <button class="swipe-arrow" onclick="vocabPrev()">←</button>
@@ -2342,7 +2342,12 @@ function renderVocabDeck() {
     el.innerHTML = `
       <div class="vcard-emoji">${card.emoji}</div>
       <div class="vcard-word" id="vcard-word-${i}">${card.word}</div>
-      <div class="vcard-sub" id="vcard-sub-${i}">tap to flip</div>
+      <div class="vcard-sub" id="vcard-sub-${i}">tap card to see translation</div>
+      <button onclick="event.stopPropagation();playVocabAudio(${i})" id="vcard-spk-${i}"
+        style="margin-top:12px;background:var(--green-dim);border:1px solid rgba(0,168,107,0.3);
+               border-radius:20px;padding:6px 16px;font-size:13px;cursor:pointer;color:var(--green);">
+        🔊 Hear it
+      </button>
       <div class="vcard-translation" id="vcard-tr-${i}" style="display:none">${card.translation}</div>
       <div class="vcard-example" id="vcard-ex-${i}" style="display:none">${card.example}</div>
     `;
@@ -2377,9 +2382,27 @@ function flipCard(i) {
   }
 }
 
+async function playVocabAudio(i) {
+  const cards = STATE.vocabCards || [];
+  const card  = cards[i];
+  if (!card) return;
+  const btn = document.getElementById('vcard-spk-' + i);
+  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+  try {
+    const audio = await tts(card.word);
+    if (audio) {
+      audio.onended = () => { if (btn) { btn.textContent = '🔊 Hear it'; btn.disabled = false; } };
+      audio.play();
+    } else {
+      if (btn) { btn.textContent = '🔊 Hear it'; btn.disabled = false; }
+    }
+  } catch(e) {
+    if (btn) { btn.textContent = '🔊 Hear it'; btn.disabled = false; }
+  }
+}
+
 function vocabNext() {
   const cards = STATE.vocabCards || [];
-  if (vocabIdx >= cards.length - 1) return;
   animateCard(vocabIdx, 'exit-left');
   vocabIdx++;
   vocabFlipped = false;
@@ -3450,134 +3473,489 @@ function toggleTranscript(i) {
 // ============================================================
 const SHADOW_PHRASES = {
   de: {
-    cafe:     [{t:'Einen Kaffee, bitte.',e:'A coffee, please.'},{t:'Haben Sie Kuchen?',e:'Do you have cake?'},{t:'Die Rechnung, bitte!',e:'The bill, please!'},{t:'Mit Milch und Zucker.',e:'With milk and sugar.'},{t:'Was empfehlen Sie?',e:'What do you recommend?'}],
-    airport:  [{t:'Ihren Pass, bitte.',e:'Your passport, please.'},{t:'Wo ist das Gate?',e:'Where is the gate?'},{t:'Ich habe Handgepäck.',e:'I have carry-on luggage.'},{t:'Wann geht der Flug?',e:'When does the flight leave?'},{t:'Guten Flug!',e:'Have a good flight!'}],
-    hotel:    [{t:'Ich habe eine Reservierung.',e:'I have a reservation.'},{t:'Was ist das WLAN-Passwort?',e:'What is the WiFi password?'},{t:'Wann ist der Checkout?',e:'When is checkout?'},{t:'Ich brauche mehr Handtücher.',e:'I need more towels.'},{t:'Sehr schön, danke.',e:'Very nice, thank you.'}],
-    shopping: [{t:'Wie viel kostet das?',e:'How much does this cost?'},{t:'Gibt es das in Blau?',e:'Do you have this in blue?'},{t:'Ich nehme es.',e:'I will take it.'},{t:'Kann ich mit Karte zahlen?',e:'Can I pay by card?'},{t:'Ich suche eine Jacke.',e:'I am looking for a jacket.'}],
-    doctor:   [{t:'Ich habe Schmerzen.',e:'I am in pain.'},{t:'Seit gestern.',e:'Since yesterday.'},{t:'Ich habe Fieber.',e:'I have a fever.'},{t:'Ich bin allergisch.',e:'I am allergic.'},{t:'Brauche ich ein Rezept?',e:'Do I need a prescription?'}],
-    job:      [{t:'Guten Tag, schön Sie kennenzulernen.',e:'Good day, lovely to meet you.'},{t:'Ich habe fünf Jahre Erfahrung.',e:'I have five years of experience.'},{t:'Meine Stärken sind Kommunikation.',e:'My strengths are communication.'},{t:'Ich bin sehr motiviert.',e:'I am very motivated.'},{t:'Haben Sie noch Fragen?',e:'Do you have any more questions?'}],
+    cafe: [
+      {t:'Einen Kaffee, bitte.',e:'A coffee, please.'},
+      {t:'Haben Sie Kuchen?',e:'Do you have cake?'},
+      {t:'Die Rechnung, bitte!',e:'The bill, please!'},
+      {t:'Mit Milch und Zucker.',e:'With milk and sugar.'},
+      {t:'Was empfehlen Sie?',e:'What do you recommend?'},
+      {t:'Ich möchte einen Tee, bitte.',e:'I would like a tea, please.'},
+      {t:'Haben Sie einen Tisch für zwei?',e:'Do you have a table for two?'},
+      {t:'Kann ich die Speisekarte haben?',e:'Can I have the menu?'},
+      {t:'Das schmeckt sehr gut.',e:'That tastes very good.'},
+      {t:'Ich nehme ein Stück Kuchen.',e:'I will have a slice of cake.'},
+      {t:'Bitte noch ein Glas Wasser.',e:'One more glass of water, please.'},
+      {t:'Haben Sie laktosefreie Milch?',e:'Do you have lactose-free milk?'},
+      {t:'Ich hätte gerne einen Cappuccino.',e:'I would like a cappuccino.'},
+      {t:'Kann ich mit Karte zahlen?',e:'Can I pay by card?'},
+      {t:'Entschuldigung, wo ist die Toilette?',e:'Excuse me, where is the toilet?'},
+      {t:'Das war wirklich lecker.',e:'That was really delicious.'},
+      {t:'Bitte bringen Sie mir die Karte.',e:'Please bring me the menu.'},
+      {t:'Haben Sie vegetarische Optionen?',e:'Do you have vegetarian options?'},
+      {t:'Ich bin Stammgast hier.',e:'I am a regular here.'},
+      {t:'Auf Wiedersehen und danke!',e:'Goodbye and thank you!'},
+    ],
+    airport: [
+      {t:'Ihren Pass, bitte.',e:'Your passport, please.'},
+      {t:'Wo ist das Gate?',e:'Where is the gate?'},
+      {t:'Ich habe Handgepäck.',e:'I have carry-on luggage.'},
+      {t:'Wann geht der Flug?',e:'When does the flight leave?'},
+      {t:'Guten Flug!',e:'Have a good flight!'},
+      {t:'Mein Flug hat Verspätung.',e:'My flight is delayed.'},
+      {t:'Wo ist die Sicherheitskontrolle?',e:'Where is the security check?'},
+      {t:'Ich habe mein Gepäck verloren.',e:'I have lost my luggage.'},
+      {t:'Kann ich einen Fensterplatz haben?',e:'Can I have a window seat?'},
+      {t:'Wann beginnt das Boarding?',e:'When does boarding begin?'},
+      {t:'Bitte zeigen Sie Ihre Bordkarte.',e:'Please show your boarding pass.'},
+      {t:'Mein Koffer ist beschädigt.',e:'My suitcase is damaged.'},
+      {t:'Gibt es einen Shuttlebus zum Hotel?',e:'Is there a shuttle bus to the hotel?'},
+      {t:'Wo kann ich mein Gepäck aufgeben?',e:'Where can I check in my luggage?'},
+      {t:'Der Flug wurde gestrichen.',e:'The flight has been cancelled.'},
+      {t:'Ich brauche eine Umbuchung.',e:'I need to rebook.'},
+      {t:'Haben Sie ein Ladekabel für mein Handy?',e:'Do you have a charging cable for my phone?'},
+      {t:'Wann landet der Anschlussflug?',e:'When does the connecting flight land?'},
+      {t:'Bitte anschnallen, wir landen gleich.',e:'Please fasten your seatbelt, we are landing soon.'},
+      {t:'Vielen Dank für Ihren Aufenthalt.',e:'Thank you very much for your stay.'},
+    ],
+    hotel: [
+      {t:'Ich habe eine Reservierung.',e:'I have a reservation.'},
+      {t:'Was ist das WLAN-Passwort?',e:'What is the WiFi password?'},
+      {t:'Wann ist der Checkout?',e:'When is checkout?'},
+      {t:'Ich brauche mehr Handtücher.',e:'I need more towels.'},
+      {t:'Sehr schön, danke.',e:'Very nice, thank you.'},
+      {t:'Können Sie mein Gepäck aufbewahren?',e:'Can you store my luggage?'},
+      {t:'Ich möchte einchecken, bitte.',e:'I would like to check in, please.'},
+      {t:'Haben Sie ein ruhigeres Zimmer?',e:'Do you have a quieter room?'},
+      {t:'Die Klimaanlage funktioniert nicht.',e:'The air conditioning is not working.'},
+      {t:'Kann ich einen Weckruf bestellen?',e:'Can I order a wake-up call?'},
+      {t:'Ich möchte Zimmerservice bestellen.',e:'I would like to order room service.'},
+      {t:'Wo ist das Frühstücksrestaurant?',e:'Where is the breakfast restaurant?'},
+      {t:'Mein Schlüssel funktioniert nicht.',e:'My key is not working.'},
+      {t:'Können Sie ein Taxi rufen?',e:'Can you call a taxi?'},
+      {t:'Ist das Frühstück inklusive?',e:'Is breakfast included?'},
+      {t:'Ich brauche ein Bügeleisen.',e:'I need an iron.'},
+      {t:'Können Sie meinen Koffer hochbringen?',e:'Can you bring my suitcase up?'},
+      {t:'Der Aufzug ist außer Betrieb.',e:'The lift is out of order.'},
+      {t:'Ich verlängere meinen Aufenthalt um einen Tag.',e:'I am extending my stay by one day.'},
+      {t:'Vielen Dank, es war wunderschön.',e:'Thank you very much, it was wonderful.'},
+    ],
+    shopping: [
+      {t:'Wie viel kostet das?',e:'How much does this cost?'},
+      {t:'Gibt es das in Blau?',e:'Do you have this in blue?'},
+      {t:'Ich nehme es.',e:'I will take it.'},
+      {t:'Kann ich mit Karte zahlen?',e:'Can I pay by card?'},
+      {t:'Ich suche eine Jacke.',e:'I am looking for a jacket.'},
+      {t:'Haben Sie das in einer größeren Größe?',e:'Do you have this in a bigger size?'},
+      {t:'Wo ist die Umkleidekabine?',e:'Where is the changing room?'},
+      {t:'Das ist zu teuer für mich.',e:'That is too expensive for me.'},
+      {t:'Gibt es gerade einen Ausverkauf?',e:'Is there a sale on at the moment?'},
+      {t:'Kann ich das umtauschen?',e:'Can I exchange this?'},
+      {t:'Das passt mir nicht gut.',e:'This does not fit me well.'},
+      {t:'Haben Sie etwas Günstigeres?',e:'Do you have something cheaper?'},
+      {t:'Ich hätte das gerne als Geschenk verpackt.',e:'I would like this gift-wrapped.'},
+      {t:'Wo finde ich die Herrenmode?',e:'Where do I find the menswear?'},
+      {t:'Diese Farbe gefällt mir besser.',e:'I prefer this colour.'},
+      {t:'Kann ich eine Quittung haben?',e:'Can I have a receipt?'},
+      {t:'Das Material ist sehr hochwertig.',e:'The material is very high quality.'},
+      {t:'Wann öffnet das Geschäft morgen?',e:'When does the shop open tomorrow?'},
+      {t:'Haben Sie auch Online-Bestellungen?',e:'Do you also take online orders?'},
+      {t:'Ich komme morgen wieder.',e:'I will come back tomorrow.'},
+    ],
+    doctor: [
+      {t:'Ich habe Schmerzen.',e:'I am in pain.'},
+      {t:'Seit gestern.',e:'Since yesterday.'},
+      {t:'Ich habe Fieber.',e:'I have a fever.'},
+      {t:'Ich bin allergisch.',e:'I am allergic.'},
+      {t:'Brauche ich ein Rezept?',e:'Do I need a prescription?'},
+      {t:'Ich fühle mich nicht gut.',e:'I am not feeling well.'},
+      {t:'Mir ist schwindelig.',e:'I feel dizzy.'},
+      {t:'Ich habe starke Kopfschmerzen.',e:'I have a severe headache.'},
+      {t:'Ich habe seit drei Tagen Husten.',e:'I have had a cough for three days.'},
+      {t:'Wo genau tut es weh?',e:'Where exactly does it hurt?'},
+      {t:'Ich nehme bereits Medikamente.',e:'I am already taking medication.'},
+      {t:'Ich bin gegen Penicillin allergisch.',e:'I am allergic to penicillin.'},
+      {t:'Ich brauche eine Krankschreibung.',e:'I need a sick note.'},
+      {t:'Wann soll ich die Tabletten nehmen?',e:'When should I take the tablets?'},
+      {t:'Haben Sie Schmerzmittel für mich?',e:'Do you have pain relief for me?'},
+      {t:'Ich schlafe sehr schlecht.',e:'I am sleeping very badly.'},
+      {t:'Mein Blutdruck ist erhöht.',e:'My blood pressure is high.'},
+      {t:'Ich habe eine Lebensmittelallergie.',e:'I have a food allergy.'},
+      {t:'Kann ich einen Spezialisten sehen?',e:'Can I see a specialist?'},
+      {t:'Wann bekomme ich die Ergebnisse?',e:'When will I get the results?'},
+    ],
+    job: [
+      {t:'Guten Tag, schön Sie kennenzulernen.',e:'Good day, lovely to meet you.'},
+      {t:'Ich habe fünf Jahre Erfahrung.',e:'I have five years of experience.'},
+      {t:'Meine Stärken sind Kommunikation.',e:'My strengths are communication.'},
+      {t:'Ich bin sehr motiviert.',e:'I am very motivated.'},
+      {t:'Haben Sie noch Fragen?',e:'Do you have any more questions?'},
+      {t:'Ich bewerbe mich für diese Stelle.',e:'I am applying for this position.'},
+      {t:'Ich arbeite sehr gut im Team.',e:'I work very well in a team.'},
+      {t:'Ich bin bereit, dazuzulernen.',e:'I am willing to keep learning.'},
+      {t:'Mein Gehaltswunsch ist flexibel.',e:'My salary expectation is flexible.'},
+      {t:'Ich kann sofort anfangen.',e:'I can start immediately.'},
+      {t:'Ich habe Erfahrung mit diesem Programm.',e:'I have experience with this programme.'},
+      {t:'Warum möchten Sie bei uns arbeiten?',e:'Why do you want to work with us?'},
+      {t:'Ich schätze ein gutes Arbeitsklima.',e:'I value a good working environment.'},
+      {t:'Mein größter Erfolg war dieses Projekt.',e:'My biggest achievement was this project.'},
+      {t:'Ich bin belastbar und zuverlässig.',e:'I am resilient and reliable.'},
+      {t:'Ich spreche drei Sprachen fließend.',e:'I speak three languages fluently.'},
+      {t:'Ich freue mich auf die Zusammenarbeit.',e:'I look forward to working together.'},
+      {t:'Wann kann ich mit einer Antwort rechnen?',e:'When can I expect a reply?'},
+      {t:'Ich bin offen für neue Herausforderungen.',e:'I am open to new challenges.'},
+      {t:'Vielen Dank für dieses Gespräch.',e:'Thank you very much for this conversation.'},
+    ],
   },
   en: {
-    cafe:     [{t:'A coffee, please.',e:'A coffee, please.'},{t:'Do you have any cake?',e:'Do you have any cake?'},{t:'Could I have the bill?',e:'Could I have the bill?'},{t:'With oat milk, please.',e:'With oat milk, please.'},{t:'What do you recommend?',e:'What do you recommend?'}],
-    airport:  [{t:'Here is my passport.',e:'Here is my passport.'},{t:'Which gate is my flight?',e:'Which gate is my flight?'},{t:'This is my carry-on.',e:'This is my carry-on.'},{t:'Is the flight on time?',e:'Is the flight on time?'},{t:'Have a safe flight!',e:'Have a safe flight!'}],
-    hotel:    [{t:'I have a reservation.',e:'I have a reservation.'},{t:'What is the WiFi password?',e:'What is the WiFi password?'},{t:'What time is check-out?',e:'What time is check-out?'},{t:'Could I have more towels?',e:'Could I have more towels?'},{t:'Thank you very much.',e:'Thank you very much.'}],
-    shopping: [{t:'How much is this?',e:'How much is this?'},{t:'Do you have this in blue?',e:'Do you have this in blue?'},{t:'I will take it, thank you.',e:'I will take it, thank you.'},{t:'Can I pay by card?',e:'Can I pay by card?'},{t:'I am looking for a jacket.',e:'I am looking for a jacket.'}],
-    doctor:   [{t:'I am not feeling well.',e:'I am not feeling well.'},{t:'It started yesterday.',e:'It started yesterday.'},{t:'I think I have a fever.',e:'I think I have a fever.'},{t:'I am allergic to penicillin.',e:'I am allergic to penicillin.'},{t:'Will I need a prescription?',e:'Will I need a prescription?'}],
-    job:      [{t:'Nice to meet you.',e:'Nice to meet you.'},{t:'I have five years of experience.',e:'I have five years of experience.'},{t:'My strength is communication.',e:'My strength is communication.'},{t:'I am highly motivated.',e:'I am highly motivated.'},{t:'Do you have any questions?',e:'Do you have any questions?'}],
+    cafe: [
+      {t:'A coffee, please.',e:'A coffee, please.'},
+      {t:'Do you have any cake?',e:'Do you have any cake?'},
+      {t:'Could I have the bill?',e:'Could I have the bill?'},
+      {t:'With oat milk, please.',e:'With oat milk, please.'},
+      {t:'What do you recommend?',e:'What do you recommend?'},
+      {t:'I would like a cappuccino, please.',e:'I would like a cappuccino, please.'},
+      {t:'Do you have a table for two?',e:'Do you have a table for two?'},
+      {t:'Can I see the menu?',e:'Can I see the menu?'},
+      {t:'That was absolutely delicious.',e:'That was absolutely delicious.'},
+      {t:'I will have a slice of the carrot cake.',e:'I will have a slice of the carrot cake.'},
+      {t:'Could I get another glass of water?',e:'Could I get another glass of water?'},
+      {t:'Do you have any dairy-free options?',e:'Do you have any dairy-free options?'},
+      {t:'Is the kitchen still open?',e:'Is the kitchen still open?'},
+      {t:'Can I pay by card?',e:'Can I pay by card?'},
+      {t:'Excuse me, where is the bathroom?',e:'Excuse me, where is the bathroom?'},
+      {t:'Could we get some more napkins?',e:'Could we get some more napkins?'},
+      {t:'I would like to order, please.',e:'I would like to order, please.'},
+      {t:'Do you have any gluten-free options?',e:'Do you have any gluten-free options?'},
+      {t:'I am a regular here.',e:'I am a regular here.'},
+      {t:'Thank you, have a lovely day!',e:'Thank you, have a lovely day!'},
+    ],
+    airport: [
+      {t:'Here is my passport.',e:'Here is my passport.'},
+      {t:'Which gate is my flight?',e:'Which gate is my flight?'},
+      {t:'This is my carry-on.',e:'This is my carry-on.'},
+      {t:'Is the flight on time?',e:'Is the flight on time?'},
+      {t:'Have a safe flight!',e:'Have a safe flight!'},
+      {t:'My flight has been delayed.',e:'My flight has been delayed.'},
+      {t:'Where is the security check?',e:'Where is the security check?'},
+      {t:'I have lost my luggage.',e:'I have lost my luggage.'},
+      {t:'Can I have a window seat?',e:'Can I have a window seat?'},
+      {t:'When does boarding start?',e:'When does boarding start?'},
+      {t:'Please show your boarding pass.',e:'Please show your boarding pass.'},
+      {t:'My suitcase has been damaged.',e:'My suitcase has been damaged.'},
+      {t:'Is there a bus to the city centre?',e:'Is there a bus to the city centre?'},
+      {t:'Where do I check in my bags?',e:'Where do I check in my bags?'},
+      {t:'My flight has been cancelled.',e:'My flight has been cancelled.'},
+      {t:'I need to rebook my ticket.',e:'I need to rebook my ticket.'},
+      {t:'Where can I charge my phone?',e:'Where can I charge my phone?'},
+      {t:'How long is the layover?',e:'How long is the layover?'},
+      {t:'Please fasten your seatbelt.',e:'Please fasten your seatbelt.'},
+      {t:'Thank you for flying with us.',e:'Thank you for flying with us.'},
+    ],
+    hotel: [
+      {t:'I have a reservation.',e:'I have a reservation.'},
+      {t:'What is the WiFi password?',e:'What is the WiFi password?'},
+      {t:'What time is check-out?',e:'What time is check-out?'},
+      {t:'Could I have more towels?',e:'Could I have more towels?'},
+      {t:'Thank you very much.',e:'Thank you very much.'},
+      {t:'Can you store my luggage?',e:'Can you store my luggage?'},
+      {t:'I would like to check in, please.',e:'I would like to check in, please.'},
+      {t:'Do you have a quieter room?',e:'Do you have a quieter room?'},
+      {t:'The air conditioning is not working.',e:'The air conditioning is not working.'},
+      {t:'Can I have a wake-up call at seven?',e:'Can I have a wake-up call at seven?'},
+      {t:'I would like to order room service.',e:'I would like to order room service.'},
+      {t:'Where is the breakfast room?',e:'Where is the breakfast room?'},
+      {t:'My key card is not working.',e:'My key card is not working.'},
+      {t:'Could you call me a taxi?',e:'Could you call me a taxi?'},
+      {t:'Is breakfast included in the price?',e:'Is breakfast included in the price?'},
+      {t:'Could I have an extra blanket?',e:'Could I have an extra blanket?'},
+      {t:'Can someone bring my bags up?',e:'Can someone bring my bags up?'},
+      {t:'The lift seems to be out of order.',e:'The lift seems to be out of order.'},
+      {t:'I would like to extend my stay.',e:'I would like to extend my stay.'},
+      {t:'It was a wonderful stay, thank you.',e:'It was a wonderful stay, thank you.'},
+    ],
+    shopping: [
+      {t:'How much is this?',e:'How much is this?'},
+      {t:'Do you have this in blue?',e:'Do you have this in blue?'},
+      {t:'I will take it, thank you.',e:'I will take it, thank you.'},
+      {t:'Can I pay by card?',e:'Can I pay by card?'},
+      {t:'I am looking for a jacket.',e:'I am looking for a jacket.'},
+      {t:'Do you have this in a larger size?',e:'Do you have this in a larger size?'},
+      {t:'Where are the changing rooms?',e:'Where are the changing rooms?'},
+      {t:'That is a bit out of my budget.',e:'That is a bit out of my budget.'},
+      {t:'Is there a sale on at the moment?',e:'Is there a sale on at the moment?'},
+      {t:'Can I exchange this for a different size?',e:'Can I exchange this for a different size?'},
+      {t:'This does not quite fit me.',e:'This does not quite fit me.'},
+      {t:'Do you have anything a bit cheaper?',e:'Do you have anything a bit cheaper?'},
+      {t:'Could you gift-wrap this for me?',e:'Could you gift-wrap this for me?'},
+      {t:'Where would I find the menswear?',e:'Where would I find the menswear?'},
+      {t:'I prefer this colour actually.',e:'I prefer this colour actually.'},
+      {t:'Could I get a receipt please?',e:'Could I get a receipt please?'},
+      {t:'The quality looks really good.',e:'The quality looks really good.'},
+      {t:'What time do you close today?',e:'What time do you close today?'},
+      {t:'Do you have a loyalty card scheme?',e:'Do you have a loyalty card scheme?'},
+      {t:'I will come back and have a think.',e:'I will come back and have a think.'},
+    ],
+    doctor: [
+      {t:'I am not feeling well.',e:'I am not feeling well.'},
+      {t:'It started yesterday.',e:'It started yesterday.'},
+      {t:'I think I have a fever.',e:'I think I have a fever.'},
+      {t:'I am allergic to penicillin.',e:'I am allergic to penicillin.'},
+      {t:'Will I need a prescription?',e:'Will I need a prescription?'},
+      {t:'I have been feeling dizzy.',e:'I have been feeling dizzy.'},
+      {t:'I have a really bad headache.',e:'I have a really bad headache.'},
+      {t:'I have had a cough for three days.',e:'I have had a cough for three days.'},
+      {t:'Can you show me where it hurts?',e:'Can you show me where it hurts?'},
+      {t:'I am already taking medication.',e:'I am already taking medication.'},
+      {t:'I need a sick note for work.',e:'I need a sick note for work.'},
+      {t:'When should I take the tablets?',e:'When should I take the tablets?'},
+      {t:'Do you have anything for the pain?',e:'Do you have anything for the pain?'},
+      {t:'I have not been sleeping well.',e:'I have not been sleeping well.'},
+      {t:'My blood pressure has been high.',e:'My blood pressure has been high.'},
+      {t:'I have a food intolerance.',e:'I have a food intolerance.'},
+      {t:'Can I be referred to a specialist?',e:'Can I be referred to a specialist?'},
+      {t:'When will I get my test results?',e:'When will I get my test results?'},
+      {t:'The pain is quite sharp.',e:'The pain is quite sharp.'},
+      {t:'Thank you doctor, I feel reassured.',e:'Thank you doctor, I feel reassured.'},
+    ],
+    job: [
+      {t:'Nice to meet you.',e:'Nice to meet you.'},
+      {t:'I have five years of experience.',e:'I have five years of experience.'},
+      {t:'My strength is communication.',e:'My strength is communication.'},
+      {t:'I am highly motivated.',e:'I am highly motivated.'},
+      {t:'Do you have any questions?',e:'Do you have any questions?'},
+      {t:'I am applying for this position.',e:'I am applying for this position.'},
+      {t:'I work very well in a team.',e:'I work very well in a team.'},
+      {t:'I am always eager to learn.',e:'I am always eager to learn.'},
+      {t:'My salary expectations are flexible.',e:'My salary expectations are flexible.'},
+      {t:'I am available to start immediately.',e:'I am available to start immediately.'},
+      {t:'I have experience with this software.',e:'I have experience with this software.'},
+      {t:'Why do you want to join our company?',e:'Why do you want to join our company?'},
+      {t:'I value a positive team culture.',e:'I value a positive team culture.'},
+      {t:'My biggest achievement was leading that project.',e:'My biggest achievement was leading that project.'},
+      {t:'I am dependable and hardworking.',e:'I am dependable and hardworking.'},
+      {t:'I speak three languages fluently.',e:'I speak three languages fluently.'},
+      {t:'I look forward to working together.',e:'I look forward to working together.'},
+      {t:'When can I expect to hear back?',e:'When can I expect to hear back?'},
+      {t:'I thrive in fast-paced environments.',e:'I thrive in fast-paced environments.'},
+      {t:'Thank you so much for your time.',e:'Thank you so much for your time.'},
+    ],
   },
 };
 
+// ============================================================
+// SHADOWING MODE — fully rebuilt
+// ============================================================
 function startShadowMode() {
   if (!STATE.selectedTopic) return;
-  const phrases = (SHADOW_PHRASES[STATE.practiceLang]||SHADOW_PHRASES.de)[STATE.selectedTopic.id] || [];
+  const phrases = (SHADOW_PHRASES[STATE.practiceLang] || SHADOW_PHRASES.de)[STATE.selectedTopic.id] || [];
   STATE.shadowPhrases = phrases;
   STATE.shadowIdx     = 0;
   STATE.shadowPlayed  = false;
   STATE.callMode      = 'shadow';
   renderShadowPhrase();
   goNext('screen-shadow');
+  // Auto-play first phrase after a brief moment
+  setTimeout(playShadowPhrase, 800);
 }
 
 function renderShadowPhrase() {
   const phrases = STATE.shadowPhrases;
   const p = phrases[STATE.shadowIdx];
   if (!p) return;
-  document.getElementById('shadow-target').textContent = p.t;
-  document.getElementById('shadow-en').textContent     = p.e;
-  document.getElementById('shadow-counter').textContent = `${STATE.shadowIdx+1} / ${phrases.length}`;
+  document.getElementById('shadow-target').textContent    = p.t;
+  document.getElementById('shadow-en').textContent        = p.e;
+  document.getElementById('shadow-counter').textContent   = `${STATE.shadowIdx + 1} / ${phrases.length}`;
   document.getElementById('shadow-score-num').textContent = '—';
-  document.getElementById('shadow-result-label').textContent = 'READY TO LISTEN';
-  document.getElementById('shadow-result-text').textContent  = 'Tap play to hear the phrase';
+  document.getElementById('shadow-score-num').style.color = 'var(--green)';
+  document.getElementById('shadow-result-label').textContent = 'GETTING READY…';
+  document.getElementById('shadow-result-text').textContent  = '';
   document.getElementById('shadow-ring').style.background    = `conic-gradient(var(--green) 0%, var(--border) 0%)`;
   document.getElementById('shadow-mic').classList.add('disabled');
-  document.getElementById('shadow-hint').textContent = 'PLAY FIRST, THEN REPEAT';
+  document.getElementById('shadow-hint').textContent = 'LISTEN FIRST';
+  const err = document.getElementById('shadow-err');
+  if (err) { err.style.display = 'none'; err.textContent = ''; }
   STATE.shadowPlayed = false;
 }
 
 async function playShadowPhrase() {
   const p = STATE.shadowPhrases[STATE.shadowIdx];
   if (!p) return;
-  document.getElementById('shadow-play-btn').disabled = true;
-  document.getElementById('shadow-result-label').textContent = 'LISTEN CAREFULLY…';
+  const playBtn = document.getElementById('shadow-play-btn');
+  const micBtn  = document.getElementById('shadow-mic');
+  if (playBtn) playBtn.disabled = true;
+  document.getElementById('shadow-result-label').textContent = '🔊 LISTEN…';
   document.getElementById('shadow-result-text').textContent  = p.t;
+  document.getElementById('shadow-hint').textContent = 'LISTEN CAREFULLY';
   try {
     const audio = await tts(p.t);
     if (audio) {
       await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
     }
   } catch(e) {}
-  document.getElementById('shadow-play-btn').disabled = false;
-  document.getElementById('shadow-mic').classList.remove('disabled');
-  document.getElementById('shadow-hint').textContent = 'NOW REPEAT IT';
-  document.getElementById('shadow-result-label').textContent = 'YOUR TURN';
-  document.getElementById('shadow-result-text').textContent  = 'Tap the mic and repeat the phrase';
+  if (playBtn) playBtn.disabled = false;
+  micBtn.classList.remove('disabled');
+  document.getElementById('shadow-result-label').textContent = '🎤 YOUR TURN';
+  document.getElementById('shadow-result-text').textContent  = 'Tap the mic and repeat exactly';
+  document.getElementById('shadow-hint').textContent = 'TAP MIC TO REPEAT';
   STATE.shadowPlayed = true;
 }
 
+let _shadowRecorder = null;
+let _shadowChunks   = [];
+let _shadowRecording = false;
+
 async function recordShadow() {
-  if (!STATE.shadowPlayed) return;
+  if (!STATE.shadowPlayed) {
+    document.getElementById('shadow-hint').textContent = 'PLAY THE PHRASE FIRST';
+    return;
+  }
   const micBtn = document.getElementById('shadow-mic');
   if (micBtn.classList.contains('disabled')) return;
 
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { document.getElementById('shadow-err').textContent = '⚠️ Chrome only'; document.getElementById('shadow-err').style.display='block'; return; }
+  // If already recording — stop
+  if (_shadowRecording) {
+    _shadowRecording = false;
+    if (_shadowRecorder && _shadowRecorder.state === 'recording') {
+      _shadowRecorder.stop();
+    }
+    return;
+  }
 
-  micBtn.classList.add('recording');
-  document.getElementById('shadow-hint').textContent = 'RECORDING…';
+  // Start recording
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    _shadowChunks   = [];
+    _shadowRecording = true;
 
-  const recognition = new SR();
-  const langMap = { de:'de-DE', en:'en-US' };
-  recognition.lang = langMap[STATE.practiceLang] || 'en-US';
-  recognition.interimResults = false;
+    const mimeType = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4']
+      .find(m => MediaRecorder.isTypeSupported(m)) || '';
+    _shadowRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+    _shadowRecorder.ondataavailable = e => { if (e.data.size > 0) _shadowChunks.push(e.data); };
+    _shadowRecorder.onstop = () => _onShadowRecordDone(stream);
+    _shadowRecorder.start();
 
-  recognition.onresult = async (e) => {
-    const said = e.results[0][0].transcript;
-    micBtn.classList.remove('recording');
-    document.getElementById('shadow-hint').textContent = 'SCORING…';
-    const score = await scoreShadow(STATE.shadowPhrases[STATE.shadowIdx].t, said);
-    showShadowScore(score, said);
+    micBtn.classList.add('recording');
+    document.getElementById('shadow-hint').textContent = 'RECORDING… TAP TO STOP';
+    document.getElementById('shadow-result-label').textContent = '🔴 RECORDING';
+    document.getElementById('shadow-result-text').textContent  = 'Speak the phrase now…';
+
+    // Auto-stop after 8 seconds max
+    setTimeout(() => {
+      if (_shadowRecording) {
+        _shadowRecording = false;
+        if (_shadowRecorder?.state === 'recording') _shadowRecorder.stop();
+      }
+    }, 8000);
+
+  } catch(err) {
+    document.getElementById('shadow-err').textContent = '⚠️ Mic access needed';
+    document.getElementById('shadow-err').style.display = 'block';
+  }
+}
+
+async function _onShadowRecordDone(stream) {
+  // Stop all tracks
+  stream.getTracks().forEach(t => t.stop());
+  const micBtn = document.getElementById('shadow-mic');
+  micBtn.classList.remove('recording');
+  document.getElementById('shadow-hint').textContent = 'SCORING…';
+  document.getElementById('shadow-result-label').textContent = '⏳ ANALYSING';
+  document.getElementById('shadow-result-text').textContent  = '';
+
+  if (_shadowChunks.length === 0) {
+    document.getElementById('shadow-result-label').textContent = 'NO AUDIO — TRY AGAIN';
+    document.getElementById('shadow-hint').textContent = 'TAP MIC TO TRY AGAIN';
+    return;
+  }
+
+  try {
+    // Send to Groq Whisper
+    const mimeType = _shadowRecorder?.mimeType || 'audio/webm';
+    const blob = new Blob(_shadowChunks, { type: mimeType });
+    const arrayBuf = await blob.arrayBuffer();
+    const lang = STATE.practiceLang || 'en';
+
+    const res = await fetch(`/api/transcribe?lang=${lang}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: arrayBuf,
+    });
+
+    if (!res.ok) throw new Error('Transcribe failed');
+    const data = await res.json();
+    const said = (data.text || '').trim();
+
+    if (!said) {
+      document.getElementById('shadow-result-label').textContent = 'COULDN\'T HEAR YOU';
+      document.getElementById('shadow-result-text').textContent  = 'Try again — speak clearly';
+      document.getElementById('shadow-hint').textContent = 'TAP MIC TO TRY AGAIN';
+      return;
+    }
+
+    // Score it
+    const result = await scoreShadow(STATE.shadowPhrases[STATE.shadowIdx].t, said);
+    showShadowScore(result, said);
+
     // Award XP
-    if (score >= 80) awardXP(10);
-    else if (score >= 50) awardXP(5);
-  };
-  recognition.onerror = () => { micBtn.classList.remove('recording'); document.getElementById('shadow-hint').textContent = 'TRY AGAIN'; };
-  try { recognition.start(); } catch(e) {}
+    if (result.score >= 80) awardXP(10);
+    else if (result.score >= 50) awardXP(5);
+
+    // Auto-advance on high score after a pause
+    if (result.score >= 85) {
+      setTimeout(nextShadowPhrase, 2000);
+    }
+
+  } catch(err) {
+    document.getElementById('shadow-result-label').textContent = 'ERROR — TRY AGAIN';
+    document.getElementById('shadow-hint').textContent = 'TAP MIC TO TRY AGAIN';
+  }
 }
 
 async function scoreShadow(target, said) {
   try {
     const res = await fetch('/api/claude', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        messages:[{role:'user', content:`Target phrase: "${target}"\nUser said: "${said}"\nScore how well the user repeated the phrase. Consider pronunciation accuracy based on what speech recognition captured. Return ONLY a JSON: {"score": <0-100>, "feedback": "<one short encouraging sentence>"}`}],
-        system:'You are a pronunciation coach. Return only valid JSON.',
-        max_tokens:60
+        messages: [{ role: 'user', content:
+          `Target: "${target}"\nUser said: "${said}"\n` +
+          `Score pronunciation accuracy 0-100. Consider: word accuracy, completeness, order.\n` +
+          `Return ONLY JSON: {"score":<0-100>,"feedback":"<one short encouraging sentence>","said":"${said}"}` }],
+        system: 'You are a pronunciation coach. Return only valid JSON.',
+        max_tokens: 80,
       })
     });
-    const data = await res.json();
-    const parsed = JSON.parse((data.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim());
+    const data   = await res.json();
+    const parsed = JSON.parse((data.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim());
     return parsed;
-  } catch(e) { return { score: 70, feedback: 'Good effort!' }; }
+  } catch(e) { return { score: 60, feedback: 'Good effort! Keep practicing.', said }; }
 }
 
 function showShadowScore(result, said) {
-  const score   = result.score || 0;
+  const score    = result.score || 0;
   const feedback = result.feedback || '';
-  const pct  = score / 100;
+  const pct   = score / 100;
   const color = score >= 80 ? 'var(--green)' : score >= 50 ? 'var(--gold)' : 'var(--red)';
+
   document.getElementById('shadow-ring').style.background =
-    `conic-gradient(${color} ${pct*360}deg, var(--border) 0deg)`;
+    `conic-gradient(${color} ${pct * 360}deg, var(--border) 0deg)`;
   document.getElementById('shadow-score-num').textContent = score;
   document.getElementById('shadow-score-num').style.color = color;
-  document.getElementById('shadow-result-label').textContent = score >= 80 ? '🎉 EXCELLENT!' : score >= 50 ? '👍 GOOD' : '💪 TRY AGAIN';
-  document.getElementById('shadow-result-text').textContent  = feedback;
-  document.getElementById('shadow-hint').textContent = 'Tap play to listen again or next phrase';
+
+  const label = score >= 80 ? '🎉 EXCELLENT!' : score >= 50 ? '👍 GOOD EFFORT' : '💪 TRY AGAIN';
+  document.getElementById('shadow-result-label').textContent = label;
+  // Show what they said + feedback
+  document.getElementById('shadow-result-text').textContent = `"${said}" · ${feedback}`;
+  document.getElementById('shadow-hint').textContent =
+    score >= 85 ? 'Perfect! Moving to next…' : 'Tap play to hear again or next phrase';
 }
 
 function nextShadowPhrase() {
+  _shadowRecording = false;
   if (STATE.shadowIdx < STATE.shadowPhrases.length - 1) {
     STATE.shadowIdx++;
     renderShadowPhrase();
+    // Auto-play next phrase
+    setTimeout(playShadowPhrase, 400);
   } else {
     awardXP(20);
     goNext('screen-home');
@@ -3832,7 +4210,7 @@ async function handleUserSpeech(text) {
         }
       },
 
-      // onDone — full response ready, fire TTS for english line too, then listen
+      // onDone — full response ready, update bubble, wait for speech to finish, then listen
       ({ targetText, englishText }) => {
         targetFinal  = targetText;
         englishFinal = englishText || targetText;
@@ -3857,16 +4235,20 @@ async function handleUserSpeech(text) {
           }
         });
 
-        // Wait for audio queue to finish playing, then listen
-        const waitForAudio = async () => {
-          // Poll until queue is drained
-          while (_queueRunning || _audioQueue.length > 0) {
-            await sleep(100);
+        // Wait until AI finishes speaking before listening again
+        // speakAIAtRate sets STATE.isSpeaking = true at start, false at end
+        // Poll on isSpeaking — simple, reliable, no race condition
+        (async () => {
+          // Give speakAIAtRate a moment to set isSpeaking = true
+          await sleep(300);
+          while (STATE.isSpeaking) {
+            await sleep(150);
           }
-          setMicState('idle');
-          setTimeout(startListening, 200);
-        };
-        waitForAudio();
+          // One final guard — don't start if call ended
+          if (document.getElementById('call-screen')?.classList.contains('active')) {
+            setTimeout(startListening, 200);
+          }
+        })();
       }
     );
   } catch(e) {
