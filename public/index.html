@@ -1994,6 +1994,9 @@ function selectNativeLang(code, name, native) {
   STATE.nativeLang = code;
   document.querySelectorAll('#screen-native-lang .lang-btn').forEach(b => b.classList.remove('selected'));
   event.currentTarget.classList.add('selected');
+  // Re-cache welcome audio for new language in background
+  _welcomeAudioCache = null;
+  setTimeout(preCacheWelcomeAudio, 0);
   setTimeout(() => goNext('screen-practice-lang'), 300);
 }
 
@@ -2041,8 +2044,31 @@ function initVoiceSetup() {
   playOnboardingWelcome();
 }
 
+// ============================================================
+// WELCOME VOICE — pre-cache TTS so it plays with zero delay
+// ============================================================
+let _welcomeAudioCache = null; // pre-generated Audio object
+
+// Call this as soon as we know the user's name + native lang
+// (right after saveName resolves) so the audio is ready by the
+// time the voice screen appears
+async function preCacheWelcomeAudio() {
+  try {
+    await loadWelcomeVoice();
+    if (!STATE.welcomeVoiceId) return;
+    const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
+    const audio = await tts(msg, STATE.welcomeVoiceId);
+    if (audio) _welcomeAudioCache = audio;
+  } catch(e) { /* silent */ }
+}
+
 async function playOnboardingWelcome() {
-  // Await the already-in-flight fetch — no double request, no delay
+  // If pre-cached just play — zero delay
+  if (_welcomeAudioCache) {
+    try { _welcomeAudioCache.currentTime = 0; _welcomeAudioCache.play(); } catch(e) {}
+    return;
+  }
+  // Not cached yet — fetch now (shouldn't normally happen)
   await loadWelcomeVoice();
   const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
   tts(msg, STATE.welcomeVoiceId).then(audio => {
@@ -2577,46 +2603,163 @@ function addTyping() {
 }
 function removeTyping() { document.getElementById('typing-bubble')?.remove(); }
 
-function startListening() {
+// ============================================================
+// STT — Groq Whisper via MediaRecorder
+// Records until silence detected, sends to /api/transcribe
+// Falls back to browser SpeechRecognition if mic fails
+// ============================================================
+
+// How long of silence (ms) before we stop recording and send
+const SILENCE_THRESHOLD_MS = 1400;
+// Min recording length before we bother sending (ms)
+const MIN_RECORD_MS = 400;
+
+let _mediaStream    = null;
+let _mediaRecorder  = null;
+let _audioChunks    = [];
+let _silenceTimer   = null;
+let _recordStart    = 0;
+let _analyser       = null;
+let _audioCtx       = null;
+let _silenceCheck   = null;
+
+async function startListening() {
   if (STATE.isMuted || STATE.isSpeaking) return;
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    setCallStatus('⚠️ Voice not supported — Chrome only');
-    return;
-  }
-  STATE.recognition = new SR();
-  const langMap = { de: 'de-DE', en: 'en-US' };
-  STATE.recognition.lang = langMap[STATE.practiceLang] || 'en-US';
-  STATE.recognition.interimResults = false;
-  STATE.recognition.maxAlternatives = 1;
-  STATE.isListening = true;
   setMicState('listening');
 
-  STATE.recognition.onresult = async (e) => {
-    const text = e.results[0][0].transcript;
+  try {
+    // Reuse stream if already open
+    if (!_mediaStream || _mediaStream.getTracks().some(t => t.readyState === 'ended')) {
+      _mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    }
+
+    _audioChunks = [];
+    _recordStart  = Date.now();
+
+    // Always create a fresh AudioContext + analyser to avoid stale node leaks
+    if (_audioCtx) { try { await _audioCtx.close(); } catch(e) {} }
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = _audioCtx.createMediaStreamSource(_mediaStream);
+    _analyser    = _audioCtx.createAnalyser();
+    _analyser.fftSize = 512;
+    source.connect(_analyser);
+
+    // Pick best supported format
+    const mimeType = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4']
+      .find(m => MediaRecorder.isTypeSupported(m)) || '';
+
+    _mediaRecorder = new MediaRecorder(_mediaStream, mimeType ? { mimeType } : {});
+    _mediaRecorder.ondataavailable = e => { if (e.data.size > 0) _audioChunks.push(e.data); };
+    _mediaRecorder.onstop = () => _onRecordingDone();
+    _mediaRecorder.start(100);
+
+    // Silence detection — only triggers AFTER the user has spoken at least once
+    const data = new Uint8Array(_analyser.frequencyBinCount);
+    let lastSoundAt = Date.now();
+    let userHasSpoken = false;
+
+    _silenceCheck = setInterval(() => {
+      if (!_analyser) return;
+      _analyser.getByteFrequencyData(data);
+      const vol = data.reduce((a, b) => a + b, 0) / data.length;
+
+      if (vol > 10) {
+        userHasSpoken = true;
+        lastSoundAt = Date.now();
+      } else if (userHasSpoken && Date.now() - lastSoundAt > SILENCE_THRESHOLD_MS) {
+        // User spoke and then went silent — send it
+        _stopRecording();
+      }
+    }, 100);
+
+  } catch(err) {
+    console.warn('Groq STT failed, falling back to browser STT:', err);
+    _fallbackSTT();
+  }
+}
+
+function _stopRecording() {
+  clearInterval(_silenceCheck);
+  _silenceCheck = null;
+  if (_mediaRecorder && _mediaRecorder.state === 'recording') {
+    _mediaRecorder.stop();
+  }
+}
+
+async function _onRecordingDone() {
+  clearInterval(_silenceCheck);
+  _silenceCheck = null;
+
+  const elapsed = Date.now() - _recordStart;
+  if (elapsed < MIN_RECORD_MS || _audioChunks.length === 0) {
+    // Too short — probably silence — just restart listening
+    setTimeout(startListening, 200);
+    return;
+  }
+
+  setMicState('processing');
+
+  try {
+    const mimeType = _mediaRecorder?.mimeType || 'audio/webm';
+    const blob = new Blob(_audioChunks, { type: mimeType });
+    const arrayBuf = await blob.arrayBuffer();
+
+    const langMap = { de: 'de', en: 'en' };
+    const lang = langMap[STATE.practiceLang] || 'en';
+
+    const res = await fetch(`/api/transcribe?lang=${lang}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: arrayBuf,
+    });
+
+    if (!res.ok) throw new Error('Transcribe failed: ' + res.status);
+    const data = await res.json();
+    const text = (data.text || '').trim();
+
+    if (!text || text.length < 2) {
+      // Empty transcription — listen again
+      setTimeout(startListening, 300);
+      return;
+    }
+
     STATE.isListening = false;
-    stopListening();
     await handleUserSpeech(text);
-  };
 
-  STATE.recognition.onerror = (e) => {
-    STATE.isListening = false;
-    if (e.error !== 'aborted') setMicState('idle');
-  };
-
-  STATE.recognition.onend = () => {
-    if (STATE.isListening) STATE.isListening = false;
-  };
-
-  try { STATE.recognition.start(); } catch(e) { setMicState('idle'); }
+  } catch(err) {
+    console.warn('Groq transcription error:', err);
+    setMicState('idle');
+    setTimeout(startListening, 500);
+  }
 }
 
 function stopListening() {
   STATE.isListening = false;
-  if (STATE.recognition) {
-    try { STATE.recognition.stop(); } catch(e) {}
-    STATE.recognition = null;
+  clearInterval(_silenceCheck);
+  _silenceCheck = null;
+  if (_mediaRecorder && _mediaRecorder.state === 'recording') {
+    try { _mediaRecorder.stop(); } catch(e) {}
   }
+  _mediaRecorder = null;
+  _audioChunks   = [];
+}
+
+// Fallback: browser SpeechRecognition (Chrome only)
+function _fallbackSTT() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { setCallStatus('⚠️ Mic access needed'); return; }
+  STATE.recognition = new SR();
+  const langMap = { de: 'de-DE', en: 'en-US' };
+  STATE.recognition.lang = langMap[STATE.practiceLang] || 'en-US';
+  STATE.recognition.interimResults = false;
+  STATE.isListening = true;
+  STATE.recognition.onresult = async (e) => {
+    STATE.isListening = false;
+    try { STATE.recognition.stop(); } catch(e) {}
+    await handleUserSpeech(e.results[0][0].transcript);
+  };
+  STATE.recognition.onerror = () => { STATE.isListening = false; setMicState('idle'); };
+  try { STATE.recognition.start(); } catch(e) { setMicState('idle'); }
 }
 
 function toggleMic() {
@@ -2970,8 +3113,8 @@ async function browserTTS(text) {
 async function endCall() {
   stopListening();
   _clearQueue();
-  if (STATE.callTimer) clearInterval(STATE.callTimer);
   STATE.isSpeaking = false;
+  if (STATE.callTimer) clearInterval(STATE.callTimer);
   speechSynthesis.cancel();
 
   // Save call recording/data
@@ -3734,17 +3877,15 @@ async function handleUserSpeech(text) {
 }
 
 async function speakAIAtRate(text, rate) {
-  // Split into chunks, enqueue each, then wait for the queue to drain
+  STATE.isSpeaking = true;
   _clearQueue();
   const chunks = splitForVoice(text);
   const r = rate || 1.0;
 
-  // Fire all TTS requests in parallel, preserve order via queue index
   const pending = chunks.map((chunk, i) =>
     tts(chunk).then(audio => ({ i, audio })).catch(() => ({ i, audio: null }))
   );
 
-  // Collect in order and play
   const results = await Promise.all(pending);
   results.sort((a,b) => a.i - b.i);
   for (const { audio } of results) {
@@ -3754,6 +3895,7 @@ async function speakAIAtRate(text, rate) {
     }
     await sleep(80);
   }
+  STATE.isSpeaking = false;
 }
 
 // ============================================================
@@ -3775,7 +3917,9 @@ async function saveName() {
   STATE.name  = val;
   STATE.email = email;
 
-  const btn = document.getElementById('name-btn');
+  // Start pre-caching welcome audio immediately in background
+  // By the time user picks language + level, audio will be ready
+  setTimeout(preCacheWelcomeAudio, 0);
   const origLabel = btn.textContent;
   btn.disabled = true; btn.textContent = 'Checking…';
 
