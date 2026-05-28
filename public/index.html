@@ -710,7 +710,17 @@ body{
       <button class="lang-btn" onclick="selectNativeLang('hi','Hindi','Hinglish mein')">
         <img class="lang-flag" src="https://flagcdn.com/w80/in.png" alt="India flag" loading="lazy"/>
         <div class="lang-name">Hindi</div>
-        <div class="lang-native">Hinglish mein</div>
+        <div class="lang-native">हिंदी में</div>
+      </button>
+      <button class="lang-btn" onclick="selectNativeLang('te','Telugu','Telugu lo')">
+        <img class="lang-flag" src="https://flagcdn.com/w80/in.png" alt="India flag" loading="lazy"/>
+        <div class="lang-name">Telugu</div>
+        <div class="lang-native">తెలుగులో</div>
+      </button>
+      <button class="lang-btn" onclick="selectNativeLang('kn','Kannada','Kannadada alli')">
+        <img class="lang-flag" src="https://flagcdn.com/w80/in.png" alt="India flag" loading="lazy"/>
+        <div class="lang-name">Kannada</div>
+        <div class="lang-native">ಕನ್ನಡದಲ್ಲಿ</div>
       </button>
       <button class="lang-btn" onclick="selectNativeLang('de','German','Auf Deutsch')">
         <img class="lang-flag" src="https://flagcdn.com/w80/de.png" alt="Germany flag" loading="lazy"/>
@@ -720,17 +730,17 @@ body{
       <button class="lang-btn" onclick="selectNativeLang('es','Spanish','En Espanol')">
         <img class="lang-flag" src="https://flagcdn.com/w80/es.png" alt="Spain flag" loading="lazy"/>
         <div class="lang-name">Spanish</div>
-        <div class="lang-native">En Espanol</div>
+        <div class="lang-native">En Español</div>
       </button>
       <button class="lang-btn" onclick="selectNativeLang('fr','French','En Francais')">
         <img class="lang-flag" src="https://flagcdn.com/w80/fr.png" alt="France flag" loading="lazy"/>
         <div class="lang-name">French</div>
-        <div class="lang-native">En Francais</div>
+        <div class="lang-native">En Français</div>
       </button>
       <button class="lang-btn" onclick="selectNativeLang('ar','Arabic','Bil Arabi')">
         <img class="lang-flag" src="https://flagcdn.com/w80/sa.png" alt="Saudi Arabia flag" loading="lazy"/>
         <div class="lang-name">Arabic</div>
-        <div class="lang-native">Bil Arabi</div>
+        <div class="lang-native">بالعربية</div>
       </button>
     </div>
   </div>
@@ -901,7 +911,7 @@ body{
       <div style="display:flex;gap:8px;align-items:center;">
         <button onclick="goNext('screen-history')" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--s1);font-size:16px;cursor:pointer;" title="Call History">📋</button>
         <button onclick="goNext('screen-confidence')" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--s1);font-size:16px;cursor:pointer;" title="Progress">📈</button>
-        <button onclick="goNext('screen-level')" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--s1);font-size:16px;cursor:pointer;" title="Settings">⚙️</button>
+        <button onclick="openSettings()" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--s1);font-size:16px;cursor:pointer;" title="Settings">⚙️</button>
       </div>
     </div>
 
@@ -1199,6 +1209,61 @@ body{
     </div>
 
     <div class="err" id="shadow-err"></div>
+  </div>
+</div>
+
+<!-- ============ SCREEN: SETTINGS ============ -->
+<div id="screen-settings" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-home')">←</button>
+    <span class="top-title">⚙️ Settings</span>
+    <span></span>
+  </div>
+  <div class="scroll-content" style="gap:16px;">
+
+    <!-- Practice language -->
+    <div class="card">
+      <div class="card-label" style="margin-bottom:12px;">Practice Language</div>
+      <div style="display:flex;flex-direction:column;gap:8px;" id="settings-lang-list">
+        <button class="lang-btn" onclick="settingsSetLang('de')" id="slang-de">🇩🇪 German · Deutsch</button>
+        <button class="lang-btn" onclick="settingsSetLang('en')" id="slang-en">🇬🇧 English · English</button>
+      </div>
+    </div>
+
+    <!-- Level -->
+    <div class="card">
+      <div class="card-label" style="margin-bottom:12px;">Your Level</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="lang-btn" onclick="settingsSetLevel('beginner')"    id="slvl-beginner">🌱 Beginner — simple words, slow pace</button>
+        <button class="lang-btn" onclick="settingsSetLevel('elementary')"  id="slvl-elementary">📖 Elementary — everyday vocabulary</button>
+        <button class="lang-btn" onclick="settingsSetLevel('intermediate')" id="slvl-intermediate">💬 Intermediate — normal conversation</button>
+        <button class="lang-btn" onclick="settingsSetLevel('advanced')"    id="slvl-advanced">🚀 Advanced — idioms and complex sentences</button>
+        <button class="lang-btn" onclick="settingsSetLevel('fluent')"      id="slvl-fluent">⚡ Fluent — native speed, no hand-holding</button>
+      </div>
+    </div>
+
+    <!-- Voice -->
+    <div class="card">
+      <div class="card-label" style="margin-bottom:4px;">Your Voice Clone</div>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:12px;">Re-record to improve call quality.</div>
+      <button class="btn btn-outline" onclick="goNext('screen-voice')" style="padding:12px;font-size:13px;">🎙️ Re-record my voice</button>
+    </div>
+
+    <!-- Goal -->
+    <div class="card">
+      <div class="card-label" style="margin-bottom:4px;">Your Goal</div>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:12px;">Affects how your AI tutor speaks and what scenarios it uses.</div>
+      <div style="display:flex;flex-direction:column;gap:8px;" id="settings-goal-list">
+        <button class="lang-btn" onclick="settingsSetGoal('travel')"  id="sgoal-travel">🧳 Travel</button>
+        <button class="lang-btn" onclick="settingsSetGoal('work')"    id="sgoal-work">💼 Work</button>
+        <button class="lang-btn" onclick="settingsSetGoal('social')"  id="sgoal-social">🤝 Social</button>
+        <button class="lang-btn" onclick="settingsSetGoal('moving')"  id="sgoal-moving">🏠 Moving abroad</button>
+        <button class="lang-btn" onclick="settingsSetGoal('exam')"    id="sgoal-exam">🎓 Exam prep</button>
+        <button class="lang-btn" onclick="settingsSetGoal('fun')"     id="sgoal-fun">🎉 Just for fun</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="applySettings()">Save & go home →</button>
   </div>
 </div>
 
@@ -1777,6 +1842,388 @@ const WARMUP_QUESTIONS_EN = {
   fluent:       ['What\'s up?', 'How\'s your week been?'],
 };
 
+// ============================================================
+// QUESTION BANK — pre-written, level-aware, topic-specific
+// Claude picks the most natural next one from the list.
+// Each question introduces 1-2 words from the vocab bank.
+// Format: { q: "target language question", e: "english", vocab: "word taught" }
+// ============================================================
+const QUESTION_BANK = {
+  de: {
+    cafe: {
+      beginner: [
+        { q: 'Möchten Sie Kaffee?', e: 'Would you like coffee?', vocab: 'möchten' },
+        { q: 'Mit Milch?', e: 'With milk?', vocab: 'Milch' },
+        { q: 'Groß oder klein?', e: 'Large or small?', vocab: 'groß, klein' },
+        { q: 'Zum Mitnehmen?', e: 'To take away?', vocab: 'Mitnehmen' },
+        { q: 'Noch etwas?', e: 'Anything else?', vocab: 'noch etwas' },
+        { q: 'Haben Sie Hunger?', e: 'Are you hungry?', vocab: 'Hunger' },
+        { q: 'Tee oder Kaffee?', e: 'Tea or coffee?', vocab: 'Tee' },
+        { q: 'Mit Zucker?', e: 'With sugar?', vocab: 'Zucker' },
+      ],
+      elementary: [
+        { q: 'Was möchten Sie trinken?', e: 'What would you like to drink?', vocab: 'trinken' },
+        { q: 'Haben Sie die Speisekarte gesehen?', e: 'Have you seen the menu?', vocab: 'Speisekarte' },
+        { q: 'Möchten Sie drinnen oder draußen sitzen?', e: 'Would you like to sit inside or outside?', vocab: 'drinnen, draußen' },
+        { q: 'Kann ich Ihnen etwas bringen?', e: 'Can I bring you something?', vocab: 'bringen' },
+        { q: 'Wie war Ihr Kaffee?', e: 'How was your coffee?', vocab: 'Wie war' },
+        { q: 'Möchten Sie noch einen Kaffee?', e: 'Would you like another coffee?', vocab: 'noch einen' },
+        { q: 'Was essen Sie gerne?', e: 'What do you like to eat?', vocab: 'essen gerne' },
+        { q: 'Haben Sie eine Reservierung?', e: 'Do you have a reservation?', vocab: 'Reservierung' },
+      ],
+      intermediate: [
+        { q: 'Was darf ich Ihnen heute bringen?', e: 'What can I bring you today?', vocab: 'darf ich' },
+        { q: 'Haben Sie schon unsere Tagesempfehlung gesehen?', e: 'Have you seen our daily special?', vocab: 'Tagesempfehlung' },
+        { q: 'Wie hat Ihnen das Essen geschmeckt?', e: 'How did you enjoy the food?', vocab: 'geschmeckt' },
+        { q: 'Möchten Sie lieber drinnen oder draußen sitzen?', e: 'Would you prefer inside or outside?', vocab: 'lieber' },
+        { q: 'Darf ich Ihnen noch etwas nachschenken?', e: 'May I refill your drink?', vocab: 'nachschenken' },
+        { q: 'Wie nehmen Sie Ihren Kaffee?', e: 'How do you take your coffee?', vocab: 'Wie nehmen Sie' },
+        { q: 'Haben Sie schon etwas in Betracht gezogen?', e: 'Have you already had a look at something?', vocab: 'in Betracht gezogen' },
+        { q: 'Soll ich Ihnen die Rechnung bringen?', e: 'Shall I bring you the bill?', vocab: 'Rechnung' },
+      ],
+      advanced: [
+        { q: 'Was haben Sie Appetit auf heute?', e: 'What are you in the mood for today?', vocab: 'Appetit auf' },
+        { q: 'Haben Sie irgendwelche Unverträglichkeiten, die ich beachten soll?', e: 'Do you have any intolerances I should know about?', vocab: 'Unverträglichkeiten' },
+        { q: 'Darf ich Ihnen unseren Hauswein empfehlen?', e: 'May I recommend our house wine?', vocab: 'Hauswein empfehlen' },
+        { q: 'Wie waren Sie zuletzt bei uns?', e: 'When were you last with us?', vocab: 'zuletzt' },
+        { q: 'Möchten Sie das Menü oder lieber à la carte bestellen?', e: 'Would you like the set menu or à la carte?', vocab: 'à la carte' },
+        { q: 'Soll ich für Sie reservieren lassen?', e: 'Shall I make a reservation for you?', vocab: 'reservieren lassen' },
+        { q: 'Wie fanden Sie unsere neue Speisekarte?', e: 'What did you think of our new menu?', vocab: 'Wie fanden Sie' },
+        { q: 'Darf ich fragen, zu welchem Anlass Sie heute hier sind?', e: 'May I ask what occasion brings you here?', vocab: 'Anlass' },
+      ],
+      fluent: [
+        { q: 'Worauf haben Sie heute Lust — etwas Leichtes oder eher Herzhaftes?', e: 'What are you feeling today — something light or more hearty?', vocab: 'Herzhaftes' },
+        { q: 'Kennen Sie schon unsere saisonalen Spezialitäten?', e: 'Are you familiar with our seasonal specials?', vocab: 'saisonalen Spezialitäten' },
+        { q: 'Haben Sie eine Vorliebe beim Wein oder darf ich Ihnen etwas Passendes heraussuchen?', e: 'Do you have a wine preference or shall I find something to match?', vocab: 'Vorliebe' },
+        { q: 'Wie war der restliche Tag bisher?', e: 'How has the rest of your day been?', vocab: 'restliche Tag' },
+        { q: 'Soll ich die Bestellung aufteilen oder alles auf eine Rechnung?', e: 'Shall I split the bill or keep it together?', vocab: 'aufteilen' },
+        { q: 'Wäre ein Dessert noch drin oder soll ich nur den Abschluss bringen?', e: 'Room for dessert or just the finish?', vocab: 'Abschluss' },
+        { q: 'Haben Sie das Lokal durch eine Empfehlung gefunden?', e: 'Did you find us through a recommendation?', vocab: 'Empfehlung' },
+        { q: 'Was hat Ihnen heute am besten geschmeckt?', e: 'What did you enjoy most today?', vocab: 'am besten geschmeckt' },
+      ],
+    },
+    airport: {
+      beginner: [
+        { q: 'Ihren Pass, bitte.', e: 'Your passport, please.', vocab: 'Pass' },
+        { q: 'Haben Sie Gepäck?', e: 'Do you have luggage?', vocab: 'Gepäck' },
+        { q: 'Wo fliegen Sie hin?', e: 'Where are you flying to?', vocab: 'fliegen' },
+        { q: 'Haben Sie Handgepäck?', e: 'Do you have carry-on luggage?', vocab: 'Handgepäck' },
+        { q: 'Fenster oder Gang?', e: 'Window or aisle?', vocab: 'Fenster, Gang' },
+        { q: 'Wann geht Ihr Flug?', e: 'When does your flight leave?', vocab: 'Flug' },
+        { q: 'Haben Sie eine Bordkarte?', e: 'Do you have a boarding pass?', vocab: 'Bordkarte' },
+        { q: 'Alles in Ordnung?', e: 'Is everything okay?', vocab: 'in Ordnung' },
+      ],
+      elementary: [
+        { q: 'Darf ich Ihren Reisepass sehen?', e: 'May I see your passport?', vocab: 'Reisepass' },
+        { q: 'Wie viel Gepäck haben Sie aufzugeben?', e: 'How much luggage are you checking in?', vocab: 'aufzugeben' },
+        { q: 'Haben Sie Ihren Koffer selbst gepackt?', e: 'Did you pack your suitcase yourself?', vocab: 'gepackt' },
+        { q: 'Wo ist Ihr Anschlussflug?', e: 'Where is your connecting flight?', vocab: 'Anschlussflug' },
+        { q: 'Haben Sie gefährliche Gegenstände dabei?', e: 'Do you have any dangerous items with you?', vocab: 'gefährliche Gegenstände' },
+        { q: 'Möchten Sie einen Gangplatz oder Fensterplatz?', e: 'Would you like an aisle or window seat?', vocab: 'Gangplatz, Fensterplatz' },
+        { q: 'Ihr Flug hat leider Verspätung.', e: 'Unfortunately your flight is delayed.', vocab: 'Verspätung' },
+        { q: 'Bitte gehen Sie zur Sicherheitskontrolle.', e: 'Please proceed to the security check.', vocab: 'Sicherheitskontrolle' },
+      ],
+      intermediate: [
+        { q: 'Darf ich nach dem Grund Ihrer Reise fragen?', e: 'May I ask the reason for your trip?', vocab: 'Grund Ihrer Reise' },
+        { q: 'Haben Sie etwas zu verzollen?', e: 'Do you have anything to declare?', vocab: 'verzollen' },
+        { q: 'Ihr Flug wurde auf Gate B12 verlegt.', e: 'Your flight has been moved to gate B12.', vocab: 'verlegt' },
+        { q: 'Wie lange bleiben Sie an Ihrem Reiseziel?', e: 'How long will you stay at your destination?', vocab: 'Reiseziel' },
+        { q: 'Haben Sie Ihr gesamtes Gepäck bei sich?', e: 'Do you have all your luggage with you?', vocab: 'gesamtes' },
+        { q: 'Wo übernachten Sie am Zielort?', e: 'Where will you be staying at your destination?', vocab: 'übernachten' },
+        { q: 'Können Sie Ihr Gepäck identifizieren?', e: 'Can you identify your luggage?', vocab: 'identifizieren' },
+        { q: 'Haben Sie die Einreisebestimmungen geprüft?', e: 'Have you checked the entry requirements?', vocab: 'Einreisebestimmungen' },
+      ],
+      advanced: [
+        { q: 'Ihr Gepäck scheint das Gewichtslimit überschritten zu haben.', e: 'Your luggage appears to have exceeded the weight limit.', vocab: 'Gewichtslimit überschritten' },
+        { q: 'Aus welchem Anlass reisen Sie heute?', e: 'What brings you to travel today?', vocab: 'Anlass' },
+        { q: 'Haben Sie Anschlussflüge, die wir berücksichtigen sollten?', e: 'Do you have connecting flights we should take into account?', vocab: 'berücksichtigen' },
+        { q: 'Könnten Sie Ihre Reisetaschen kurz öffnen?', e: 'Could you briefly open your travel bags?', vocab: 'Reisetaschen' },
+        { q: 'Ihr Flug wurde aufgrund von Schlechtwetter umgeleitet.', e: 'Your flight has been diverted due to bad weather.', vocab: 'umgeleitet' },
+        { q: 'Möchten Sie auf einen früheren Flug umgebucht werden?', e: 'Would you like to be rebooked on an earlier flight?', vocab: 'umgebucht' },
+        { q: 'Haben Sie eine Reiseversicherung?', e: 'Do you have travel insurance?', vocab: 'Reiseversicherung' },
+        { q: 'Darf ich Ihre Reisedokumente überprüfen?', e: 'May I check your travel documents?', vocab: 'Reisedokumente überprüfen' },
+      ],
+      fluent: [
+        { q: 'Ihr Flug ist überbucht — hätten Sie Interesse an einer Umbuchung gegen Entschädigung?', e: 'Your flight is overbooked — would you be interested in rebooking for compensation?', vocab: 'überbucht, Entschädigung' },
+        { q: 'Kennen Sie die aktuellen Einreisevorschriften für Ihr Zielland?', e: 'Are you aware of the current entry regulations for your destination country?', vocab: 'Einreisevorschriften' },
+        { q: 'Wie empfinden Sie die aktuellen Sicherheitsmaßnahmen am Flughafen?', e: 'What do you think of the current airport security measures?', vocab: 'Sicherheitsmaßnahmen' },
+        { q: 'Haben Sie Erfahrung mit dem Transit in diesem Flughafen?', e: 'Have you transited through this airport before?', vocab: 'Transit' },
+        { q: 'Wir könnten Ihnen einen Lounge-Zugang anbieten — interessiert Sie das?', e: 'We could offer you lounge access — does that interest you?', vocab: 'Lounge-Zugang' },
+        { q: 'Ihr Gepäck ist leider verloren gegangen — wie können wir das regeln?', e: 'Unfortunately your luggage has been lost — how can we sort this out?', vocab: 'verloren gegangen, regeln' },
+        { q: 'Sind Sie mit den Umbuchungsoptionen einverstanden?', e: 'Do you agree with the rebooking options?', vocab: 'einverstanden' },
+        { q: 'Wie war Ihre bisherige Erfahrung mit unserer Airline?', e: 'How has your experience with our airline been so far?', vocab: 'bisherige Erfahrung' },
+      ],
+    },
+    hotel: {
+      beginner: [
+        { q: 'Haben Sie eine Reservierung?', e: 'Do you have a reservation?', vocab: 'Reservierung' },
+        { q: 'Wie heißen Sie?', e: 'What is your name?', vocab: 'Wie heißen Sie' },
+        { q: 'Für wie viele Nächte?', e: 'For how many nights?', vocab: 'Nächte' },
+        { q: 'Einfach oder Doppelzimmer?', e: 'Single or double room?', vocab: 'Doppelzimmer' },
+        { q: 'Brauchen Sie Hilfe mit dem Gepäck?', e: 'Do you need help with your luggage?', vocab: 'Hilfe' },
+        { q: 'Hier ist Ihr Schlüssel.', e: 'Here is your key.', vocab: 'Schlüssel' },
+        { q: 'Das Frühstück ist um sieben Uhr.', e: 'Breakfast is at seven o\'clock.', vocab: 'Frühstück' },
+        { q: 'Haben Sie Fragen?', e: 'Do you have any questions?', vocab: 'Fragen' },
+      ],
+      elementary: [
+        { q: 'Darf ich Ihren Personalausweis sehen?', e: 'May I see your ID?', vocab: 'Personalausweis' },
+        { q: 'Wann möchten Sie auschecken?', e: 'When would you like to check out?', vocab: 'auschecken' },
+        { q: 'Haben Sie besondere Wünsche für Ihr Zimmer?', e: 'Do you have any special requests for your room?', vocab: 'besondere Wünsche' },
+        { q: 'Möchten Sie ein Zimmer mit Aussicht?', e: 'Would you like a room with a view?', vocab: 'Aussicht' },
+        { q: 'Kann ich ein Taxi für Sie bestellen?', e: 'Can I order a taxi for you?', vocab: 'bestellen' },
+        { q: 'Brauchen Sie einen Weckruf?', e: 'Do you need a wake-up call?', vocab: 'Weckruf' },
+        { q: 'Haben Sie alles, was Sie brauchen?', e: 'Do you have everything you need?', vocab: 'alles was Sie brauchen' },
+        { q: 'Wie war Ihre Anreise?', e: 'How was your journey here?', vocab: 'Anreise' },
+      ],
+      intermediate: [
+        { q: 'Wie war Ihr Aufenthalt bei uns bisher?', e: 'How has your stay with us been so far?', vocab: 'Aufenthalt' },
+        { q: 'Darf ich Ihnen die Einrichtungen des Hotels vorstellen?', e: 'May I introduce you to the hotel facilities?', vocab: 'Einrichtungen' },
+        { q: 'Haben Sie Interesse an unserem Spa-Angebot?', e: 'Are you interested in our spa services?', vocab: 'Spa-Angebot' },
+        { q: 'Könnten Sie mir sagen, was Ihnen nicht gefällt?', e: 'Could you tell me what you are not happy with?', vocab: 'nicht gefällt' },
+        { q: 'Möchten Sie Ihren Aufenthalt verlängern?', e: 'Would you like to extend your stay?', vocab: 'verlängern' },
+        { q: 'Haben Sie das Restaurant bereits ausprobiert?', e: 'Have you tried the restaurant yet?', vocab: 'ausprobiert' },
+        { q: 'Soll ich Ihnen lokale Sehenswürdigkeiten empfehlen?', e: 'Shall I recommend local sights for you?', vocab: 'Sehenswürdigkeiten' },
+        { q: 'Haben Sie Probleme mit dem WLAN gehabt?', e: 'Have you had any issues with the WiFi?', vocab: 'Probleme' },
+      ],
+      advanced: [
+        { q: 'Entspricht Ihr Zimmer Ihren Erwartungen?', e: 'Does your room meet your expectations?', vocab: 'Erwartungen' },
+        { q: 'Darf ich fragen, ob Sie geschäftlich oder privat hier sind?', e: 'May I ask whether you are here for business or pleasure?', vocab: 'geschäftlich' },
+        { q: 'Haben Sie unsere Loyalitätsprogramm-Vorteile schon genutzt?', e: 'Have you made use of our loyalty programme benefits?', vocab: 'Loyalitätsprogramm' },
+        { q: 'Wie können wir Ihren Aufenthalt noch angenehmer gestalten?', e: 'How can we make your stay even more pleasant?', vocab: 'angenehmer gestalten' },
+        { q: 'Haben Sie Anmerkungen zu unserem Service?', e: 'Do you have any comments on our service?', vocab: 'Anmerkungen' },
+        { q: 'Können wir Ihnen eine Reservierung für das Abendessen arrangieren?', e: 'Can we arrange a dinner reservation for you?', vocab: 'arrangieren' },
+        { q: 'Wären Sie an einem Late-Checkout interessiert?', e: 'Would you be interested in a late checkout?', vocab: 'Late-Checkout' },
+        { q: 'Wie hat Ihnen das Frühstücksangebot gefallen?', e: 'How did you find the breakfast options?', vocab: 'Frühstücksangebot' },
+      ],
+      fluent: [
+        { q: 'Wir schätzen Ihre Treue sehr — wie kann ich Ihnen heute besonders behilflich sein?', e: 'We really value your loyalty — how can I be of special help today?', vocab: 'Treue, behilflich' },
+        { q: 'Hatten Sie schon einmal die Gelegenheit, unsere Suite auszuprobieren?', e: 'Have you ever had the chance to try our suite?', vocab: 'Gelegenheit' },
+        { q: 'Wie empfinden Sie das Preis-Leistungs-Verhältnis unseres Hauses?', e: 'How do you find the value for money here?', vocab: 'Preis-Leistungs-Verhältnis' },
+        { q: 'Gibt es etwas, das wir für zukünftige Aufenthalte verbessern könnten?', e: 'Is there anything we could improve for future stays?', vocab: 'zukünftige' },
+        { q: 'Würden Sie das Hotel Ihren Kollegen oder Freunden empfehlen?', e: 'Would you recommend the hotel to colleagues or friends?', vocab: 'empfehlen' },
+        { q: 'Haben Sie besondere Anlässe, für die wir etwas vorbereiten könnten?', e: 'Do you have special occasions we could prepare something for?', vocab: 'besondere Anlässe' },
+        { q: 'Wie war die Qualität des Room Service?', e: 'How was the quality of the room service?', vocab: 'Qualität' },
+        { q: 'Darf ich Ihnen unsere exklusiven Mitgliedschaftsvorteile vorstellen?', e: 'May I introduce you to our exclusive membership benefits?', vocab: 'exklusiven Vorteile' },
+      ],
+    },
+    shopping: {
+      beginner: [
+        { q: 'Kann ich helfen?', e: 'Can I help?', vocab: 'helfen' },
+        { q: 'Was suchen Sie?', e: 'What are you looking for?', vocab: 'suchen' },
+        { q: 'Welche Größe?', e: 'What size?', vocab: 'Größe' },
+        { q: 'Welche Farbe?', e: 'What colour?', vocab: 'Farbe' },
+        { q: 'Gefällt es Ihnen?', e: 'Do you like it?', vocab: 'gefällt' },
+        { q: 'Möchten Sie es anprobieren?', e: 'Would you like to try it on?', vocab: 'anprobieren' },
+        { q: 'Wie viel kostet das?', e: 'How much does that cost?', vocab: 'kostet' },
+        { q: 'Bar oder Karte?', e: 'Cash or card?', vocab: 'Bar, Karte' },
+      ],
+      elementary: [
+        { q: 'Wonach suchen Sie heute?', e: 'What are you looking for today?', vocab: 'Wonach' },
+        { q: 'Haben Sie eine bestimmte Farbe im Sinn?', e: 'Do you have a particular colour in mind?', vocab: 'im Sinn' },
+        { q: 'Darf ich Ihre Größe messen?', e: 'May I measure your size?', vocab: 'messen' },
+        { q: 'Wie passt das Stück?', e: 'How does the item fit?', vocab: 'passt' },
+        { q: 'Haben wir Ihr Interesse geweckt?', e: 'Have we caught your interest?', vocab: 'Interesse geweckt' },
+        { q: 'Soll ich es einpacken?', e: 'Shall I wrap it up?', vocab: 'einpacken' },
+        { q: 'Haben Sie unsere Sonderangebote gesehen?', e: 'Have you seen our special offers?', vocab: 'Sonderangebote' },
+        { q: 'Brauchen Sie eine Quittung?', e: 'Do you need a receipt?', vocab: 'Quittung' },
+      ],
+      intermediate: [
+        { q: 'Haben Sie etwas Bestimmtes gesucht oder schauen Sie sich nur um?', e: 'Are you looking for something specific or just browsing?', vocab: 'schauen Sie sich um' },
+        { q: 'Unser Angebot wurde gerade erneuert — soll ich Ihnen die Neuheiten zeigen?', e: 'Our range was just updated — shall I show you the new arrivals?', vocab: 'Neuheiten' },
+        { q: 'Haben Sie schon bei uns eingekauft?', e: 'Have you shopped with us before?', vocab: 'eingekauft' },
+        { q: 'Für welchen Anlass suchen Sie etwas?', e: 'What occasion are you shopping for?', vocab: 'Anlass' },
+        { q: 'Darf ich Ihnen eine andere Option vorschlagen?', e: 'May I suggest a different option?', vocab: 'vorschlagen' },
+        { q: 'Möchten Sie es als Geschenk verpackt haben?', e: 'Would you like it gift-wrapped?', vocab: 'Geschenk verpackt' },
+        { q: 'Wie empfinden Sie die Qualität des Materials?', e: 'How do you find the quality of the material?', vocab: 'Qualität des Materials' },
+        { q: 'Soll ich die Änderung für Sie veranlassen?', e: 'Shall I arrange the alteration for you?', vocab: 'Änderung veranlassen' },
+      ],
+      advanced: [
+        { q: 'Haben Sie ein bestimmtes Budget, an dem wir uns orientieren sollen?', e: 'Do you have a specific budget we should work within?', vocab: 'Budget orientieren' },
+        { q: 'Wie wichtig ist Ihnen die Marke im Vergleich zur Qualität?', e: 'How important is the brand compared to quality for you?', vocab: 'Marke, Qualität' },
+        { q: 'Wären Sie an unserer Stammkundenkarte interessiert?', e: 'Would you be interested in our loyalty card?', vocab: 'Stammkundenkarte' },
+        { q: 'Darf ich fragen, was Ihnen an Ihrem bisherigen Kleidungsstil gefällt?', e: 'May I ask what you like about your current style?', vocab: 'Kleidungsstil' },
+        { q: 'Haben Sie schon unsere aktuelle Kollektion entdeckt?', e: 'Have you already discovered our current collection?', vocab: 'Kollektion entdeckt' },
+        { q: 'Wie schätzen Sie das Preis-Leistungs-Verhältnis ein?', e: 'How do you assess the value for money?', vocab: 'schätzen Sie ein' },
+        { q: 'Suchen Sie eher klassisch oder modern?', e: 'Are you looking for something more classic or modern?', vocab: 'klassisch, modern' },
+        { q: 'Möchten Sie das Stück auf Probe mitnehmen?', e: 'Would you like to take it on approval?', vocab: 'auf Probe' },
+      ],
+      fluent: [
+        { q: 'Haben Sie einen Stilberater, oder orientieren Sie sich eher an Ihrer eigenen Intuition?', e: 'Do you have a stylist or do you go by your own intuition?', vocab: 'Stilberater, Intuition' },
+        { q: 'Was hat Sie an unserer Kollektion besonders angesprochen?', e: 'What particularly caught your eye in our collection?', vocab: 'angesprochen' },
+        { q: 'Wie empfinden Sie den Unterschied zwischen unseren Premium- und Standardlinien?', e: 'How do you find the difference between our premium and standard lines?', vocab: 'Premiumlinien' },
+        { q: 'Hätten Sie Interesse an einer exklusiven Vorschau unserer nächsten Kollektion?', e: 'Would you be interested in an exclusive preview of our next collection?', vocab: 'exklusive Vorschau' },
+        { q: 'Kommen Sie oft in diese Gegend zum Einkaufen?', e: 'Do you come to this area often to shop?', vocab: 'Gegend' },
+        { q: 'Wie empfinden Sie das aktuelle Modegeschehen in der Stadt?', e: 'What do you think of the current fashion scene in the city?', vocab: 'Modegeschehen' },
+        { q: 'Darf ich Ihnen unsere maßgefertigten Optionen vorstellen?', e: 'May I introduce you to our made-to-measure options?', vocab: 'maßgefertigt' },
+        { q: 'Haben Sie besondere Ansprüche, die wir berücksichtigen sollten?', e: 'Do you have particular requirements we should consider?', vocab: 'Ansprüche berücksichtigen' },
+      ],
+    },
+    doctor: {
+      beginner: [
+        { q: 'Was fehlt Ihnen?', e: 'What seems to be the matter?', vocab: 'fehlt' },
+        { q: 'Haben Sie Schmerzen?', e: 'Are you in pain?', vocab: 'Schmerzen' },
+        { q: 'Haben Sie Fieber?', e: 'Do you have a fever?', vocab: 'Fieber' },
+        { q: 'Seit wann?', e: 'Since when?', vocab: 'seit wann' },
+        { q: 'Haben Sie Medikamente genommen?', e: 'Have you taken any medication?', vocab: 'Medikamente' },
+        { q: 'Sind Sie allergisch?', e: 'Are you allergic?', vocab: 'allergisch' },
+        { q: 'Wo tut es weh?', e: 'Where does it hurt?', vocab: 'tut es weh' },
+        { q: 'Können Sie tief einatmen?', e: 'Can you breathe in deeply?', vocab: 'einatmen' },
+      ],
+      elementary: [
+        { q: 'Was hat Sie heute hierher gebracht?', e: 'What brings you here today?', vocab: 'gebracht' },
+        { q: 'Wie lange haben Sie diese Beschwerden schon?', e: 'How long have you had these symptoms?', vocab: 'Beschwerden' },
+        { q: 'Haben Sie Vorerkrankungen?', e: 'Do you have any pre-existing conditions?', vocab: 'Vorerkrankungen' },
+        { q: 'Schlafen Sie gut?', e: 'Are you sleeping well?', vocab: 'schlafen' },
+        { q: 'Haben Sie regelmäßig gegessen?', e: 'Have you been eating regularly?', vocab: 'regelmäßig' },
+        { q: 'Haben Sie Ihr Blut kürzlich testen lassen?', e: 'Have you had your blood tested recently?', vocab: 'testen lassen' },
+        { q: 'Rauchen Sie oder trinken Sie Alkohol?', e: 'Do you smoke or drink alcohol?', vocab: 'rauchen, Alkohol' },
+        { q: 'Nehmen Sie regelmäßig Medikamente?', e: 'Do you take medication regularly?', vocab: 'regelmäßig' },
+      ],
+      intermediate: [
+        { q: 'Können Sie mir die Symptome genauer beschreiben?', e: 'Can you describe the symptoms in more detail?', vocab: 'beschreiben' },
+        { q: 'Hat sich der Schmerz verändert seit dem letzten Mal?', e: 'Has the pain changed since last time?', vocab: 'verändert' },
+        { q: 'Wie würden Sie den Schmerz auf einer Skala von eins bis zehn einordnen?', e: 'How would you rate the pain on a scale of one to ten?', vocab: 'Skala einordnen' },
+        { q: 'Haben Sie Stress oder belastende Faktoren in letzter Zeit?', e: 'Have you had stress or strain recently?', vocab: 'belastende Faktoren' },
+        { q: 'Gibt es etwas, das die Beschwerden verbessert oder verschlimmert?', e: 'Is there anything that improves or worsens the symptoms?', vocab: 'verbessert, verschlimmert' },
+        { q: 'Haben Sie eine Familiengeschichte von ähnlichen Beschwerden?', e: 'Do you have a family history of similar conditions?', vocab: 'Familiengeschichte' },
+        { q: 'Haben Sie in letzter Zeit gereist?', e: 'Have you travelled recently?', vocab: 'gereist' },
+        { q: 'Darf ich eine kurze Untersuchung vornehmen?', e: 'May I carry out a brief examination?', vocab: 'Untersuchung vornehmen' },
+      ],
+      advanced: [
+        { q: 'Haben Sie Begleiterscheinungen bemerkt, die Sie nicht direkt mit der Hauptbeschwerde in Verbindung bringen?', e: 'Have you noticed accompanying symptoms not directly related to the main complaint?', vocab: 'Begleiterscheinungen' },
+        { q: 'Wie beurteilen Sie Ihren allgemeinen Gesundheitszustand?', e: 'How would you assess your general state of health?', vocab: 'Gesundheitszustand' },
+        { q: 'Haben Sie alternative Behandlungsmethoden versucht?', e: 'Have you tried any alternative treatment methods?', vocab: 'Behandlungsmethoden' },
+        { q: 'Welche Auswirkungen hat dies auf Ihren Alltag?', e: 'What impact does this have on your daily life?', vocab: 'Auswirkungen, Alltag' },
+        { q: 'Haben Sie Bedenken bezüglich bestimmter Medikamente?', e: 'Do you have concerns about specific medications?', vocab: 'Bedenken bezüglich' },
+        { q: 'Wie reagiert Ihr Körper normalerweise auf Stress?', e: 'How does your body normally respond to stress?', vocab: 'reagiert' },
+        { q: 'Haben Sie schon einmal ähnliche Symptome erlebt?', e: 'Have you ever experienced similar symptoms before?', vocab: 'erlebt' },
+        { q: 'Was sind Ihre Erwartungen an die Behandlung?', e: 'What are your expectations of the treatment?', vocab: 'Erwartungen an die Behandlung' },
+      ],
+      fluent: [
+        { q: 'Wie würden Sie Ihren Lebensstil in Bezug auf Bewegung und Ernährung beschreiben?', e: 'How would you describe your lifestyle in terms of exercise and diet?', vocab: 'Lebensstil, Ernährung' },
+        { q: 'Haben Sie das Gefühl, dass psychische Faktoren eine Rolle spielen könnten?', e: 'Do you feel that psychological factors could be playing a role?', vocab: 'psychische Faktoren' },
+        { q: 'Was wissen Sie bereits über Ihre Diagnose?', e: 'What do you already know about your diagnosis?', vocab: 'Diagnose' },
+        { q: 'Haben Sie Bedenken bezüglich der Nebenwirkungen der empfohlenen Therapie?', e: 'Do you have concerns about the side effects of the recommended therapy?', vocab: 'Nebenwirkungen, Therapie' },
+        { q: 'Wie hat sich Ihr Befinden in den letzten Monaten entwickelt?', e: 'How has your condition developed over the last few months?', vocab: 'Befinden entwickelt' },
+        { q: 'Welche Prioritäten setzen Sie bei Ihrer Gesundheitsversorgung?', e: 'What priorities do you set for your healthcare?', vocab: 'Gesundheitsversorgung' },
+        { q: 'Haben Sie ein gutes Unterstützungsnetz in Ihrem privaten Umfeld?', e: 'Do you have a good support network in your personal life?', vocab: 'Unterstützungsnetz' },
+        { q: 'Was wünschen Sie sich von uns als nächsten Schritt?', e: 'What would you like from us as the next step?', vocab: 'nächsten Schritt' },
+      ],
+    },
+    job: {
+      beginner: [
+        { q: 'Guten Tag! Wie heißen Sie?', e: 'Good day! What is your name?', vocab: 'Wie heißen Sie' },
+        { q: 'Woher kommen Sie?', e: 'Where are you from?', vocab: 'Woher kommen Sie' },
+        { q: 'Sprechen Sie Deutsch?', e: 'Do you speak German?', vocab: 'sprechen' },
+        { q: 'Haben Sie Erfahrung?', e: 'Do you have experience?', vocab: 'Erfahrung' },
+        { q: 'Warum möchten Sie hier arbeiten?', e: 'Why do you want to work here?', vocab: 'arbeiten' },
+        { q: 'Wann können Sie anfangen?', e: 'When can you start?', vocab: 'anfangen' },
+        { q: 'Was sind Ihre Stärken?', e: 'What are your strengths?', vocab: 'Stärken' },
+        { q: 'Haben Sie Fragen?', e: 'Do you have any questions?', vocab: 'Fragen' },
+      ],
+      elementary: [
+        { q: 'Erzählen Sie mir etwas über sich.', e: 'Tell me something about yourself.', vocab: 'Erzählen Sie' },
+        { q: 'Was haben Sie zuletzt gemacht?', e: 'What have you been doing recently?', vocab: 'zuletzt' },
+        { q: 'Haben Sie Teamarbeit gemacht?', e: 'Have you done teamwork?', vocab: 'Teamarbeit' },
+        { q: 'Was sind Ihre Schwächen?', e: 'What are your weaknesses?', vocab: 'Schwächen' },
+        { q: 'Wie viele Stunden möchten Sie arbeiten?', e: 'How many hours would you like to work?', vocab: 'Stunden' },
+        { q: 'Was verdienen Sie gerade?', e: 'What are you earning currently?', vocab: 'verdienen' },
+        { q: 'Warum verlassen Sie Ihren jetzigen Job?', e: 'Why are you leaving your current job?', vocab: 'verlassen' },
+        { q: 'Haben Sie Referenzen?', e: 'Do you have references?', vocab: 'Referenzen' },
+      ],
+      intermediate: [
+        { q: 'Beschreiben Sie Ihren idealen Arbeitsplatz.', e: 'Describe your ideal workplace.', vocab: 'idealen Arbeitsplatz' },
+        { q: 'Wie gehen Sie mit Konflikten im Team um?', e: 'How do you handle conflicts in a team?', vocab: 'Konflikte' },
+        { q: 'Was ist Ihr größter beruflicher Erfolg?', e: 'What is your greatest professional achievement?', vocab: 'beruflicher Erfolg' },
+        { q: 'Wo sehen Sie sich in fünf Jahren?', e: 'Where do you see yourself in five years?', vocab: 'sehen Sie sich' },
+        { q: 'Was wissen Sie über unser Unternehmen?', e: 'What do you know about our company?', vocab: 'Unternehmen' },
+        { q: 'Wie priorisieren Sie Aufgaben unter Druck?', e: 'How do you prioritise tasks under pressure?', vocab: 'priorisieren, Druck' },
+        { q: 'Welche Fähigkeiten möchten Sie weiterentwickeln?', e: 'Which skills would you like to develop further?', vocab: 'Fähigkeiten weiterentwickeln' },
+        { q: 'Haben Sie Führungserfahrung?', e: 'Do you have leadership experience?', vocab: 'Führungserfahrung' },
+      ],
+      advanced: [
+        { q: 'Welche Managementstile bevorzugen Sie und warum?', e: 'Which management styles do you prefer and why?', vocab: 'Managementstile' },
+        { q: 'Wie haben Sie in der Vergangenheit Veränderungsprozesse begleitet?', e: 'How have you supported change processes in the past?', vocab: 'Veränderungsprozesse' },
+        { q: 'Wie gehen Sie mit Misserfolgen um?', e: 'How do you deal with setbacks?', vocab: 'Misserfolgen' },
+        { q: 'Was zeichnet Sie im Vergleich zu anderen Bewerbern aus?', e: 'What distinguishes you from other applicants?', vocab: 'zeichnet Sie aus' },
+        { q: 'Wie gestalten Sie Ihre Work-Life-Balance?', e: 'How do you manage your work-life balance?', vocab: 'Work-Life-Balance' },
+        { q: 'Haben Sie Erfahrung mit internationalen Teams?', e: 'Do you have experience with international teams?', vocab: 'internationalen Teams' },
+        { q: 'Welche Gehaltsvorstellung haben Sie?', e: 'What are your salary expectations?', vocab: 'Gehaltsvorstellung' },
+        { q: 'Was hat Sie an unserer Unternehmenskultur angesprochen?', e: 'What attracted you to our company culture?', vocab: 'Unternehmenskultur' },
+      ],
+      fluent: [
+        { q: 'Welche strategischen Initiativen haben Sie in Ihrer letzten Rolle angestoßen?', e: 'What strategic initiatives did you drive in your last role?', vocab: 'angestoßen' },
+        { q: 'Wie gehen Sie mit Interessenkonflikten zwischen Abteilungen um?', e: 'How do you handle conflicts of interest between departments?', vocab: 'Interessenkonflikten' },
+        { q: 'Welche Werte sind für Sie in einem Unternehmen nicht verhandelbar?', e: 'What values are non-negotiable for you in a company?', vocab: 'nicht verhandelbar' },
+        { q: 'Wie würden Ihre Kollegen Sie in drei Worten beschreiben?', e: 'How would your colleagues describe you in three words?', vocab: 'beschreiben' },
+        { q: 'Was war die schwierigste Entscheidung, die Sie je beruflich getroffen haben?', e: 'What was the hardest professional decision you have ever made?', vocab: 'schwierigste Entscheidung' },
+        { q: 'Wie bleiben Sie in Ihrem Bereich auf dem neuesten Stand?', e: 'How do you stay current in your field?', vocab: 'auf dem neuesten Stand' },
+        { q: 'Welchen kulturellen Beitrag würden Sie in unser Team einbringen?', e: 'What cultural contribution would you bring to our team?', vocab: 'kulturellen Beitrag' },
+        { q: 'Was wäre Ihr erster Schritt, wenn Sie die Stelle bekommen?', e: 'What would be your first step if you got the job?', vocab: 'erster Schritt' },
+      ],
+    },
+  },
+  en: {
+    cafe: {
+      beginner: [
+        { q: 'What would you like?', e: 'What would you like?', vocab: 'would like' },
+        { q: 'Tea or coffee?', e: 'Tea or coffee?', vocab: 'tea, coffee' },
+        { q: 'Milk and sugar?', e: 'Milk and sugar?', vocab: 'milk, sugar' },
+        { q: 'To take away?', e: 'To take away?', vocab: 'take away' },
+        { q: 'Anything else?', e: 'Anything else?', vocab: 'anything else' },
+        { q: 'Are you ready to order?', e: 'Are you ready to order?', vocab: 'ready, order' },
+        { q: 'How was that?', e: 'How was that?', vocab: 'How was' },
+        { q: 'Cash or card?', e: 'Cash or card?', vocab: 'cash, card' },
+      ],
+      elementary: [
+        { q: 'What can I get for you today?', e: 'What can I get for you today?', vocab: 'get for you' },
+        { q: 'Have you had a look at the menu?', e: 'Have you had a look at the menu?', vocab: 'have a look' },
+        { q: 'Would you like to sit inside or outside?', e: 'Would you like to sit inside or outside?', vocab: 'inside, outside' },
+        { q: 'How would you like your coffee?', e: 'How would you like your coffee?', vocab: 'How would you like' },
+        { q: 'Would you like something to eat?', e: 'Would you like something to eat?', vocab: 'something to eat' },
+        { q: 'Can I get you a refill?', e: 'Can I get you a refill?', vocab: 'refill' },
+        { q: 'How did you find it?', e: 'How did you find it?', vocab: 'How did you find' },
+        { q: 'Would you like the bill?', e: 'Would you like the bill?', vocab: 'bill' },
+      ],
+      intermediate: [
+        { q: 'Have you seen our daily specials?', e: 'Have you seen our daily specials?', vocab: 'daily specials' },
+        { q: 'Do you have any dietary requirements?', e: 'Do you have any dietary requirements?', vocab: 'dietary requirements' },
+        { q: 'Would you like me to recommend something?', e: 'Would you like me to recommend something?', vocab: 'recommend' },
+        { q: 'How long have you been coming here?', e: 'How long have you been coming here?', vocab: 'How long have you been' },
+        { q: 'What are you in the mood for today?', e: 'What are you in the mood for today?', vocab: 'in the mood for' },
+        { q: 'Would you like to try our new seasonal menu?', e: 'Would you like to try our new seasonal menu?', vocab: 'seasonal' },
+        { q: 'Did everything come out as expected?', e: 'Did everything come out as expected?', vocab: 'as expected' },
+        { q: 'Would you like to split the bill?', e: 'Would you like to split the bill?', vocab: 'split the bill' },
+      ],
+      advanced: [
+        { q: 'What kind of flavour profile are you drawn to today?', e: 'What kind of flavour profile are you drawn to today?', vocab: 'flavour profile' },
+        { q: 'Have you tried single-origin coffees before?', e: 'Have you tried single-origin coffees before?', vocab: 'single-origin' },
+        { q: 'Do you tend to go for classic options or do you like to try something new?', e: 'Do you tend to go for classic options or do you like to try something new?', vocab: 'tend to' },
+        { q: 'How do you generally feel about alternative milks?', e: 'How do you generally feel about alternative milks?', vocab: 'alternative milks' },
+        { q: 'What is it that keeps bringing you back?', e: 'What is it that keeps bringing you back?', vocab: 'keeps bringing you back' },
+        { q: 'Are you the kind of person who always orders the same thing?', e: 'Are you the kind of person who always orders the same thing?', vocab: 'the kind of person' },
+        { q: 'How do you take your coffee at home?', e: 'How do you take your coffee at home?', vocab: 'take your coffee' },
+        { q: 'Would pairing it with something sweet work for you?', e: 'Would pairing it with something sweet work for you?', vocab: 'pairing' },
+      ],
+      fluent: [
+        { q: 'Are you more of a pour-over person or do you prefer espresso-based drinks?', e: 'Are you more of a pour-over person or do you prefer espresso-based drinks?', vocab: 'pour-over, espresso-based' },
+        { q: 'What do you reckon about the current trend for cold brew?', e: 'What do you reckon about the current trend for cold brew?', vocab: 'cold brew, reckon' },
+        { q: 'Has anything on the menu caught your eye in particular?', e: 'Has anything on the menu caught your eye in particular?', vocab: 'caught your eye' },
+        { q: 'Where do you usually go for your coffee fix?', e: 'Where do you usually go for your coffee fix?', vocab: 'coffee fix' },
+        { q: 'Would it be fair to say you\'re a creature of habit when it comes to coffee?', e: 'Would it be fair to say you\'re a creature of habit?', vocab: 'creature of habit' },
+        { q: 'What is it about this place that you keep coming back for?', e: 'What is it about this place that you keep coming back for?', vocab: 'keep coming back' },
+        { q: 'Do you think the coffee scene has changed much lately?', e: 'Do you think the coffee scene has changed much lately?', vocab: 'coffee scene' },
+        { q: 'Honestly, how would you rate us compared to other places you go to?', e: 'Honestly, how would you rate us?', vocab: 'rate, compared to' },
+      ],
+    },
+    airport:  { beginner: [{q:'Can I see your passport?',e:'Can I see your passport?',vocab:'passport'},{q:'Where are you flying to?',e:'Where are you flying to?',vocab:'flying to'},{q:'Window or aisle?',e:'Window or aisle?',vocab:'window, aisle'},{q:'Any checked bags?',e:'Any checked bags?',vocab:'checked bags'},{q:'Do you have carry-on?',e:'Do you have carry-on?',vocab:'carry-on'},{q:'Is this your bag?',e:'Is this your bag?',vocab:'bag'},{q:'Have a good flight!',e:'Have a good flight!',vocab:'good flight'},{q:'Any liquids in your bag?',e:'Any liquids in your bag?',vocab:'liquids'}], elementary: [{q:'Could I see your boarding pass and passport?',e:'Could I see your boarding pass and passport?',vocab:'boarding pass'},{q:'How many bags are you checking in?',e:'How many bags are you checking in?',vocab:'checking in'},{q:'Did you pack your bags yourself?',e:'Did you pack your bags yourself?',vocab:'pack yourself'},{q:'Do you have any connecting flights?',e:'Do you have any connecting flights?',vocab:'connecting flights'},{q:'Your flight is delayed by thirty minutes.',e:'Your flight is delayed by thirty minutes.',vocab:'delayed'},{q:'Please proceed to gate B5.',e:'Please proceed to gate B5.',vocab:'proceed to gate'},{q:'Do you have anything to declare?',e:'Do you have anything to declare?',vocab:'declare'},{q:'Would you like an aisle or window seat?',e:'Would you like an aisle or window seat?',vocab:'preference'}], intermediate: [{q:'What is the purpose of your trip today?',e:'What is the purpose of your trip today?',vocab:'purpose of your trip'},{q:'How long will you be staying at your destination?',e:'How long will you be staying at your destination?',vocab:'destination'},{q:'Have you checked the entry requirements?',e:'Have you checked the entry requirements?',vocab:'entry requirements'},{q:'Your bag appears to be slightly over the weight limit.',e:'Your bag appears to be slightly over the weight limit.',vocab:'weight limit'},{q:'Would you be willing to check your carry-on?',e:'Would you be willing to check your carry-on?',vocab:'willing to'},{q:'Where will you be staying while you are there?',e:'Where will you be staying while you are there?',vocab:'staying'},{q:'Have you flown with us before?',e:'Have you flown with us before?',vocab:'flown with us'},{q:'Can I help you find your gate?',e:'Can I help you find your gate?',vocab:'find your gate'}], advanced: [{q:'Your flight has been overbooked — would you consider taking a later one in exchange for compensation?',e:'Your flight is overbooked — would you take a later one for compensation?',vocab:'overbooked, compensation'},{q:'How familiar are you with the transit process at this airport?',e:'How familiar are you with the transit process?',vocab:'transit process'},{q:'Do you have travel insurance in case of disruption?',e:'Do you have travel insurance?',vocab:'travel insurance, disruption'},{q:'Would you be interested in upgrading for this flight?',e:'Would you be interested in upgrading?',vocab:'upgrading'},{q:'Are you aware of the customs restrictions for your destination?',e:'Are you aware of the customs restrictions?',vocab:'customs restrictions'},{q:'Have you been able to check in online ahead of time?',e:'Have you checked in online?',vocab:'ahead of time'},{q:'How do you typically find the security process here?',e:'How do you find the security process?',vocab:'typically'},{q:'Is there anything we can do to make your journey smoother?',e:'Is there anything we can do?',vocab:'smoother'}], fluent: [{q:'This is the third delay this week — how are you holding up?',e:'This is the third delay — how are you holding up?',vocab:'holding up'},{q:'Given the disruption, would a complimentary lounge pass make things better?',e:'Would a complimentary lounge pass help?',vocab:'complimentary, disruption'},{q:'How do you generally find long-haul travel these days?',e:'How do you find long-haul travel?',vocab:'long-haul'},{q:'What is your take on the state of air travel at the moment?',e:'What is your take on air travel right now?',vocab:'your take on'},{q:'Is there a particular airline you tend to stay loyal to?',e:'Do you have a loyalty airline?',vocab:'stay loyal to'},{q:'How has your experience with us compared to other carriers?',e:'How do we compare to other carriers?',vocab:'carriers'},{q:'If you could change one thing about air travel, what would it be?',e:'What would you change about air travel?',vocab:'if you could change'},{q:'What do you make of the new biometric check-in systems?',e:'What do you think of biometric check-in?',vocab:'biometric, what do you make of'}] },
+    hotel:    { beginner: [{q:'Do you have a reservation?',e:'Do you have a reservation?',vocab:'reservation'},{q:'What name is it under?',e:'What name is it under?',vocab:'under the name'},{q:'How many nights?',e:'How many nights?',vocab:'nights'},{q:'Single or double?',e:'Single or double?',vocab:'single, double'},{q:'Here is your key.',e:'Here is your key.',vocab:'key'},{q:'Breakfast is at seven.',e:'Breakfast is at seven.',vocab:'breakfast'},{q:'Do you need help with your bags?',e:'Do you need help with your bags?',vocab:'help with bags'},{q:'Any questions?',e:'Any questions?',vocab:'questions'}], elementary: [{q:'Could I take a copy of your passport?',e:'Could I take a copy of your passport?',vocab:'copy of passport'},{q:'When were you planning to check out?',e:'When were you planning to check out?',vocab:'check out'},{q:'Do you have any special requests?',e:'Do you have any special requests?',vocab:'special requests'},{q:'Would you like a room with a view?',e:'Would you like a room with a view?',vocab:'room with a view'},{q:'Can I arrange a taxi for you?',e:'Can I arrange a taxi for you?',vocab:'arrange'},{q:'Would you like a wake-up call?',e:'Would you like a wake-up call?',vocab:'wake-up call'},{q:'How was your journey here?',e:'How was your journey here?',vocab:'journey'},{q:'Is there anything you need right now?',e:'Is there anything you need?',vocab:'right now'}], intermediate: [{q:'How has your stay been so far?',e:'How has your stay been so far?',vocab:'stay so far'},{q:'Have you had a chance to explore the area yet?',e:'Have you had a chance to explore?',vocab:'explore'},{q:'Is there anything that has not been to your satisfaction?',e:'Is there anything not to your satisfaction?',vocab:'satisfaction'},{q:'Would you like any recommendations for dining nearby?',e:'Would you like dining recommendations?',vocab:'recommendations'},{q:'Have you tried our restaurant yet?',e:'Have you tried our restaurant?',vocab:'tried our'},{q:'Are you here for business or leisure?',e:'Are you here for business or leisure?',vocab:'leisure'},{q:'Would you like to extend your stay?',e:'Would you like to extend?',vocab:'extend your stay'},{q:'Is there anything we can do to improve your experience?',e:'Is there anything we can improve?',vocab:'improve your experience'}], advanced: [{q:'Does the room meet your expectations?',e:'Does the room meet your expectations?',vocab:'meet your expectations'},{q:'Have you made use of any of the hotel facilities?',e:'Have you used any hotel facilities?',vocab:'made use of'},{q:'Would you be interested in a late check-out option?',e:'Would you like a late check-out?',vocab:'late check-out'},{q:'How do you find the overall ambiance of the hotel?',e:'How do you find the ambiance?',vocab:'ambiance'},{q:'Have you had a chance to try the spa?',e:'Have you tried the spa?',vocab:'spa'},{q:'Is there a particular aspect of the service you have found outstanding?',e:'Has any aspect of our service stood out?',vocab:'outstanding'},{q:'Would you like us to arrange anything special for your last evening?',e:'Can we arrange anything for your last evening?',vocab:'arrange something special'},{q:'How does this stay compare to previous visits?',e:'How does this visit compare to previous ones?',vocab:'compare to previous'}], fluent: [{q:'What is it that keeps bringing you back to this hotel specifically?',e:'What keeps bringing you back here?',vocab:'keeps bringing you back'},{q:'How do you generally decide between hotels when you are travelling?',e:'How do you choose between hotels?',vocab:'decide between'},{q:'Has anything genuinely surprised you about your stay?',e:'Has anything surprised you about your stay?',vocab:'genuinely surprised'},{q:'What would make this a truly memorable stay for you?',e:'What would make this truly memorable?',vocab:'truly memorable'},{q:'How important is brand loyalty to you when booking accommodation?',e:'How important is brand loyalty?',vocab:'brand loyalty, accommodation'},{q:'What do you think sets apart a good hotel from a great one?',e:'What makes a hotel great?',vocab:'sets apart'},{q:'If you were to leave us a review, what would you highlight?',e:'What would you highlight in a review?',vocab:'highlight'},{q:'What could we genuinely do better?',e:'What could we genuinely do better?',vocab:'genuinely'}] },
+    shopping: { beginner: [{q:'Can I help you?',e:'Can I help you?',vocab:'help'},{q:'What are you looking for?',e:'What are you looking for?',vocab:'looking for'},{q:'What size?',e:'What size?',vocab:'size'},{q:'What colour?',e:'What colour?',vocab:'colour'},{q:'Do you like it?',e:'Do you like it?',vocab:'like'},{q:'Would you like to try it on?',e:'Would you like to try it on?',vocab:'try on'},{q:'How much is your budget?',e:'How much is your budget?',vocab:'budget'},{q:'Cash or card?',e:'Cash or card?',vocab:'cash, card'}], elementary: [{q:'What brings you in today?',e:'What brings you in today?',vocab:'brings you in'},{q:'Do you have a particular colour in mind?',e:'Do you have a colour in mind?',vocab:'in mind'},{q:'How does the fit feel?',e:'How does the fit feel?',vocab:'fit'},{q:'Would you like me to check if we have it in your size?',e:'Shall I check your size?',vocab:'check if we have'},{q:'Have you seen our sale items?',e:'Have you seen our sale?',vocab:'sale items'},{q:'Would you like it gift-wrapped?',e:'Would you like it gift-wrapped?',vocab:'gift-wrapped'},{q:'Can I take that to the till for you?',e:'Shall I take that to the till?',vocab:'till'},{q:'Do you need a receipt?',e:'Do you need a receipt?',vocab:'receipt'}], intermediate: [{q:'Are you shopping for a particular occasion?',e:'Are you shopping for an occasion?',vocab:'particular occasion'},{q:'Have you been in before?',e:'Have you shopped with us before?',vocab:'been in before'},{q:'What is your usual style?',e:'What is your usual style?',vocab:'usual style'},{q:'Would you like me to pull out a few options?',e:'Shall I find some options for you?',vocab:'pull out options'},{q:'How do you feel about the quality?',e:'How do you feel about the quality?',vocab:'quality'},{q:'Are you open to trying something a bit different?',e:'Would you try something different?',vocab:'open to trying'},{q:'Would a loyalty card be useful for you?',e:'Would a loyalty card be useful?',vocab:'loyalty card'},{q:'Shall I check if we have it in another colour?',e:'Should I check another colour?',vocab:'another colour'}], advanced: [{q:'Do you tend to invest in fewer, higher-quality pieces or prefer to build variety?',e:'Do you invest in quality or variety?',vocab:'invest in, higher-quality'},{q:'What is driving your shopping today — need or want?',e:'Are you shopping out of need or want?',vocab:'driving, need or want'},{q:'How important is brand heritage to your buying decisions?',e:'How important is brand heritage?',vocab:'brand heritage'},{q:'Would you be interested in our personal styling service?',e:'Would you like a personal styling session?',vocab:'personal styling'},{q:'How do you feel about the sustainability credentials of the brands you buy?',e:'How do you feel about sustainability?',vocab:'sustainability credentials'},{q:'What is the one piece you feel is missing from your wardrobe right now?',e:'What piece is missing from your wardrobe?',vocab:'wardrobe'},{q:'Do you tend to shop online more these days or do you prefer in-person?',e:'Do you prefer online or in-person shopping?',vocab:'in-person'},{q:'Would you like to know about upcoming collections before they hit the floor?',e:'Would you like a preview of upcoming collections?',vocab:'upcoming collections'}], fluent: [{q:'What is your relationship with fashion like — is it a passion or more of a practicality?',e:'Is fashion a passion or practicality for you?',vocab:'practicality'},{q:'What do you reckon makes a piece genuinely worth investing in?',e:'What makes a piece worth investing in?',vocab:'genuinely worth'},{q:'How has your personal style evolved over the years?',e:'How has your style evolved?',vocab:'evolved'},{q:'Do you think there is too much pressure on people to keep up with trends?',e:'Is there too much pressure to keep up with trends?',vocab:'keep up with trends'},{q:'What would your dream capsule wardrobe look like?',e:'What would your dream wardrobe look like?',vocab:'capsule wardrobe'},{q:'How do you approach balancing classic investment pieces with trend-led items?',e:'How do you balance classics and trends?',vocab:'approach balancing'},{q:'What is your take on the rise of second-hand and vintage shopping?',e:'What do you think of vintage and second-hand shopping?',vocab:'second-hand, vintage'},{q:'If you could design one piece, what would it be?',e:'If you could design one piece, what would it be?',vocab:'design'}] },
+    doctor:   { beginner: [{q:'What seems to be the matter?',e:'What seems to be the matter?',vocab:'the matter'},{q:'Are you in pain?',e:'Are you in pain?',vocab:'pain'},{q:'Where does it hurt?',e:'Where does it hurt?',vocab:'hurt'},{q:'Since when?',e:'Since when?',vocab:'since when'},{q:'Do you have a temperature?',e:'Do you have a temperature?',vocab:'temperature'},{q:'Have you taken anything for it?',e:'Have you taken anything?',vocab:'taken anything'},{q:'Are you allergic to anything?',e:'Are you allergic?',vocab:'allergic'},{q:'Can you breathe deeply?',e:'Can you breathe deeply?',vocab:'breathe'}], elementary: [{q:'What brings you in today?',e:'What brings you in today?',vocab:'brings you in'},{q:'How long have you had this?',e:'How long have you had this?',vocab:'how long'},{q:'Do you have any existing conditions?',e:'Do you have any conditions?',vocab:'existing conditions'},{q:'Are you sleeping and eating normally?',e:'Are you sleeping and eating normally?',vocab:'normally'},{q:'Do you smoke or drink?',e:'Do you smoke or drink?',vocab:'smoke, drink'},{q:'Are you on any regular medication?',e:'Are you on medication?',vocab:'regular medication'},{q:'Has this happened before?',e:'Has this happened before?',vocab:'happened before'},{q:'Have you been under a lot of stress lately?',e:'Have you been stressed?',vocab:'under stress'}], intermediate: [{q:'Can you describe the pain in more detail?',e:'Can you describe the pain?',vocab:'describe, in more detail'},{q:'Would you say it is a sharp or dull pain?',e:'Is it sharp or dull?',vocab:'sharp, dull'},{q:'Has anything made it better or worse?',e:'What makes it better or worse?',vocab:'better or worse'},{q:'Do you have a family history of this condition?',e:'Any family history?',vocab:'family history'},{q:'How would you rate the pain out of ten?',e:'Rate the pain out of ten.',vocab:'rate out of ten'},{q:'Have you travelled recently?',e:'Have you travelled recently?',vocab:'travelled'},{q:'How is this affecting your day-to-day life?',e:'How does it affect daily life?',vocab:'day-to-day'},{q:'May I carry out a quick examination?',e:'May I examine you?',vocab:'carry out an examination'}], advanced: [{q:'How would you describe your overall health going into this?',e:'How would you describe your overall health?',vocab:'going into this'},{q:'Have you noticed any symptoms that seem unrelated but started at the same time?',e:'Any unrelated symptoms starting together?',vocab:'unrelated symptoms'},{q:'How have previous treatments worked out for you?',e:'How have previous treatments worked?',vocab:'worked out'},{q:'Do you have any concerns about the proposed treatment?',e:'Do you have concerns about treatment?',vocab:'proposed treatment'},{q:'How does this compare to how you were feeling six months ago?',e:'How do you compare to six months ago?',vocab:'compare to'},{q:'What impact is this having on your mental wellbeing?',e:'How is this affecting your mental health?',vocab:'mental wellbeing'},{q:'Are there any lifestyle factors that might be contributing to this?',e:'Are lifestyle factors contributing?',vocab:'lifestyle factors'},{q:'What outcome are you hoping for from today?',e:'What outcome are you hoping for?',vocab:'outcome'}], fluent: [{q:'How do you feel about the diagnosis — does it match what you suspected?',e:'Does the diagnosis match what you suspected?',vocab:'match what you suspected'},{q:'What is your instinct telling you about what is going on?',e:'What does your gut say?',vocab:'instinct'},{q:'How do you tend to approach your own healthcare — proactively or reactively?',e:'Are you proactive or reactive about health?',vocab:'proactively, reactively'},{q:'If we do nothing, what do you think happens?',e:'What happens if we do nothing?',vocab:'if we do nothing'},{q:'How much do you want to know about the details of the treatment?',e:'How much detail do you want about treatment?',vocab:'details of treatment'},{q:'What worries you most about what is happening?',e:'What worries you most?',vocab:'worries you most'},{q:'Do you feel you have enough support around you right now?',e:'Do you have enough support?',vocab:'support around you'},{q:'What would a good outcome look like to you?',e:'What does a good outcome look like?',vocab:'good outcome'}] },
+    job:      { beginner: [{q:'Tell me your name.',e:'Tell me your name.',vocab:'tell me'},{q:'Where are you from?',e:'Where are you from?',vocab:'where are you from'},{q:'Do you speak English?',e:'Do you speak English?',vocab:'speak'},{q:'Do you have experience?',e:'Do you have experience?',vocab:'experience'},{q:'Why do you want this job?',e:'Why do you want this job?',vocab:'want this job'},{q:'When can you start?',e:'When can you start?',vocab:'when can you start'},{q:'What are your strengths?',e:'What are your strengths?',vocab:'strengths'},{q:'Do you have questions?',e:'Do you have questions?',vocab:'questions'}], elementary: [{q:'Tell me a little about yourself.',e:'Tell me about yourself.',vocab:'tell me about'},{q:'What have you been doing recently?',e:'What have you been doing?',vocab:'recently'},{q:'Have you worked in a team before?',e:'Have you worked in a team?',vocab:'team'},{q:'What are your weaknesses?',e:'What are your weaknesses?',vocab:'weaknesses'},{q:'What hours are you able to work?',e:'What hours can you work?',vocab:'able to work'},{q:'Why are you leaving your current job?',e:'Why are you leaving your job?',vocab:'leaving'},{q:'What do you know about our company?',e:'What do you know about us?',vocab:'company'},{q:'Do you have any references?',e:'Do you have references?',vocab:'references'}], intermediate: [{q:'Describe your ideal working environment.',e:'Describe your ideal workplace.',vocab:'working environment'},{q:'How do you handle conflict with colleagues?',e:'How do you handle conflict?',vocab:'handle conflict'},{q:'What is your greatest professional achievement?',e:'What is your greatest achievement?',vocab:'professional achievement'},{q:'Where do you see yourself in five years?',e:'Where do you see yourself in five years?',vocab:'see yourself'},{q:'How do you prioritise when you have too much on your plate?',e:'How do you prioritise tasks?',vocab:'prioritise, on your plate'},{q:'What skills are you looking to develop?',e:'What skills do you want to develop?',vocab:'looking to develop'},{q:'Do you have experience managing people?',e:'Have you managed people?',vocab:'managing people'},{q:'What would your previous manager say about you?',e:'What would your manager say?',vocab:'previous manager'}], advanced: [{q:'What leadership style do you tend to adopt and why?',e:'What is your leadership style?',vocab:'leadership style, adopt'},{q:'How have you driven change in a previous organisation?',e:'How have you driven change?',vocab:'driven change'},{q:'How do you deal with failure?',e:'How do you deal with failure?',vocab:'deal with failure'},{q:'What differentiates you from the other candidates we will see today?',e:'What sets you apart from other candidates?',vocab:'differentiates'},{q:'How do you manage your own wellbeing under sustained pressure?',e:'How do you manage wellbeing under pressure?',vocab:'sustained pressure, wellbeing'},{q:'What is your approach to giving difficult feedback?',e:'How do you give difficult feedback?',vocab:'approach to, difficult feedback'},{q:'What excites you most about this role?',e:'What excites you about this role?',vocab:'excites you'},{q:'What would you change about your career so far?',e:'What would you change about your career?',vocab:'so far'}], fluent: [{q:'Walk me through a time you had to make a decision with incomplete information.',e:'Tell me about a decision with incomplete information.',vocab:'walk me through, incomplete'},{q:'What does good leadership look like to you in practice?',e:'What does good leadership look like?',vocab:'in practice'},{q:'How do you create an environment where people feel safe to fail?',e:'How do you create psychological safety?',vocab:'psychological safety'},{q:'What is your relationship with ambiguity?',e:'How do you handle ambiguity?',vocab:'ambiguity'},{q:'If you got this role, what would you do in the first thirty days?',e:'What would you do in your first thirty days?',vocab:'first thirty days'},{q:'What is the most underrated quality in a leader?',e:'What is the most underrated quality in leadership?',vocab:'underrated'},{q:'How do you make sure you keep learning once you are settled in a role?',e:'How do you keep learning in a settled role?',vocab:'settled in a role'},{q:'What would have to be true for you to say no to this offer?',e:'What would make you say no to this offer?',vocab:'what would have to be true'}] },
+  },
+};
+
 const FILLERS = {
   de: [],
   en: [],
@@ -2039,6 +2486,51 @@ function selectPracticeLang(code, name, native) {
   }, 300);
 }
 
+// ============================================================
+// SETTINGS SCREEN
+// ============================================================
+function openSettings() {
+  // Mark current selections
+  document.querySelectorAll('#settings-lang-list .lang-btn').forEach(b => b.classList.remove('selected'));
+  const lb = document.getElementById('slang-' + STATE.practiceLang);
+  if (lb) lb.classList.add('selected');
+
+  document.querySelectorAll('[id^="slvl-"]').forEach(b => b.classList.remove('selected'));
+  const lvlb = document.getElementById('slvl-' + STATE.level);
+  if (lvlb) lvlb.classList.add('selected');
+
+  document.querySelectorAll('[id^="sgoal-"]').forEach(b => b.classList.remove('selected'));
+  const gb = document.getElementById('sgoal-' + (STATE.goal || 'fun'));
+  if (gb) gb.classList.add('selected');
+
+  goNext('screen-settings');
+}
+
+function settingsSetLang(code) {
+  STATE.practiceLang = code;
+  document.querySelectorAll('#settings-lang-list .lang-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('slang-' + code)?.classList.add('selected');
+}
+
+function settingsSetLevel(lvl) {
+  STATE.level = lvl;
+  document.querySelectorAll('[id^="slvl-"]').forEach(b => b.classList.remove('selected'));
+  document.getElementById('slvl-' + lvl)?.classList.add('selected');
+}
+
+function settingsSetGoal(id) {
+  STATE.goal = id;
+  document.querySelectorAll('[id^="sgoal-"]').forEach(b => b.classList.remove('selected'));
+  document.getElementById('sgoal-' + id)?.classList.add('selected');
+  saveGameState();
+}
+
+function applySettings() {
+  saveState();
+  updateHome();
+  goNext('screen-home');
+}
+
 function selectLevel(lvl) {
   STATE.level = lvl;
   document.querySelectorAll('#screen-level .lang-btn').forEach(b => b.classList.remove('selected'));
@@ -2072,8 +2564,57 @@ function initVoiceSetup() {
 }
 
 // ============================================================
-// WELCOME VOICE — pre-cache TTS so it plays with zero delay
+// SARVAM AI — Telugu & Kannada support
 // ============================================================
+
+// Maps nativeLang code → Sarvam BCP-47 code
+const SARVAM_LANG = {
+  te: 'te-IN',  // Telugu
+  kn: 'kn-IN',  // Kannada
+  hi: 'hi-IN',  // Hindi (future)
+};
+
+// Is the user's native language an Indic language using Sarvam?
+function isIndicUser() {
+  return !!SARVAM_LANG[STATE.nativeLang];
+}
+
+// Sarvam STT — transcribe audio in Telugu/Kannada
+async function sarvamTranscribe(audioBuffer, langCode) {
+  const res = await fetch(`/api/sarvam-transcribe?lang=${langCode}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/octet-stream' },
+    body: audioBuffer,
+  });
+  if (!res.ok) throw new Error('Sarvam STT failed: ' + res.status);
+  const data = await res.json();
+  return data.text || '';
+}
+
+// Sarvam Translate — Indic → English (before Claude) or English → Indic (for subtitle)
+async function sarvamTranslate(text, source, target) {
+  const res = await fetch('/api/sarvam-translate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, source, target }),
+  });
+  if (!res.ok) throw new Error('Sarvam translate failed: ' + res.status);
+  const data = await res.json();
+  return data.translated || text;
+}
+
+// Sarvam TTS — speak in Telugu/Kannada (used for subtitles/hints)
+async function sarvamTTS(text, langCode) {
+  const res = await fetch('/api/sarvam-tts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, language: langCode }),
+  });
+  if (!res.ok) return null;
+  const blob = await res.blob();
+  const url  = URL.createObjectURL(blob);
+  return new Audio(url);
+}
 let _welcomeAudioCache = null; // pre-generated Audio object
 
 // Call this as soon as we know the user's name + native lang
@@ -2766,27 +3307,46 @@ async function _onRecordingDone() {
     const blob = new Blob(_audioChunks, { type: mimeType });
     const arrayBuf = await blob.arrayBuffer();
 
-    const langMap = { de: 'de', en: 'en' };
-    const lang = langMap[STATE.practiceLang] || 'en';
+    let text = '';
 
-    const res = await fetch(`/api/transcribe?lang=${lang}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/octet-stream' },
-      body: arrayBuf,
-    });
-
-    if (!res.ok) throw new Error('Transcribe failed: ' + res.status);
-    const data = await res.json();
-    const text = (data.text || '').trim();
+    if (isIndicUser()) {
+      // Sarvam STT for Telugu / Kannada users
+      const sarvamLangCode = SARVAM_LANG[STATE.nativeLang];
+      const indicText = await sarvamTranscribe(arrayBuf, sarvamLangCode);
+      if (!indicText || indicText.length < 2) {
+        if (_callActive) setTimeout(startListening, 300);
+        return;
+      }
+      // Translate to English before sending to Claude
+      text = await sarvamTranslate(indicText, sarvamLangCode, 'en-IN');
+      // Show original Indic in user bubble, English as subtitle
+      addBubble('user', indicText);
+    } else {
+      // Groq Whisper for English / other language users
+      const langMap = { de: 'de', en: 'en' };
+      const lang = langMap[STATE.practiceLang] || 'en';
+      const res = await fetch(`/api/transcribe?lang=${lang}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: arrayBuf,
+      });
+      if (!res.ok) throw new Error('Transcribe failed: ' + res.status);
+      const data = await res.json();
+      text = (data.text || '').trim();
+    }
 
     if (!text || text.length < 2) {
-      // Empty transcription — listen again
       if (_callActive) setTimeout(startListening, 300);
       return;
     }
 
     STATE.isListening = false;
-    await handleUserSpeech(text);
+    if (!isIndicUser()) addBubble('user', text);
+    STATE.callHistory.push({ role: 'user', content: text });
+    STATE.silenceStrikes = 0;
+    setMicState('processing');
+    addTyping();
+    await _processUserSpeech(text);
 
   } catch(err) {
     console.warn('Groq transcription error:', err);
@@ -3009,25 +3569,37 @@ async function streamClaude(userText, correctionsEnabled, onSentence, onToken, o
     { role: 'user', content: userText }
   ];
 
-  const levelGuide = {
-    beginner:     'BEGINNER: very simple words, slow pace, encouraging, always end with a question.',
-    elementary:   'ELEMENTARY: simple everyday vocabulary, repeat key words, always end with a question.',
-    intermediate: 'INTERMEDIATE: normal vocabulary, correct gently, always end with a question.',
-    advanced:     'ADVANCED: natural vocabulary, idioms, correct naturally, always end with a question.',
-    fluent:       'FLUENT: natural fast speech, slang, idioms, always end with a question.',
+  const levelBehaviour = {
+    beginner:     'BEGINNER: 100 most common words only. Max 5 words. One sentence. Yes/no questions. Very slow and warm.',
+    elementary:   'ELEMENTARY: Everyday vocab, no idioms. Max 8 words. Simple open questions. Gentle and patient.',
+    intermediate: 'INTERMEDIATE: Normal vocab. 1-2 sentences up to 12 words. Open questions needing full answers. Correct briefly.',
+    advanced:     'ADVANCED: Natural vocab + idioms. 2-3 sentences no limit. Layered questions. Correct significant errors only.',
+    fluent:       'FLUENT: Native speed, slang, contractions. Multi-sentence. Complex questions. Never correct — react naturally.',
   };
 
   const targetLang = STATE.practiceLang === 'de' ? 'German' : 'English';
   const goalPersona = GOAL_PERSONA[STATE.goal] || GOAL_PERSONA.fun;
 
-  // For streaming we ask Claude to output two lines, not JSON
-  // LINE 1: target language reply
-  // LINE 2: English translation
-  // This is more streaming-friendly than JSON (we don't need to wait for closing brace)
+  // Build question bank for this topic + level
+  const qBank = QUESTION_BANK[STATE.practiceLang]?.[STATE.selectedTopic?.id]?.[STATE.level] || [];
+  const usedQs = STATE.callHistory
+    .filter(m => m.role === 'assistant')
+    .map(m => m.content.toLowerCase().trim().slice(0, 40));
+  const availableQs = qBank
+    .filter(q => !usedQs.some(used => used.includes(q.q.toLowerCase().slice(0, 20))))
+    .map((q, i) => `Q${i+1}: "${q.q}" [teaches: ${q.vocab}]`)
+    .join('\n');
+
+  const qBankSection = availableQs ? `
+QUESTION BANK — pick the most natural next question from this list when you need to ask something. Never repeat one already asked. Choose based on the conversation context:
+${availableQs}
+Do NOT invent questions outside this list unless the bank is exhausted.` : '';
+
   const systemPrompt = [
     STATE.selectedTopic.system,
-    'Level: ' + (levelGuide[STATE.level] || levelGuide.intermediate),
+    'Level: ' + (levelBehaviour[STATE.level] || levelBehaviour.intermediate),
     'Persona: ' + goalPersona,
+    qBankSection,
     correctionsEnabled
       ? 'CORRECTIONS ON: gently correct grammar errors, keep it brief.'
       : 'CORRECTIONS OFF: continue naturally, no corrections.',
@@ -3035,7 +3607,7 @@ async function streamClaude(userText, correctionsEnabled, onSentence, onToken, o
 Reply ONLY with exactly 2 lines, no labels, no JSON, no markdown:
 Line 1: your reply in ${targetLang} (1-2 short sentences max)
 Line 2: the English translation of line 1`,
-  ].join('\n\n');
+  ].filter(Boolean).join('\n\n');
 
   const res = await fetch('/api/claude', {
     method: 'POST',
@@ -3143,30 +3715,84 @@ async function callClaude(userText, correctionsEnabled) {
     { role: 'user', content: userText }
   ];
 
-  const levelGuide = {
-    beginner: 'The user is a BEGINNER. Use very simple words only (100 most common words). Repeat often. Slow pace. Be encouraging. ALWAYS end with a question. Never use their name.',
-    elementary: 'The user is at ELEMENTARY level. Use simple everyday vocabulary. Repeat key words. Speak slowly. Encourage them. ALWAYS end with a question. Never use their name.',
-    intermediate: 'The user is INTERMEDIATE. Use normal vocabulary and speed. Correct gently if needed. Challenge them slightly. ALWAYS end with a question. Never use their name.',
-    advanced: 'The user is ADVANCED. Use natural vocabulary and speed. Use idioms and complex structures. Correct them naturally. ALWAYS end with a question. Never use their name.',
-    fluent: 'The user is FLUENT. Speak naturally and fast. Use slang, idioms, and complex structures freely. No corrections needed—just chat. ALWAYS end with a question. Never use their name.'
+  const targetLang  = STATE.practiceLang === 'de' ? 'German' : 'English';
+  const goalPersona = GOAL_PERSONA[STATE.goal] || GOAL_PERSONA.fun;
+  const topicRole   = STATE.selectedTopic?.system || '';
+
+  // Level-specific full behaviour — replaces the static topic system prompt rules
+  const levelBehaviour = {
+    beginner: `
+LEVEL: BEGINNER
+- Use only the 100 most common ${targetLang} words.
+- Maximum 5 words per sentence. One sentence only.
+- Speak extremely slowly and simply.
+- Repeat key words. Echo what they said.
+- Be very warm and encouraging — mistakes are fine.
+- Ask only the simplest yes/no questions.
+- Example questions: "Do you like coffee?" "Is it good?" "Yes or no?"
+- NEVER use idioms, complex grammar, or multi-part questions.
+- If they struggle, simplify further and reassure them.`,
+    elementary: `
+LEVEL: ELEMENTARY
+- Use everyday vocabulary only — no idioms.
+- Maximum 8 words per sentence. One or two sentences.
+- Speak at 70% of normal speed.
+- Ask simple open questions about what they said.
+- Example questions: "What do you want?" "Where is your bag?" "How much?"
+- Gently repeat correct versions of their mistakes.
+- Be encouraging and patient.`,
+    intermediate: `
+LEVEL: INTERMEDIATE
+- Use normal everyday ${targetLang} vocabulary.
+- 1–2 sentences, up to 12 words each.
+- Normal conversational speed.
+- Ask open-ended questions that require a sentence answer.
+- Example questions: "What did you do yesterday?" "Can you describe it?" "Why did you choose that?"
+- Correct grammar errors briefly and naturally, then continue.
+- Challenge them slightly — push for full sentences.`,
+    advanced: `
+LEVEL: ADVANCED
+- Use natural ${targetLang} including common idioms and phrasal verbs.
+- 2–3 sentences, no word limit.
+- Normal or slightly fast speed.
+- Ask complex, layered questions that require thought.
+- Example questions: "What would you have done differently?" "How does that compare to your experience?" "What's your take on that?"
+- Correct only significant errors, in passing, then move on.
+- Push for precision and fluency.`,
+    fluent: `
+LEVEL: FLUENT / NATIVE
+- Speak exactly like a native ${targetLang} speaker in this scenario.
+- No simplification. Use slang, contractions, reductions naturally.
+- Multiple sentences, fast natural pace.
+- Ask complex, multi-part questions or follow-ups.
+- NEVER correct — just react naturally as a real person would.
+- Treat them as a native speaker peer.`,
   };
 
-  const targetLang = STATE.practiceLang === 'de' ? 'German' : 'English';
-  const goalPersona = GOAL_PERSONA[STATE.goal] || GOAL_PERSONA.fun;
-  let systemPrompt = STATE.selectedTopic.system + '\n\nLevel guidance: ' + (levelGuide[STATE.level] || levelGuide.intermediate) + '\n\nPersona context: ' + goalPersona;
+  const behaviour = levelBehaviour[STATE.level] || levelBehaviour.intermediate;
 
-  systemPrompt += `\n\nBILINGUAL OUTPUT: You MUST respond ONLY with a valid JSON object in this exact shape:
-{"target":"<your reply in ${targetLang}>","english":"<English translation of your reply>"}
-No other text. No markdown. No explanation. Only the JSON object.
-The "target" field is what you say as the character, in ${targetLang}.
-The "english" field is the English translation so the learner can follow along.
-Keep both under 2 short sentences.`;
+  // Question bank injection
+  const qBank = QUESTION_BANK[STATE.practiceLang]?.[STATE.selectedTopic?.id]?.[STATE.level] || [];
+  const usedQs = messages.filter(m => m.role === 'assistant').map(m => m.content.toLowerCase().slice(0, 40));
+  const availableQs = qBank
+    .filter(q => !usedQs.some(u => u.includes(q.q.toLowerCase().slice(0, 20))))
+    .map((q, i) => `Q${i+1}: "${q.q}" [teaches: ${q.vocab}]`)
+    .join('\n');
+  const qBankSection = availableQs
+    ? `\n\nQUESTION BANK — pick the most natural next question from this list. Never repeat. Choose based on context:\n${availableQs}\nDo NOT invent questions outside this list unless exhausted.`
+    : '';
 
-  if (correctionsEnabled) {
-    systemPrompt += '\n\nCORRECTIONS ENABLED: If the user makes a grammatical error or uses incorrect vocabulary, gently correct them. Keep corrections brief and encouraging. Include the correction in your reply.';
-  } else {
-    systemPrompt += '\n\nCORRECTIONS DISABLED: Do not correct the user\'s grammar or mistakes. Just continue the conversation naturally.';
-  }
+  const systemPrompt = [
+    topicRole.trim(),
+    behaviour + qBankSection,
+    `Persona context: ${goalPersona}`,
+    `BILINGUAL OUTPUT — respond ONLY with this exact JSON shape:
+{"target":"<your reply in ${targetLang}>","english":"<English translation>"}
+No other text. No markdown. Only the JSON object. Max 2 short sentences per field.`,
+    correctionsEnabled
+      ? 'CORRECTIONS ON: briefly correct grammar errors, stay in character.'
+      : 'CORRECTIONS OFF: ignore errors, just continue naturally.',
+  ].join('\n\n');
 
   const res = await fetch('/api/claude', {
     method: 'POST',
@@ -4421,31 +5047,10 @@ function renderConfidence() {
   }
 }
 
-// ============================================================
-// PATCH: handleUserSpeech — streaming version
-// TTS fires on first sentence ~1s after user stops speaking
-// Bubble text updates live as Claude streams
-// ============================================================
-async function handleUserSpeech(text) {
+// Core speech processing — called after transcription (shared by Groq + Sarvam paths)
+async function _processUserSpeech(text) {
   const lastAI = STATE.callHistory.filter(m => m.role === 'assistant').slice(-1)[0]?.content || '';
-
-  addBubble('user', text);
-  STATE.callHistory.push({ role: 'user', content: text });
-  STATE.silenceStrikes = 0; // reset — they responded
-  setMicState('processing');
-  addTyping();
-
-  // Clear any leftover audio from previous turn
-  _clearQueue();
-
-  const cleaned = text
-    .replace(/\buh+\b/gi, '').replace(/\bum+\b/gi, '')
-    .replace(/\ber+\b/gi, '').replace(/\bah+\b/gi, '').trim();
-
-  // Create the AI bubble early so we can stream text into it
-  let aiBubble = null;
-  let targetFinal = '';
-  let englishFinal = '';
+  const cleaned = text.replace(/\buh+\b/gi,'').replace(/\bum+\b/gi,'').replace(/\ber+\b/gi,'').replace(/\bah+\b/gi,'').trim();
   const rate = STATE.ttsSpeed === 'slow' ? 0.75 : STATE.ttsSpeed === 'fast' ? 1.3 : 1.0;
 
   try {
@@ -4453,67 +5058,66 @@ async function handleUserSpeech(text) {
       cleaned,
       STATE.correctionsEnabled,
 
-      // onSentence — called as soon as first sentence is ready (target + english)
       (targetSentence, englishSentence) => {
         removeTyping();
         setMicState('speaking');
-        // Show English immediately, German as subtitle
         const displayText = englishSentence || targetSentence;
-        const subText     = (targetSentence && targetSentence !== displayText) ? targetSentence : null;
-        aiBubble = addBubble('ai', displayText, subText);
-        makeWordsTappable(aiBubble, displayText);
+        const subText = (targetSentence && targetSentence !== displayText) ? targetSentence : null;
+        const bub = addBubble('ai', displayText, subText);
+        makeWordsTappable(bub, displayText);
       },
 
-      // onToken — live text update as Claude streams (updates bubble in real time)
       (fullStreamedText) => {
-        // Update the bubble with whatever has streamed so far (target line)
-        if (aiBubble) {
-          const lines = fullStreamedText.split('\n');
-          const targetSoFar  = cleanAIText(lines[0] || '');
-          const englishSoFar = cleanAIText(lines[1] || '');
-          const display = englishSoFar || targetSoFar;
-          if (display) {
-            const mainDiv = aiBubble.querySelector('div');
-            if (mainDiv) mainDiv.textContent = display;
-          }
-        }
+        // live token update handled by streamClaude
       },
 
-      // onDone — full response ready, update bubble, wait for speech to finish, then listen
-      ({ targetText, englishText }) => {
-        targetFinal  = targetText;
-        englishFinal = englishText || targetText;
+      async ({ targetText, englishText }) => {
+        const targetFinal  = targetText;
+        const englishFinal = englishText || targetText;
 
         STATE.callHistory.push({ role: 'assistant', content: targetFinal });
 
-        // Update bubble to final clean text
-        if (aiBubble) {
+        // Update bubble
+        const aiMessages = document.querySelectorAll('.bubble.ai:not(#typing-bubble)');
+        const lastBub = aiMessages[aiMessages.length - 1];
+        if (lastBub) {
           const langFlag = STATE.practiceLang === 'de' ? '🇩🇪' : '🇬🇧';
           const subHtml  = (targetFinal && targetFinal !== englishFinal)
             ? `<div class="bubble-sub">${langFlag} ${targetFinal}</div>` : '';
-          aiBubble.innerHTML = `<div>${englishFinal}</div>${subHtml}`;
-          makeWordsTappable(aiBubble, englishFinal);
+          lastBub.innerHTML = `<div>${englishFinal}</div>${subHtml}`;
+          makeWordsTappable(lastBub, englishFinal);
         }
 
-        // Pronunciation score (non-blocking)
+        // Pronunciation score
         scorePronunciation(lastAI, text).then(result => {
           if (result?.score != null) {
             const userBubbles = document.querySelectorAll('.bubble.user');
-            const lastUser    = userBubbles[userBubbles.length - 1];
+            const lastUser = userBubbles[userBubbles.length - 1];
             if (lastUser) addPronBadge(lastUser, result.score);
           }
         });
 
-        // Wait until AI finishes speaking before listening again
-        // speakAIAtRate sets STATE.isSpeaking = true at start, false at end
-        // Poll on isSpeaking — simple, reliable, no race condition
+        // For Indic users — also show AI English response translated to their language
+        if (isIndicUser() && englishFinal) {
+          const sarvamCode = SARVAM_LANG[STATE.nativeLang];
+          sarvamTranslate(englishFinal, 'en-IN', sarvamCode).then(indicTranslation => {
+            if (indicTranslation && lastBub) {
+              const existing = lastBub.querySelector('.bubble-sub');
+              const indicDiv = document.createElement('div');
+              indicDiv.className = 'bubble-sub';
+              indicDiv.style.color = '#6366f1'; // indigo for Indic text
+              indicDiv.textContent = indicTranslation;
+              if (existing) lastBub.insertBefore(indicDiv, existing);
+              else lastBub.appendChild(indicDiv);
+            }
+          }).catch(() => {});
+        }
+
+        // Speak and then listen
+        await speakAI(targetFinal);
         (async () => {
-          // Give speakAIAtRate a moment to set isSpeaking = true
           await sleep(300);
-          while (STATE.isSpeaking) {
-            await sleep(150);
-          }
-          // One final guard — don't start if call ended
+          while (STATE.isSpeaking) await sleep(150);
           if (document.getElementById('call-screen')?.classList.contains('active')) {
             setTimeout(startListening, 200);
           }
@@ -4525,6 +5129,17 @@ async function handleUserSpeech(text) {
     setMicState('idle');
     setTimeout(startListening, 500);
   }
+}
+
+// handleUserSpeech — kept for direct calls (e.g. fallback STT)
+async function handleUserSpeech(text) {
+  addBubble('user', text);
+  STATE.callHistory.push({ role: 'user', content: text });
+  STATE.silenceStrikes = 0;
+  setMicState('processing');
+  addTyping();
+  _clearQueue();
+  await _processUserSpeech(text);
 }
 
 async function speakAIAtRate(text, rate) {
