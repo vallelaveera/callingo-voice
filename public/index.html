@@ -5175,19 +5175,18 @@ async function _processUserSpeech(text) {
           }
         });
 
-        // For Indic users — translate AI reply to their language and show it
+        // For Indic users — translate AI reply to their language, show it, and speak it
         if (isIndicUser() && englishFinal) {
           const sarvamCode = SARVAM_LANG[STATE.nativeLang];
           sarvamTranslate(englishFinal, 'en-IN', sarvamCode).then(async indicTranslation => {
             if (!indicTranslation) return;
 
-            // Show Indic translation in bubble
+            // Show Indic translation in bubble (tappable to replay)
             if (lastBub) {
               const indicDiv = document.createElement('div');
               indicDiv.className = 'bubble-sub';
               indicDiv.style.cssText = 'color:#6366f1;cursor:pointer;';
               indicDiv.textContent = indicTranslation;
-              // Tap to hear the Indic translation spoken
               indicDiv.onclick = async () => {
                 const audio = await sarvamTTS(indicTranslation, sarvamCode);
                 if (audio) audio.play();
@@ -5197,37 +5196,52 @@ async function _processUserSpeech(text) {
               else lastBub.appendChild(indicDiv);
             }
 
-            // If user was confused — also auto-speak the Indic translation once
-            // so they hear what the AI said in their own language
-            if (confused) {
-              await sleep(400); // let English audio start first
-              const audio = await sarvamTTS(indicTranslation, sarvamCode);
-              if (audio) {
-                // Wait for English to finish, then speak Indic
-                while (STATE.isSpeaking) await sleep(150);
-                audio.play();
-                // Show a small "explained in Telugu/Kannada" indicator
-                if (lastBub) {
-                  const flag = sarvamCode === 'te-IN' ? '🇮🇳 Telugu' : '🇮🇳 Kannada';
-                  const note = document.createElement('div');
-                  note.style.cssText = 'font-size:10px;color:#6366f1;font-family:DM Mono,monospace;margin-top:4px;opacity:0.7;';
-                  note.textContent = `↑ explained in ${flag.split(' ')[1]}`;
-                  lastBub.appendChild(note);
-                }
-              }
+            // Pre-fetch Sarvam audio while English is still playing
+            const indicAudio = await sarvamTTS(indicTranslation, sarvamCode);
+
+            // Wait for English (Fish Audio) to finish, then play Telugu/Kannada
+            while (STATE.isSpeaking) await sleep(150);
+
+            if (indicAudio && document.getElementById('call-screen')?.classList.contains('active')) {
+              // Brief pause between English and Telugu
+              await sleep(300);
+              await new Promise(r => {
+                indicAudio.onended = r;
+                indicAudio.onerror = r;
+                indicAudio.play();
+              });
+            }
+
+            // Start listening after Telugu finishes
+            if (document.getElementById('call-screen')?.classList.contains('active')) {
+              setTimeout(startListening, 200);
+            }
+
+            // If confused — show indicator
+            if (confused && lastBub) {
+              const lang = sarvamCode === 'te-IN' ? 'Telugu' : 'Kannada';
+              const note = document.createElement('div');
+              note.style.cssText = 'font-size:10px;color:#6366f1;font-family:DM Mono,monospace;margin-top:4px;opacity:0.7;';
+              note.textContent = `↑ explained in ${lang}`;
+              lastBub.appendChild(note);
             }
           }).catch(() => {});
         }
 
-        // Speak English and then listen
+        // Speak English then Telugu, then listen
         await speakAI(targetFinal);
-        (async () => {
-          await sleep(300);
-          while (STATE.isSpeaking) await sleep(150);
-          if (document.getElementById('call-screen')?.classList.contains('active')) {
-            setTimeout(startListening, 200);
-          }
-        })();
+
+        // For non-Indic users — start listening immediately after English
+        // For Indic users — the Sarvam block above handles listening after Telugu finishes
+        if (!isIndicUser()) {
+          (async () => {
+            await sleep(300);
+            while (STATE.isSpeaking) await sleep(150);
+            if (document.getElementById('call-screen')?.classList.contains('active')) {
+              setTimeout(startListening, 200);
+            }
+          })();
+        }
       }
     );
   } catch(e) {
