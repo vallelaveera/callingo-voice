@@ -666,7 +666,7 @@ body{
 <div id="app">
 
 <!-- ============ SCREEN: NAME ============ -->
-<div id="screen-name" class="screen active">
+<div id="screen-name" class="screen">
   <div class="scroll-content" style="justify-content:center;min-height:100vh;">
     <div style="text-align:center;padding:20px 0;">
       <div class="logo" style="margin-bottom:16px;">Callingo</div>
@@ -1382,6 +1382,8 @@ async function loadWelcomeVoice() {
 const WELCOME = {
   en: (name) => `Welcome to Callingo, ${name}. Please repeat these two sentences so we can clone your voice and use it for your practice calls.`,
   hi: (name) => `Callingo mein swagat hai, ${name}. Kripya neeche di gayi do lines dohraiye taki hum aapki awaaz clone kar sakein aur practice calls mein use kar sakein.`,
+  te: (name) => `Callingo కి స్వాగతం, ${name}. మీ వాయిస్ క్లోన్ చేయడానికి దయచేసి ఈ రెండు వాక్యాలను పునరావృతం చేయండి.`,
+  kn: (name) => `Callingo ಗೆ ಸ್ವಾಗತ, ${name}. ನಿಮ್ಮ ಧ್ವನಿಯನ್ನು ಕ್ಲೋನ್ ಮಾಡಲು ದಯವಿಟ್ಟು ಈ ಎರಡು ವಾಕ್ಯಗಳನ್ನು ಪುನರಾವರ್ತಿಸಿ.`,
   de: (name) => `Willkommen bei Callingo, ${name}. Bitte wiederhole die zwei Saetze unten, damit wir deine Stimme klonen und in deinen Uebungsanrufen verwenden koennen.`,
   es: (name) => `Bienvenido a Callingo, ${name}. Por favor repite estas dos frases para que podamos clonar tu voz y usarla en tus llamadas de practica.`,
   fr: (name) => `Bienvenue sur Callingo, ${name}. Repete les deux phrases ci-dessous pour qu'on puisse cloner ta voix et l'utiliser dans tes appels d'entrainement.`,
@@ -1396,6 +1398,14 @@ const SENTENCES = {
   hi: [
     "Main har subah paani peeta hoon aur roti khata hoon ghar mein.",
     "Mera dost mere ghar aata hai aur hum saath khelte hain roz.",
+  ],
+  te: [
+    "నేను ప్రతి రోజు ఉదయం ఇంట్లో తాజా నీళ్ళు తాగి వెచ్చని రొట్టె తింటాను.",
+    "నా సంతోషమైన కుక్క పార్కులో పరుగెత్తి పిల్లలతో ప్రతి రోజు ఆడుతుంది.",
+  ],
+  kn: [
+    "ನಾನು ಪ್ರತಿ ದಿನ ಬೆಳಿಗ್ಗೆ ಮನೆಯಲ್ಲಿ ತಾಜಾ ನೀರು ಕುಡಿದು ಬೆಚ್ಚಗಿನ ರೊಟ್ಟಿ ತಿನ್ನುತ್ತೇನೆ.",
+    "ನನ್ನ ಸಂತೋಷದ ನಾಯಿ ಪ್ರತಿ ದಿನ ಪಾರ್ಕ್‌ನಲ್ಲಿ ಓಡಾಡಿ ಮಕ್ಕಳೊಂದಿಗೆ ಆಡುತ್ತದೆ.",
   ],
   de: [
     "I drink fresh water and eat warm bread every single morning at home.",
@@ -2471,7 +2481,9 @@ function selectNativeLang(code, name, native) {
   // Re-cache welcome audio for new language in background
   _welcomeAudioCache = null;
   setTimeout(preCacheWelcomeAudio, 0);
-  setTimeout(() => goNext('screen-practice-lang'), 300);
+  // New users → goal screen; returning users who changed lang → practice lang
+  const isNewUser = !STATE.voiceId;
+  setTimeout(() => goNext(isNewUser ? 'screen-goal' : 'screen-practice-lang'), 300);
 }
 
 // ============================================================
@@ -2552,6 +2564,11 @@ function selectLevel(lvl) {
 // SCREEN 4: VOICE SETUP
 // ============================================================
 function initVoiceSetup() {
+  // Stop any playing welcome audio before restarting
+  if (_welcomePlaying) {
+    try { _welcomePlaying.pause(); _welcomePlaying.currentTime = 0; } catch(e) {}
+    _welcomePlaying = null;
+  }
   STATE.recordings = [];
   STATE.currentSent = 0;
   updateSentUI();
@@ -2559,7 +2576,6 @@ function initVoiceSetup() {
   const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
   const el = document.getElementById('welcome-text');
   if (el) el.textContent = msg;
-  // Narrate the instructions in Veera's voice immediately
   playOnboardingWelcome();
 }
 
@@ -2616,32 +2632,51 @@ async function sarvamTTS(text, langCode) {
   return new Audio(url);
 }
 let _welcomeAudioCache = null; // pre-generated Audio object
+let _welcomePlaying    = null; // track currently playing to stop before replaying
 
-// Call this as soon as we know the user's name + native lang
-// (right after saveName resolves) so the audio is ready by the
-// time the voice screen appears
 async function preCacheWelcomeAudio() {
   try {
-    await loadWelcomeVoice();
-    if (!STATE.welcomeVoiceId) return;
     const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
-    const audio = await tts(msg, STATE.welcomeVoiceId);
+    let audio = null;
+    if (isIndicUser()) {
+      // Sarvam Bulbul TTS for Telugu/Kannada — speaks in their language
+      audio = await sarvamTTS(msg, SARVAM_LANG[STATE.nativeLang]);
+    } else {
+      // Veera's cloned Fish Audio voice for English/other
+      await loadWelcomeVoice();
+      if (!STATE.welcomeVoiceId) return;
+      audio = await tts(msg, STATE.welcomeVoiceId);
+    }
     if (audio) _welcomeAudioCache = audio;
   } catch(e) { /* silent */ }
 }
 
 async function playOnboardingWelcome() {
-  // If pre-cached just play — zero delay
+  // Stop anything already playing to prevent echo/double voice
+  if (_welcomePlaying) {
+    try { _welcomePlaying.pause(); _welcomePlaying.currentTime = 0; } catch(e) {}
+    _welcomePlaying = null;
+  }
   if (_welcomeAudioCache) {
-    try { _welcomeAudioCache.currentTime = 0; _welcomeAudioCache.play(); } catch(e) {}
+    try {
+      _welcomeAudioCache.currentTime = 0;
+      _welcomeAudioCache.play();
+      _welcomePlaying = _welcomeAudioCache;
+    } catch(e) {}
     return;
   }
-  // Not cached yet — fetch now (shouldn't normally happen)
-  await loadWelcomeVoice();
-  const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
-  tts(msg, STATE.welcomeVoiceId).then(audio => {
-    if (audio) audio.play();
-  }).catch(() => {});
+  // Not cached — fetch now
+  try {
+    const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
+    let audio = null;
+    if (isIndicUser()) {
+      audio = await sarvamTTS(msg, SARVAM_LANG[STATE.nativeLang]);
+    } else {
+      await loadWelcomeVoice();
+      audio = await tts(msg, STATE.welcomeVoiceId);
+    }
+    if (audio) { _welcomePlaying = audio; audio.play(); }
+  } catch(e) {}
 }
 
 function updateSentUI() {
@@ -3563,7 +3598,7 @@ function _enqueueTTS(text, rate) {
 
 // Stream Claude response — calls onSentence(targetSentence, englishSentence) as each sentence arrives
 // calls onDone({ targetText, englishText }) when complete
-async function streamClaude(userText, correctionsEnabled, onSentence, onToken, onDone) {
+async function streamClaude(userText, correctionsEnabled, confused, onSentence, onToken, onDone) {
   const messages = [
     ...STATE.callHistory.slice(-6),
     { role: 'user', content: userText }
@@ -3603,6 +3638,9 @@ Do NOT invent questions outside this list unless the bank is exhausted.` : '';
     correctionsEnabled
       ? 'CORRECTIONS ON: gently correct grammar errors, keep it brief.'
       : 'CORRECTIONS OFF: continue naturally, no corrections.',
+    confused
+      ? `CONFUSION DETECTED: The user did not understand your last reply. Re-explain it in much simpler English — use very short sentences (max 5 words each). Give a simple real-life example like "For example: I cannot come = nenu raanu." Then ask if that is clearer. Do NOT switch language — always speak English.`
+      : null,
     `OUTPUT FORMAT (strict):
 Reply ONLY with exactly 2 lines, no labels, no JSON, no markdown:
 Line 1: your reply in ${targetLang} (1-2 short sentences max)
@@ -5048,15 +5086,44 @@ function renderConfidence() {
 }
 
 // Core speech processing — called after transcription (shared by Groq + Sarvam paths)
+// ============================================================
+// CONFUSION DETECTOR
+// ============================================================
+// Common confusion signals across Telugu, Kannada, and English
+const CONFUSION_SIGNALS = [
+  // English
+  "i don't understand", "i dont understand", "i didn't get", "i didnt get",
+  "what does that mean", "what do you mean", "can you explain", "i'm confused",
+  "i am confused", "i'm lost", "i am lost", "could you repeat", "say that again",
+  "i don't know", "i dont know", "what", "huh", "sorry",
+  // Telugu (romanised — from Sarvam STT)
+  "artham kaaledu", "artham kaadu", "nenu artham", "naaku teliyadu",
+  "naaku ardham", "ela cheppali", "meeru repeat", "explain cheyyandi",
+  "teliyaledu", "telusu kaadu", "aemi chepparu", "naaku", "ardham",
+  // Kannada (romanised)
+  "arthaavagalilla", "gottilla", "naanu artha", "explain maadi",
+  "hegide", "ondu saari", "repeat maadi", "naaku gottilla",
+  "artha aagalilla", "gottalla",
+];
+
+function isConfused(englishText) {
+  if (!englishText) return false;
+  const lower = englishText.toLowerCase();
+  return CONFUSION_SIGNALS.some(signal => lower.includes(signal));
+}
+
 async function _processUserSpeech(text) {
   const lastAI = STATE.callHistory.filter(m => m.role === 'assistant').slice(-1)[0]?.content || '';
   const cleaned = text.replace(/\buh+\b/gi,'').replace(/\bum+\b/gi,'').replace(/\ber+\b/gi,'').replace(/\bah+\b/gi,'').trim();
-  const rate = STATE.ttsSpeed === 'slow' ? 0.75 : STATE.ttsSpeed === 'fast' ? 1.3 : 1.0;
+
+  // Detect confusion before sending to Claude
+  const confused = isConfused(cleaned);
 
   try {
     await streamClaude(
       cleaned,
       STATE.correctionsEnabled,
+      confused, // pass confusion flag to streamClaude
 
       (targetSentence, englishSentence) => {
         removeTyping();
@@ -5097,23 +5164,51 @@ async function _processUserSpeech(text) {
           }
         });
 
-        // For Indic users — also show AI English response translated to their language
+        // For Indic users — translate AI reply to their language and show it
         if (isIndicUser() && englishFinal) {
           const sarvamCode = SARVAM_LANG[STATE.nativeLang];
-          sarvamTranslate(englishFinal, 'en-IN', sarvamCode).then(indicTranslation => {
-            if (indicTranslation && lastBub) {
-              const existing = lastBub.querySelector('.bubble-sub');
+          sarvamTranslate(englishFinal, 'en-IN', sarvamCode).then(async indicTranslation => {
+            if (!indicTranslation) return;
+
+            // Show Indic translation in bubble
+            if (lastBub) {
               const indicDiv = document.createElement('div');
               indicDiv.className = 'bubble-sub';
-              indicDiv.style.color = '#6366f1'; // indigo for Indic text
+              indicDiv.style.cssText = 'color:#6366f1;cursor:pointer;';
               indicDiv.textContent = indicTranslation;
+              // Tap to hear the Indic translation spoken
+              indicDiv.onclick = async () => {
+                const audio = await sarvamTTS(indicTranslation, sarvamCode);
+                if (audio) audio.play();
+              };
+              const existing = lastBub.querySelector('.bubble-sub');
               if (existing) lastBub.insertBefore(indicDiv, existing);
               else lastBub.appendChild(indicDiv);
+            }
+
+            // If user was confused — also auto-speak the Indic translation once
+            // so they hear what the AI said in their own language
+            if (confused) {
+              await sleep(400); // let English audio start first
+              const audio = await sarvamTTS(indicTranslation, sarvamCode);
+              if (audio) {
+                // Wait for English to finish, then speak Indic
+                while (STATE.isSpeaking) await sleep(150);
+                audio.play();
+                // Show a small "explained in Telugu/Kannada" indicator
+                if (lastBub) {
+                  const flag = sarvamCode === 'te-IN' ? '🇮🇳 Telugu' : '🇮🇳 Kannada';
+                  const note = document.createElement('div');
+                  note.style.cssText = 'font-size:10px;color:#6366f1;font-family:DM Mono,monospace;margin-top:4px;opacity:0.7;';
+                  note.textContent = `↑ explained in ${flag.split(' ')[1]}`;
+                  lastBub.appendChild(note);
+                }
+              }
             }
           }).catch(() => {});
         }
 
-        // Speak and then listen
+        // Speak English and then listen
         await speakAI(targetFinal);
         (async () => {
           await sleep(300);
@@ -5207,7 +5302,7 @@ async function saveName() {
 
   btn.disabled = false; btn.textContent = origLabel;
   saveState();
-  goNext('screen-goal');
+  goNext('screen-native-lang'); // language picker first, then goal → onboarding
 }
 
 // ============================================================
