@@ -34,9 +34,9 @@ module.exports = async function handler(req, res) {
 
     const payload = JSON.stringify({
       model: 'tts-rt-v1',
-      input: text,
+      text: text,
       language: lang,
-      voice: voice,        // Maya (female), Nina (female), Daniel (male), Noah (male)
+      voice: voice,
       audio_format: 'mp3',
     });
 
