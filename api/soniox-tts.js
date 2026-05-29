@@ -32,9 +32,15 @@ module.exports = async function handler(req, res) {
 
     const lang = LANG_MAP[language] || language;
 
+    // Keep numbers as digits — Soniox reads digits in English naturally
+    // This prevents Telugu number words sounding unnatural
+    const cleanText = text
+      .replace(/[౦-౯]/g, d => String.fromCharCode(d.charCodeAt(0) - 0x0C66 + 48)) // Telugu digits → ASCII
+      .replace(/[೦-೯]/g, d => String.fromCharCode(d.charCodeAt(0) - 0x0CE6 + 48)); // Kannada digits → ASCII
+
     const payload = JSON.stringify({
       model: 'tts-rt-v1',
-      text: text,
+      text: cleanText,
       language: lang,
       voice: voice,
       audio_format: 'mp3',
