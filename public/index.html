@@ -1382,8 +1382,8 @@ async function loadWelcomeVoice() {
 const WELCOME = {
   en: (name) => `Welcome to Callingo, ${name}. Please repeat these two sentences so we can clone your voice and use it for your practice calls.`,
   hi: (name) => `Callingo mein swagat hai, ${name}. Kripya neeche di gayi do lines dohraiye taki hum aapki awaaz clone kar sakein aur practice calls mein use kar sakein.`,
-  te: (name) => `Callingo కి స్వాగతం, ${name}. మీ వాయిస్ క్లోన్ చేయడానికి దయచేసి ఈ రెండు వాక్యాలను పునరావృతం చేయండి.`,
-  kn: (name) => `Callingo ಗೆ ಸ್ವಾಗತ, ${name}. ನಿಮ್ಮ ಧ್ವನಿಯನ್ನು ಕ್ಲೋನ್ ಮಾಡಲು ದಯವಿಟ್ಟು ಈ ಎರಡು ವಾಕ್ಯಗಳನ್ನು ಪುನರಾವರ್ತಿಸಿ.`,
+  te: (name) => `Welcome to Callingo, ${name}! మీ వాయిస్ క్లోన్ చేయడానికి దయచేసి ఈ రెండు వాక్యాలను చదవండి. (Please read these two sentences so we can clone your voice.)`,
+  kn: (name) => `Welcome to Callingo, ${name}! ನಿಮ್ಮ ಧ್ವನಿಯನ್ನು ಕ್ಲೋನ್ ಮಾಡಲು ದಯವಿಟ್ಟು ಈ ಎರಡು ವಾಕ್ಯಗಳನ್ನು ಓದಿ. (Please read these two sentences so we can clone your voice.)`,
   de: (name) => `Willkommen bei Callingo, ${name}. Bitte wiederhole die zwei Saetze unten, damit wir deine Stimme klonen und in deinen Uebungsanrufen verwenden koennen.`,
   es: (name) => `Bienvenido a Callingo, ${name}. Por favor repite estas dos frases para que podamos clonar tu voz y usarla en tus llamadas de practica.`,
   fr: (name) => `Bienvenue sur Callingo, ${name}. Repete les deux phrases ci-dessous pour qu'on puisse cloner ta voix et l'utiliser dans tes appels d'entrainement.`,
@@ -1399,13 +1399,15 @@ const SENTENCES = {
     "Main har subah paani peeta hoon aur roti khata hoon ghar mein.",
     "Mera dost mere ghar aata hai aur hum saath khelte hain roz.",
   ],
+  // Telugu and Kannada users learn English — so they record in English
+  // Native script shown below as translation so they know what to say
   te: [
-    "నేను ప్రతి రోజు ఉదయం ఇంట్లో తాజా నీళ్ళు తాగి వెచ్చని రొట్టె తింటాను.",
-    "నా సంతోషమైన కుక్క పార్కులో పరుగెత్తి పిల్లలతో ప్రతి రోజు ఆడుతుంది.",
+    "I drink fresh water and eat warm bread every single morning at home.\n(నేను ప్రతి ఉదయం ఇంట్లో తాజా నీళ్ళు తాగి వెచ్చని రొట్టె తింటాను.)",
+    "My happy dog runs in the park and plays with the kids each day.\n(నా కుక్క పార్కులో పరుగెత్తి పిల్లలతో ప్రతి రోజు ఆడుతుంది.)",
   ],
   kn: [
-    "ನಾನು ಪ್ರತಿ ದಿನ ಬೆಳಿಗ್ಗೆ ಮನೆಯಲ್ಲಿ ತಾಜಾ ನೀರು ಕುಡಿದು ಬೆಚ್ಚಗಿನ ರೊಟ್ಟಿ ತಿನ್ನುತ್ತೇನೆ.",
-    "ನನ್ನ ಸಂತೋಷದ ನಾಯಿ ಪ್ರತಿ ದಿನ ಪಾರ್ಕ್‌ನಲ್ಲಿ ಓಡಾಡಿ ಮಕ್ಕಳೊಂದಿಗೆ ಆಡುತ್ತದೆ.",
+    "I drink fresh water and eat warm bread every single morning at home.\n(ನಾನು ಪ್ರತಿ ಬೆಳಿಗ್ಗೆ ಮನೆಯಲ್ಲಿ ತಾಜಾ ನೀರು ಕುಡಿದು ಬೆಚ್ಚಗಿನ ರೊಟ್ಟಿ ತಿನ್ನುತ್ತೇನೆ.)",
+    "My happy dog runs in the park and plays with the kids each day.\n(ನನ್ನ ನಾಯಿ ಪ್ರತಿ ದಿನ ಪಾರ್ಕ್‌ನಲ್ಲಿ ಓಡಾಡಿ ಮಕ್ಕಳೊಂದಿಗೆ ಆಡುತ್ತದೆ.)",
   ],
   de: [
     "I drink fresh water and eat warm bread every single morning at home.",
@@ -2480,6 +2482,7 @@ function selectNativeLang(code, name, native) {
   event.currentTarget.classList.add('selected');
   // Re-cache welcome audio for new language in background
   _welcomeAudioCache = null;
+  _preCacheInFlight  = false; // allow fresh fetch for new language
   setTimeout(preCacheWelcomeAudio, 0);
   // New users → goal screen; returning users who changed lang → practice lang
   const isNewUser = !STATE.voiceId;
@@ -2549,13 +2552,13 @@ function selectLevel(lvl) {
   event.currentTarget.classList.add('selected');
   setTimeout(() => {
     if (STATE.voiceId) {
-      // Voice already cloned — skip straight to home
       saveState();
       updateHome();
       goNext('screen-home');
     } else {
-      initVoiceSetup();
+      // Show screen FIRST, then init (which plays audio)
       goNext('screen-voice');
+      initVoiceSetup();
     }
   }, 300);
 }
@@ -2631,31 +2634,39 @@ async function sarvamTTS(text, langCode) {
   const url  = URL.createObjectURL(blob);
   return new Audio(url);
 }
-let _welcomeAudioCache = null; // pre-generated Audio object
-let _welcomePlaying    = null; // track currently playing to stop before replaying
+let _welcomeAudioCache = null;
+let _welcomePlaying    = null;
+let _preCacheInFlight  = false; // prevents duplicate fetches
 
 async function preCacheWelcomeAudio() {
+  if (_preCacheInFlight) return;   // already fetching — don't start another
+  _preCacheInFlight = true;
+  _welcomeAudioCache = null;       // clear stale cache for new language
   try {
     const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
     let audio = null;
     if (isIndicUser()) {
-      // Sarvam Bulbul TTS for Telugu/Kannada — speaks in their language
       audio = await sarvamTTS(msg, SARVAM_LANG[STATE.nativeLang]);
     } else {
-      // Veera's cloned Fish Audio voice for English/other
       await loadWelcomeVoice();
-      if (!STATE.welcomeVoiceId) return;
-      audio = await tts(msg, STATE.welcomeVoiceId);
+      if (STATE.welcomeVoiceId) audio = await tts(msg, STATE.welcomeVoiceId);
     }
     if (audio) _welcomeAudioCache = audio;
   } catch(e) { /* silent */ }
+  _preCacheInFlight = false;
 }
 
 async function playOnboardingWelcome() {
-  // Stop anything already playing to prevent echo/double voice
+  // Stop anything already playing
   if (_welcomePlaying) {
     try { _welcomePlaying.pause(); _welcomePlaying.currentTime = 0; } catch(e) {}
     _welcomePlaying = null;
+  }
+  // Wait if fetch is still in flight (max 3s)
+  let waited = 0;
+  while (_preCacheInFlight && waited < 3000) {
+    await new Promise(r => setTimeout(r, 100));
+    waited += 100;
   }
   if (_welcomeAudioCache) {
     try {
@@ -2665,7 +2676,7 @@ async function playOnboardingWelcome() {
     } catch(e) {}
     return;
   }
-  // Not cached — fetch now
+  // Still nothing — fetch now as last resort
   try {
     const msg = (WELCOME[STATE.nativeLang] || WELCOME.en)(STATE.name);
     let audio = null;
