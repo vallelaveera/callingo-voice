@@ -749,7 +749,7 @@ body{
 <!-- ============ SCREEN: PRACTICE LANGUAGE ============ -->
 <div id="screen-practice-lang" class="screen">
   <div class="top-bar">
-    <button class="back-btn" onclick="goNext('screen-native-lang')">←</button>
+    <button class="back-btn" onclick="goNext('screen-goal')">←</button>
     <span class="top-title">Practice Language</span>
     <span></span>
   </div>
@@ -1128,7 +1128,7 @@ body{
 <!-- ============ SCREEN: GOAL SETTING ============ -->
 <div id="screen-goal" class="screen">
   <div class="top-bar">
-    <button class="back-btn" onclick="goNext('screen-name')">←</button>
+    <button class="back-btn" onclick="goNext('screen-native-lang')">←</button>
     <span class="top-title">Your Goal</span>
     <span></span>
   </div>
@@ -5003,7 +5003,7 @@ function selectGoal(id, name, icon) {
   document.querySelectorAll('.goal-btn').forEach(b => b.classList.remove('selected'));
   event.currentTarget.classList.add('selected');
   saveGameState();
-  setTimeout(() => goNext('screen-native-lang'), 300);
+  setTimeout(() => goNext('screen-practice-lang'), 300);
 }
 
 // ============================================================
