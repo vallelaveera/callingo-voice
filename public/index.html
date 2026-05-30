@@ -1589,6 +1589,7 @@ body{
 
 </div><!-- end #app -->
 
+<script src="https://cdn.jsdelivr.net/npm/@soniox/web@latest/dist/soniox.umd.js"></script>
 <script>
 // ============================================================
 // STATE
@@ -4336,6 +4337,9 @@ async function launchCall() {
     document.getElementById('call-timer').textContent = fmt(STATE.callSecs);
   }, 1000);
 
+  // Pre-init Soniox STT client in background
+  initSonioxClient().catch(() => {});
+
   // Pre-cache nudge audio in background
   setTimeout(preCacheNudgeAudio, 2000);
 
@@ -4499,14 +4503,12 @@ function addTyping() {
 function removeTyping() { document.getElementById('typing-bubble')?.remove(); }
 
 // ============================================================
-// STT — Groq Whisper via MediaRecorder
-// Records until silence detected, sends to /api/transcribe
-// Falls back to browser SpeechRecognition if mic fails
+// STT — Soniox WebSocket streaming (primary) + Groq fallback
+// Soniox streams mic directly, detects endpoint (natural turn end)
+// No silence threshold needed — Soniox handles it
 // ============================================================
 
-// How long of silence (ms) before we stop recording and send
-const SILENCE_THRESHOLD_MS = 1400;
-// Min recording length before we bother sending (ms)
+const SILENCE_THRESHOLD_MS = 1400; // kept for Groq fallback
 const MIN_RECORD_MS = 400;
 
 let _mediaStream    = null;
@@ -4518,7 +4520,143 @@ let _analyser       = null;
 let _audioCtx       = null;
 let _silenceCheck   = null;
 
+// Soniox streaming state
+let _sonioxClient   = null;
+let _sonioxRecording = null;
+let _useSoniox      = true; // try Soniox first, fall back to Groq
+
+// Get temp key from server and init Soniox client
+async function initSonioxClient() {
+  if (_sonioxClient) return _sonioxClient;
+  try {
+    const res  = await fetch('/api/soniox-tmp-key');
+    const data = await res.json();
+    if (!data.api_key) throw new Error('No temp key');
+
+    // SonioxClient is loaded via CDN script tag
+    _sonioxClient = new Soniox.SonioxClient({
+      apiKey: async () => {
+        // Refresh key before each session
+        const r = await fetch('/api/soniox-tmp-key');
+        const d = await r.json();
+        return d.api_key;
+      },
+    });
+    console.log('[Soniox STT] ✅ Client ready');
+    return _sonioxClient;
+  } catch(e) {
+    console.warn('[Soniox STT] Init failed, will use Groq:', e.message);
+    _useSoniox = false;
+    return null;
+  }
+}
+
 async function startListening() {
+  if (STATE.isMuted || STATE.isSpeaking) return;
+  setMicState('listening');
+
+  // Try Soniox streaming first
+  if (_useSoniox) {
+    try {
+      await startListeningSoniox();
+      return;
+    } catch(e) {
+      console.warn('[Soniox STT] Failed, falling back to Groq:', e.message);
+      _useSoniox = false;
+    }
+  }
+
+  // Groq fallback
+  startListeningGroq();
+}
+
+async function startListeningSoniox() {
+  const client = await initSonioxClient();
+  if (!client) throw new Error('No Soniox client');
+
+  const lang = STATE.practiceLang || 'en';
+  const nativeLang = STATE.nativeLang || 'en';
+
+  // Language hints — include both practice and native languages
+  const langHints = [lang, nativeLang].filter((v,i,a) => a.indexOf(v) === i);
+
+  _sonioxRecording = client.realtime.record({
+    model: 'stt-rt-v4',
+    language_hints: langHints,
+    enable_endpoint_detection: true, // key feature — detects natural turn end
+    audio_format: 'auto',
+    context: {
+      general: [
+        { key: 'domain', value: 'language_learning' },
+        { key: 'topic', value: STATE.selectedTopic?.name || 'conversation' },
+      ],
+    },
+  });
+
+  let utterance = '';
+  let endpointFired = false;
+
+  _sonioxRecording.on('result', (result) => {
+    // Build up transcript from tokens
+    const text = result.tokens.map(t => t.text).join('');
+    utterance = text;
+    // Show live transcript hint in status
+    if (text.trim()) setCallStatus(`🎤 ${text.trim().slice(0, 40)}…`);
+  });
+
+  _sonioxRecording.on('endpoint', async () => {
+    // User finished speaking — natural turn end detected by Soniox
+    if (endpointFired) return;
+    endpointFired = true;
+
+    _sonioxRecording.stop();
+
+    const finalText = utterance.trim();
+    if (!finalText || finalText.length < 2) {
+      // Nothing useful — restart listening
+      if (_callActive) setTimeout(startListening, 200);
+      return;
+    }
+
+    // Process the utterance — same as before
+    STATE.isListening = false;
+    if (STATE.interviewMode) {
+      ivAddBubble('user', finalText);
+      const fillers = (finalText.toLowerCase().match(/\b(um|uh|like|you know|er|ah)\b/g)||[]).length;
+      _ivState.fillerCount += fillers;
+      const el = document.getElementById('iv-filler-count');
+      if (el) el.textContent = _ivState.fillerCount;
+      _ivState.transcript.push({ role: 'user', content: finalText, timestamp: new Date().toISOString() });
+      document.getElementById('iv-status').textContent = 'Good answer!';
+      await sleep(1200);
+      _ivState.questionIdx++;
+      if (_ivState.questionIdx < INTERVIEW_QUESTIONS[_ivState.lang].length) {
+        await ivAskQuestion();
+      } else {
+        await endInterview();
+      }
+    } else {
+      if (!isIndicUser()) addBubble('user', finalText);
+      STATE.callHistory.push({ role: 'user', content: finalText });
+      STATE.silenceStrikes = 0;
+      setMicState('processing');
+      addTyping();
+      _clearQueue();
+      await _processUserSpeech(finalText);
+    }
+  });
+
+  _sonioxRecording.on('error', (err) => {
+    console.error('[Soniox STT] Error:', err);
+    _useSoniox = false;
+    if (_callActive) startListeningGroq();
+  });
+
+  await _sonioxRecording.start();
+  console.log('[Soniox STT] 🎙 Recording started');
+}
+
+async function startListeningGroq() {
   if (STATE.isMuted || STATE.isSpeaking) return;
   setMicState('listening');
 
@@ -4686,6 +4824,11 @@ function stopListening() {
   STATE.isListening = false;
   clearInterval(_silenceCheck);
   _silenceCheck = null;
+  // Stop Soniox recording if active
+  if (_sonioxRecording) {
+    try { _sonioxRecording.stop(); } catch(e) {}
+    _sonioxRecording = null;
+  }
   if (_mediaRecorder && _mediaRecorder.state === 'recording') {
     try { _mediaRecorder.stop(); } catch(e) {}
   }
