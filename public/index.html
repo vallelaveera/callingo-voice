@@ -620,7 +620,19 @@ body{
 .top-title{font-size:14px;font-weight:700;}
 
 /* VOICE BADGE */
-.page-num{position:fixed;bottom:8px;right:12px;font-size:10px;font-family:'DM Mono',monospace;color:var(--sub);opacity:0.5;pointer-events:none;z-index:100;}
+.bot-card{width:100%;background:var(--s1);border:1.5px solid var(--border);border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left;transition:all 0.15s;margin-bottom:10px;}
+.bot-card:hover{border-color:var(--green);background:var(--green-dim);}
+.bot-card.selected{border-color:var(--green);background:var(--green-dim);box-shadow:0 0 0 2px rgba(0,168,107,0.2);}
+.bot-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.bot-info{flex:1;}
+.bot-name{font-size:15px;font-weight:800;color:var(--text);margin-bottom:2px;}
+.bot-role{font-size:11px;font-family:'DM Mono',monospace;color:var(--green);letter-spacing:.05em;margin-bottom:4px;}
+.bot-desc{font-size:12px;color:var(--sub);line-height:1.4;}
+.bot-tag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.04em;}
+.bot-tag.tough{background:rgba(192,58,0,0.1);color:#c03a00;}
+.bot-tag.friendly{background:rgba(0,168,107,0.1);color:var(--green);}
+.bot-tag.casual{background:rgba(99,102,241,0.1);color:#6366f1;}
+.bot-tag.technical{background:rgba(0,100,200,0.1);color:#0064c8;}font-size:10px;font-family:'DM Mono',monospace;color:var(--sub);opacity:0.5;pointer-events:none;z-index:100;}
 .mode-card{width:100%;background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;margin-bottom:10px;}
 .mode-card:hover{border-color:var(--green);background:var(--green-dim);}
 .mode-icon{font-size:32px;flex-shrink:0;}
@@ -741,6 +753,35 @@ body{
   <div class="page-num">Page 2</div>
 </div>
 
+<!-- ============ SCREEN: BOT SELECTION ============ -->
+<div id="screen-bot-select" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" id="bot-back-btn" onclick="goNext('screen-mode')">←</button>
+    <span class="top-title" id="bot-screen-title">Choose your bot</span>
+    <span></span>
+  </div>
+  <div class="scroll-content" style="gap:12px;">
+    <div>
+      <div class="headline" style="font-size:20px;" id="bot-screen-headline">Who do you want to practice with?</div>
+      <div class="subtext" style="margin-top:6px;" id="bot-screen-sub">Each bot has a different personality and style.</div>
+    </div>
+    <div id="bot-list"></div>
+
+    <!-- Extra options for interview mode -->
+    <div id="bot-job-section" style="display:none;">
+      <div class="card">
+        <div class="card-label">Job title or industry <span style="color:var(--sub);font-weight:400;">(optional)</span></div>
+        <input class="inp" id="bot-job-title" type="text" placeholder="e.g. Software Engineer, Marketing Manager…" style="margin-bottom:0;"/>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="bot-start-btn" disabled onclick="launchWithBot()" style="padding:16px;font-size:16px;">
+      🎙 Start →
+    </button>
+  </div>
+  <div class="page-num" id="bot-page-num">Page 3</div>
+</div>
+
 <!-- ============ SCREEN: INTERVIEW SETUP ENGLISH (Page 3) ============ -->
 <div id="screen-interview-setup-en" class="screen">
   <div class="top-bar">
@@ -817,10 +858,11 @@ body{
 <div id="screen-interview-call" class="screen">
   <div class="top-bar" style="background:rgba(26,26,26,0.95);">
     <div style="display:flex;align-items:center;gap:10px;">
-      <div style="width:36px;height:36px;border-radius:50%;background:var(--green-dim);display:flex;align-items:center;justify-content:center;font-size:18px;">💼</div>
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--green-dim);display:flex;align-items:center;justify-content:center;font-size:18px;" id="iv-bot-avatar">💼</div>
       <div>
         <div style="font-size:13px;font-weight:600;color:#fff;" id="iv-call-name">AI Interviewer</div>
-        <div style="font-size:11px;color:var(--sub);" id="iv-call-timer">0:00</div>
+        <div style="font-size:11px;color:var(--sub);" id="iv-bot-role">Professional Interview</div>
+        <div style="font-size:10px;color:var(--sub);font-family:'DM Mono',monospace;" id="iv-call-timer">0:00</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
@@ -1203,7 +1245,7 @@ body{
 
     <!-- PRIMARY ACTIONS — Start Call + Practise Pronunciation side by side -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <button class="btn btn-primary" id="start-call-btn" disabled onclick="startCall()" style="padding:14px 10px;font-size:13px;">
+      <button class="btn btn-primary" id="start-call-btn" disabled onclick="openBotSelectForCall()" style="padding:14px 10px;font-size:13px;">
         📞 Start Call
       </button>
       <button class="btn btn-outline" id="pronounce-mode-btn" disabled onclick="startShadowMode()"
@@ -2742,11 +2784,370 @@ function selectPracticeLang(code, name, native) {
 }
 
 // ============================================================
-// MODE SELECTION
+// BOT CONFIGURATIONS
 // ============================================================
+const BOT_CONFIGS = {
+
+  // ── INTERVIEW BOTS ────────────────────────────────────────
+  interview: {
+    en: [
+      {
+        id: 'sarah',
+        name: 'Sarah',
+        role: 'HR Manager · Google',
+        emoji: '👩‍💼',
+        color: '#1a7a4a',
+        tag: 'Friendly',
+        tagClass: 'friendly',
+        desc: 'Warm, encouraging, and thorough. Great for building confidence in your first interviews.',
+        fishVoiceId: null, // set to a Fish Audio voice ID for a female voice
+        system: `You are Sarah, a warm and experienced HR Manager at a top tech company. 
+You genuinely want candidates to succeed. You ask clear, structured questions and often say things like:
+"That's a great point — could you tell me more about that?"
+"Don't worry, take your time."
+"I love that example — what was the outcome?"
+You are encouraging but also thorough. You notice when answers lack depth and gently probe further.
+You ask follow-up questions based on what the candidate actually said.
+Never rush. Never be cold. Always feel human and warm.`,
+        questionStyle: 'Open-ended, warm follow-ups, STAR method focused',
+      },
+      {
+        id: 'james',
+        name: 'James',
+        role: 'Senior Partner · McKinsey',
+        emoji: '👔',
+        color: '#c03a00',
+        tag: 'Challenging',
+        tagClass: 'tough',
+        desc: 'Direct, formal and demanding. Will push you hard and expose weak answers. Best for senior roles.',
+        fishVoiceId: null,
+        system: `You are James, a Senior Partner at a top consulting firm with 20 years of experience interviewing candidates.
+You are direct, formal, and do not accept vague answers. You challenge every answer:
+"That's quite generic — give me a specific example."
+"I'm not convinced. What exactly was your role in that?"
+"Walk me through the numbers."
+You maintain a professional tone but you push hard. You respect candidates who can handle pressure.
+You never accept one-word answers. You always dig deeper.
+If an answer is weak, you say so directly but professionally.`,
+        questionStyle: 'Challenging, case-study style, numbers-focused',
+      },
+      {
+        id: 'priya',
+        name: 'Priya',
+        role: 'Co-Founder · YC Startup',
+        emoji: '🚀',
+        color: '#6366f1',
+        tag: 'Casual',
+        tagClass: 'casual',
+        desc: 'Conversational and story-driven. Loves passion, creativity and real experiences over rehearsed answers.',
+        fishVoiceId: null,
+        system: `You are Priya, a startup co-founder who went through YC and has built two companies. 
+You interview in a very conversational, casual style. You hate corporate jargon and scripted answers.
+You say things like:
+"Forget the script — just tell me what actually happened."
+"What did you learn from that failure?"
+"What are you genuinely passionate about?"
+You love hearing about real experiences, mistakes, and lessons. You value authenticity over polish.
+You ask creative questions that reveal character and mindset, not just experience.`,
+        questionStyle: 'Story-driven, passion-focused, authentic experiences',
+      },
+      {
+        id: 'david',
+        name: 'David',
+        role: 'Engineering Lead · Amazon',
+        emoji: '🔬',
+        color: '#0064c8',
+        tag: 'Technical',
+        tagClass: 'technical',
+        desc: 'Precise and detail-oriented. Asks deep technical and behavioural questions. Perfect for engineering roles.',
+        fishVoiceId: null,
+        system: `You are David, a Senior Engineering Lead at a major tech company with 15 years of experience.
+You are precise, analytical and deeply technical. You ask:
+"Walk me through your technical decision-making process."
+"What trade-offs did you consider?"
+"How would you scale that solution to 10 million users?"
+"Tell me about a system design decision you regret."
+You value clarity, precision and depth. You can tell immediately when someone is bluffing.
+You follow up relentlessly on technical claims. You are not unkind but you are exacting.`,
+        questionStyle: 'Technical depth, system design, trade-off analysis',
+      },
+    ],
+    de: [
+      {
+        id: 'anna',
+        name: 'Anna',
+        role: 'HR-Managerin · Siemens',
+        emoji: '👩‍💼',
+        color: '#1a7a4a',
+        tag: 'Freundlich',
+        tagClass: 'friendly',
+        desc: 'Warm und strukturiert. Ideal für erste Bewerbungsgespräche auf Deutsch.',
+        fishVoiceId: null,
+        system: `Du bist Anna, eine erfahrene HR-Managerin bei einem deutschen Großkonzern.
+Du bist warmherzig, strukturiert und möchtest, dass Kandidaten ihr Bestes geben.
+Du sagst Dinge wie: "Das ist ein interessanter Punkt — können Sie das näher erläutern?"
+"Nehmen Sie sich Zeit." "Welches Ergebnis hatte das?"
+Du fragst gezielt nach, wenn Antworten vage sind. Du stellst Folgefragen basierend auf dem Gesagten.`,
+        questionStyle: 'Strukturiert, warm, STAR-Methode',
+      },
+      {
+        id: 'michael',
+        name: 'Michael',
+        role: 'Geschäftsführer · Berlinfahrt GmbH',
+        emoji: '👔',
+        color: '#c03a00',
+        tag: 'Anspruchsvoll',
+        tagClass: 'tough',
+        desc: 'Direkt und fordernd. Testet Belastbarkeit und Präzision. Für erfahrene Kandidaten.',
+        fishVoiceId: null,
+        system: `Du bist Michael, ein Geschäftsführer mit 20 Jahren Erfahrung.
+Du bist direkt, formal und akzeptierst keine vagen Antworten.
+Du sagst: "Das ist zu allgemein — geben Sie mir ein konkretes Beispiel."
+"Was genau war Ihre Rolle dabei?" "Zeigen Sie mir die Zahlen."
+Du bleibst professionell aber fordernd. Du respektierst Kandidaten die Druck aushalten können.`,
+        questionStyle: 'Herausfordernd, präzise, zahlenorientiert',
+      },
+      {
+        id: 'lena',
+        name: 'Lena',
+        role: 'Gründerin · Berlin Startup',
+        emoji: '🚀',
+        color: '#6366f1',
+        tag: 'Locker',
+        tagClass: 'casual',
+        desc: 'Gesprächig und authentisch. Mag echte Erfahrungen und Leidenschaft.',
+        fishVoiceId: null,
+        system: `Du bist Lena, eine Startup-Gründerin die zwei Unternehmen aufgebaut hat.
+Du interviewst sehr gesprächig und locker. Du hasst Floskeln und auswendig gelernte Antworten.
+Du sagst: "Vergiss das Skript — was ist wirklich passiert?" "Was hast du daraus gelernt?"
+Du liebst echte Geschichten, Fehler und Learnings. Authentizität ist dir wichtiger als Politur.`,
+        questionStyle: 'Gesprächsorientiert, leidenschaftlich, authentisch',
+      },
+      {
+        id: 'thomas',
+        name: 'Thomas',
+        role: 'Tech Lead · SAP',
+        emoji: '🔬',
+        color: '#0064c8',
+        tag: 'Technisch',
+        tagClass: 'technical',
+        desc: 'Präzise und tiefgründig. Ideal für technische Stellen in Deutschland.',
+        fishVoiceId: null,
+        system: `Du bist Thomas, ein erfahrener Tech Lead bei einem deutschen Technologieunternehmen.
+Du bist präzise, analytisch und technisch versiert. Du fragst:
+"Erläutern Sie Ihren technischen Entscheidungsprozess." "Welche Kompromisse haben Sie in Betracht gezogen?"
+"Wie würden Sie das auf 10 Millionen Nutzer skalieren?"
+Du erkennst sofort wenn jemand blufft. Du bist nicht unfreundlich aber sehr genau.`,
+        questionStyle: 'Technische Tiefe, Systemdesign, Trade-off Analyse',
+      },
+    ],
+  },
+
+  // ── LANGUAGE LEARNING BOTS ────────────────────────────────
+  language: {
+    de: [
+      {
+        id: 'marco',
+        name: 'Marco',
+        role: 'Café-Inhaber aus München',
+        emoji: '☕',
+        color: '#8B4513',
+        tag: 'Friendly',
+        tagClass: 'friendly',
+        desc: 'Cheerful café owner from Munich. Loves chatting about food, coffee and daily life.',
+        fishVoiceId: null,
+        system: `Du bist Marco, ein fröhlicher Café-Inhaber aus München. Du liebst Kaffee, Kuchen und nette Gespräche.
+Du bist herzlich, warmherzig und geduldig. Du freust dich immer über Kunden.
+Du sprichst natürlich und unkompliziert. Du hilfst Lernenden sanft mit der Sprache.`,
+      },
+      {
+        id: 'elena',
+        name: 'Elena',
+        role: 'Hotel-Managerin · Berlin',
+        emoji: '🏨',
+        color: '#1a5276',
+        tag: 'Professional',
+        tagClass: 'technical',
+        desc: 'Polished hotel manager in Berlin. Formal, helpful and very precise.',
+        fishVoiceId: null,
+        system: `Du bist Elena, eine professionelle Hotel-Managerin in Berlin. Du bist höflich, präzise und hilfsbereit.
+Du sprichst förmlich und klar. Du achtest auf Details und bist sehr serviceorientiert.
+Du stellst klare Fragen und gibst hilfreiche Antworten.`,
+      },
+      {
+        id: 'sophie',
+        name: 'Sophie',
+        role: 'Verkäuferin in Hamburg',
+        emoji: '🛍️',
+        color: '#8e44ad',
+        tag: 'Casual',
+        tagClass: 'casual',
+        desc: 'Energetic shop assistant in Hamburg. Fun, bubbly and loves helping customers find things.',
+        fishVoiceId: null,
+        system: `Du bist Sophie, eine aufgeweckte Verkäuferin in einem Modegeschäft in Hamburg.
+Du bist lebhaft, freundlich und hilfsbereit. Du liebst es Kunden zu helfen den perfekten Look zu finden.
+Du machst auch mal einen Witz und bist sehr gesprächig.`,
+      },
+      {
+        id: 'dr_raj',
+        name: 'Dr. Raj',
+        role: 'Arzt · Charité Berlin',
+        emoji: '👨‍⚕️',
+        color: '#1a7a4a',
+        tag: 'Calm',
+        tagClass: 'friendly',
+        desc: 'Calm and thorough doctor at a Berlin hospital. Patient, precise and reassuring.',
+        fishVoiceId: null,
+        system: `Du bist Dr. Raj, ein erfahrener Arzt an der Charité in Berlin. Du bist ruhig, geduldig und präzise.
+Du stellst klare medizinische Fragen und erklärst Dinge verständlich.
+Du bist beruhigend und professionell. Du nimmst dir Zeit für jeden Patienten.`,
+      },
+    ],
+    en: [
+      {
+        id: 'tom',
+        name: 'Tom',
+        role: 'Barista · London Café',
+        emoji: '☕',
+        color: '#8B4513',
+        tag: 'Friendly',
+        tagClass: 'friendly',
+        desc: 'Cheerful London barista who loves a good chat. Casual, warm and patient.',
+        fishVoiceId: null,
+        system: `You are Tom, a cheerful barista at a busy London café. You love good coffee and good conversation.
+You are warm, casual and very patient. You enjoy chatting with customers.
+You use natural English expressions and help learners feel comfortable speaking.`,
+      },
+      {
+        id: 'claire',
+        name: 'Claire',
+        role: 'Hotel Concierge · London',
+        emoji: '🏨',
+        color: '#1a5276',
+        tag: 'Professional',
+        tagClass: 'technical',
+        desc: 'Polished hotel concierge in London. Formal, precise and always helpful.',
+        fishVoiceId: null,
+        system: `You are Claire, a professional concierge at a five-star London hotel. You are polished, precise and helpful.
+You speak formally and clearly. You pay attention to detail and are very service-oriented.
+You ask clear questions and give helpful, professional responses.`,
+      },
+      {
+        id: 'jake',
+        name: 'Jake',
+        role: 'Shop Assistant · Manchester',
+        emoji: '🛍️',
+        color: '#8e44ad',
+        tag: 'Casual',
+        tagClass: 'casual',
+        desc: 'Energetic shop assistant from Manchester. Fun, friendly and loves helping customers.',
+        fishVoiceId: null,
+        system: `You are Jake, an energetic shop assistant at a clothing store in Manchester.
+You are lively, friendly and love helping customers find what they need.
+You speak casually with northern English expressions. You are chatty and make shopping fun.`,
+      },
+      {
+        id: 'dr_amy',
+        name: 'Dr. Amy',
+        role: 'GP · NHS London',
+        emoji: '👩‍⚕️',
+        color: '#1a7a4a',
+        tag: 'Calm',
+        tagClass: 'friendly',
+        desc: 'Calm and thorough NHS doctor. Patient, precise and very reassuring.',
+        fishVoiceId: null,
+        system: `You are Dr. Amy, a calm and experienced GP at an NHS practice in London.
+You are patient, precise and reassuring. You ask clear medical questions and explain things clearly.
+You take your time with each patient and make them feel at ease.`,
+      },
+    ],
+  },
+};
+
+// ── Bot state ─────────────────────────────────────────────────
+STATE.selectedBot = null;
+let _botMode = 'language'; // 'language' or 'interview'
+let _botLang = 'en';
+
+// ── Open bot selection screen ─────────────────────────────────
+function openBotSelect(mode, lang, backScreen) {
+  _botMode = mode;
+  _botLang = lang;
+  STATE.selectedBot = null;
+
+  // Update screen text
+  const isInterview = mode === 'interview';
+  document.getElementById('bot-screen-title').textContent =
+    isInterview ? '🤝 Choose your Interviewer' : '🤖 Choose your Bot';
+  document.getElementById('bot-screen-headline').textContent =
+    isInterview ? 'Who will interview you?' : 'Who do you want to practice with?';
+  document.getElementById('bot-screen-sub').textContent =
+    isInterview ? 'Each interviewer has a different style and difficulty level.' :
+                  'Each bot has a unique personality. Pick one that suits your mood.';
+  document.getElementById('bot-job-section').style.display = isInterview ? 'block' : 'none';
+  document.getElementById('bot-start-btn').textContent =
+    isInterview ? '🎙 Start Interview →' : '📞 Start Call →';
+  document.getElementById('bot-start-btn').disabled = true;
+
+  // Back button
+  const backBtn = document.getElementById('bot-back-btn');
+  backBtn.onclick = () => goNext(backScreen || 'screen-mode');
+
+  // Render bot cards
+  const bots = (BOT_CONFIGS[mode]?.[lang] || BOT_CONFIGS[mode]?.en || []);
+  const list = document.getElementById('bot-list');
+  list.innerHTML = bots.map(bot => `
+    <button class="bot-card" id="botcard-${bot.id}" onclick="selectBot('${bot.id}')">
+      <div class="bot-avatar" style="background:${bot.color}22;">${bot.emoji}</div>
+      <div class="bot-info">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+          <div class="bot-name">${bot.name}</div>
+          <span class="bot-tag ${bot.tagClass}">${bot.tag}</span>
+        </div>
+        <div class="bot-role">${bot.role}</div>
+        <div class="bot-desc">${bot.desc}</div>
+      </div>
+    </button>
+  `).join('');
+
+  goNext('screen-bot-select');
+}
+
+function selectBot(botId) {
+  const bots = BOT_CONFIGS[_botMode]?.[_botLang] || BOT_CONFIGS[_botMode]?.en || [];
+  const bot  = bots.find(b => b.id === botId);
+  if (!bot) return;
+  STATE.selectedBot = bot;
+
+  // Update UI
+  document.querySelectorAll('.bot-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('botcard-' + botId)?.classList.add('selected');
+  document.getElementById('bot-start-btn').disabled = false;
+  document.getElementById('bot-start-btn').textContent =
+    _botMode === 'interview'
+      ? `🎙 Interview with ${bot.name} →`
+      : `📞 Call with ${bot.name} →`;
+}
+
+async function launchWithBot() {
+  if (!STATE.selectedBot) return;
+  if (_botMode === 'interview') {
+    const jobTitle = document.getElementById('bot-job-title')?.value.trim() || 'General';
+    await startInterview(_botLang, jobTitle);
+  } else {
+    startCall();
+  }
+}
+
+// ── Inject bot personality into Claude system prompt ──────────
+function getBotSystemPrompt() {
+  const bot = STATE.selectedBot;
+  if (!bot) return '';
+  return bot.system || '';
+}
 function startInterviewSetup(lang) {
   STATE.interviewLang = lang;
-  goNext(lang === 'de' ? 'screen-interview-setup-de' : 'screen-interview-setup-en');
+  openBotSelect('interview', lang, 'screen-mode');
 }
 
 function startLearnLanguage() {
@@ -2807,9 +3208,17 @@ let _ivState = {
   active: false,
 };
 
-async function startInterview(lang) {
-  const jobInput = document.getElementById(lang === 'de' ? 'job-title-de' : 'job-title-en');
-  const jobTitle = jobInput?.value.trim() || 'General';
+function openBotSelectForCall() {
+  if (!STATE.selectedTopic) return;
+  const lang = STATE.practiceLang || 'en';
+  openBotSelect('language', lang, 'screen-home');
+}
+
+async function startInterview(lang, jobTitleParam) {
+  const jobTitle = jobTitleParam ||
+    document.getElementById('bot-job-title')?.value.trim() ||
+    document.getElementById(lang === 'de' ? 'job-title-de' : 'job-title-en')?.value.trim() ||
+    'General';
 
   _ivState = {
     sessionId: null, lang, jobTitle,
@@ -2840,7 +3249,9 @@ async function startInterview(lang) {
   goNext('screen-interview-call');
   document.getElementById('iv-messages').innerHTML = '';
   document.getElementById('iv-filler-count').textContent = '0';
-  document.getElementById('iv-call-name').textContent = lang === 'de' ? 'KI-Interviewer' : 'AI Interviewer';
+  document.getElementById('iv-bot-avatar').textContent = STATE.selectedBot?.emoji || '💼';
+  document.getElementById('iv-call-name').textContent = STATE.selectedBot?.name || (lang === 'de' ? 'KI-Interviewer' : 'AI Interviewer');
+  document.getElementById('iv-bot-role').textContent  = STATE.selectedBot?.role || 'Professional Interview';
   document.getElementById('iv-question-num').textContent = `Q1 / ${INTERVIEW_QUESTIONS[lang].length}`;
 
   // Start timer
@@ -2870,49 +3281,6 @@ async function ivStartSessionRecording() {
   } catch(e) { console.warn('[Interview] Recording failed:', e); }
 }
 
-async function ivAskQuestion() {
-  if (!_ivState.active) return;
-  const questions = INTERVIEW_QUESTIONS[_ivState.lang];
-  const q = questions[_ivState.questionIdx];
-  if (!q) { endInterview(); return; }
-
-  document.getElementById('iv-question-num').textContent =
-    `Q${_ivState.questionIdx + 1} / ${questions.length}`;
-  document.getElementById('iv-status').textContent = 'AI is speaking…';
-  document.getElementById('iv-mic-btn').disabled = true;
-
-  // Add bubble
-  ivAddBubble('ai', q);
-  _ivState.transcript.push({ role: 'ai', content: q, timestamp: new Date().toISOString() });
-
-  // Speak the question — use cloned voice if available, else use Veera's welcome voice
-  try {
-    // Ensure we have a voice to use
-    if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
-    const voiceId = STATE.voiceId || STATE.welcomeVoiceId;
-    if (voiceId) {
-      const audio = await tts(q, voiceId);
-      if (audio) await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
-    }
-  } catch(e) { console.warn('[Interview] TTS error:', e); }
-
-  // For Indic users — also speak in their language
-  if (isIndicUser()) {
-    try {
-      const sarvamCode = SARVAM_LANG[STATE.nativeLang];
-      const translated = await sarvamTranslate(q, 'en-IN', sarvamCode);
-      if (translated) {
-        const audio = await sarvamTTS(translated, sarvamCode);
-        if (audio) await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
-      }
-    } catch(e) {}
-  }
-
-  document.getElementById('iv-status').textContent = 'Your turn — speak your answer';
-  document.getElementById('iv-mic-btn').disabled = false;
-  document.getElementById('iv-mic-btn').style.background = 'var(--green)';
-}
-
 function ivAddBubble(role, text) {
   const el = document.createElement('div');
   el.style.display = 'flex';
@@ -2926,61 +3294,108 @@ function ivAddBubble(role, text) {
   container.scrollTop = container.scrollHeight;
 }
 
-let _ivRecording = false;
+let _ivRecording   = false;
 let _ivMediaRecorder = null;
-let _ivChunks = [];
+let _ivChunks      = [];
 let _ivSilenceCheck = null;
-let _ivAudioCtx = null;
+let _ivAudioCtx    = null;
+let _ivListening   = false;
 
-async function ivToggleMic() {
-  if (_ivRecording) {
-    // Stop recording
-    clearInterval(_ivSilenceCheck);
-    _ivRecording = false;
-    if (_ivMediaRecorder?.state === 'recording') _ivMediaRecorder.stop();
-    document.getElementById('iv-mic-btn').textContent = '🎤';
-    document.getElementById('iv-mic-btn').style.background = 'var(--green)';
-    document.getElementById('iv-status').textContent = 'Processing…';
-    return;
+async function ivAskQuestion() {
+  if (!_ivState.active) return;
+  const questions = INTERVIEW_QUESTIONS[_ivState.lang];
+  const q = questions[_ivState.questionIdx];
+  if (!q) { endInterview(); return; }
+
+  document.getElementById('iv-question-num').textContent =
+    `Q${_ivState.questionIdx + 1} / ${questions.length}`;
+  document.getElementById('iv-status').textContent = 'AI is speaking…';
+  document.getElementById('iv-mic-btn').style.background = 'var(--border)';
+  document.getElementById('iv-mic-btn').textContent = '🔊';
+  _ivListening = false;
+
+  // Add AI bubble
+  ivAddBubble('ai', q);
+  _ivState.transcript.push({ role: 'ai', content: q, timestamp: new Date().toISOString() });
+
+  // Speak the question — use bot's voice if set, else welcome voice, else browser TTS
+  try {
+    if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
+    const botVoiceId = STATE.selectedBot?.fishVoiceId;
+    const voiceId = botVoiceId || STATE.voiceId || STATE.welcomeVoiceId;
+    if (voiceId) {
+      const audio = await tts(q, voiceId);
+      if (audio) await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+    } else {
+      await browserTTS(q);
+    }
+  } catch(e) {
+    await browserTTS(q).catch(() => {});
   }
 
-  // Start recording
+  if (!_ivState.active) return;
+
+  // Auto-start listening after question finishes
+  await sleep(400);
+  ivStartListening();
+}
+
+async function ivStartListening() {
+  if (_ivListening || !_ivState.active) return;
+  _ivListening = true;
+
+  document.getElementById('iv-status').textContent = 'Listening… speak your answer';
+  document.getElementById('iv-mic-btn').textContent = '🎙';
+  document.getElementById('iv-mic-btn').style.background = 'var(--green)';
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     _ivChunks = [];
     _ivRecording = true;
-    document.getElementById('iv-mic-btn').textContent = '⏹';
-    document.getElementById('iv-mic-btn').style.background = 'var(--red)';
-    document.getElementById('iv-status').textContent = 'Recording — tap to stop';
 
     // Silence detection
     if (_ivAudioCtx) { try { await _ivAudioCtx.close(); } catch(e) {} }
     _ivAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = _ivAudioCtx.createMediaStreamSource(stream);
+    const source   = _ivAudioCtx.createMediaStreamSource(stream);
     const analyser = _ivAudioCtx.createAnalyser();
     analyser.fftSize = 512;
     source.connect(analyser);
     const data = new Uint8Array(analyser.frequencyBinCount);
     let lastSound = Date.now(), spoke = false;
 
+    // Nudge after 5s of silence
+    const nudge = setTimeout(() => {
+      if (!spoke && _ivRecording) {
+        document.getElementById('iv-status').textContent = 'Take your time, speak when ready…';
+        document.getElementById('iv-mic-btn').style.transform = 'scale(1.15)';
+        setTimeout(() => { const b = document.getElementById('iv-mic-btn'); if(b) b.style.transform=''; }, 600);
+      }
+    }, 5000);
+
     const mimeType = ['audio/webm;codecs=opus','audio/webm'].find(m => MediaRecorder.isTypeSupported(m)) || '';
     _ivMediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
     _ivMediaRecorder.ondataavailable = e => { if (e.data.size > 0) _ivChunks.push(e.data); };
-    _ivMediaRecorder.onstop = () => _ivOnRecordDone(stream);
+    _ivMediaRecorder.onstop = () => { clearTimeout(nudge); _ivOnRecordDone(stream); };
     _ivMediaRecorder.start(100);
 
     _ivSilenceCheck = setInterval(() => {
+      if (!_ivRecording) { clearInterval(_ivSilenceCheck); return; }
       analyser.getByteFrequencyData(data);
-      const vol = data.reduce((a,b)=>a+b,0)/data.length;
-      if (vol > 10) { spoke = true; lastSound = Date.now(); }
-      else if (spoke && Date.now()-lastSound > 1500) {
+      const vol = data.reduce((a,b) => a+b, 0) / data.length;
+      if (vol > 10) {
+        spoke = true;
+        lastSound = Date.now();
+        document.getElementById('iv-mic-btn').style.background = 'var(--red)';
+        document.getElementById('iv-status').textContent = 'Recording… keep going';
+      } else if (spoke && Date.now() - lastSound > 1800) {
+        // User spoke and stopped — send it
         clearInterval(_ivSilenceCheck);
         _ivRecording = false;
         if (_ivMediaRecorder?.state === 'recording') _ivMediaRecorder.stop();
       }
     }, 100);
 
-    // Max 90 seconds
+    // Max 90 seconds per answer
     setTimeout(() => {
       if (_ivRecording) {
         clearInterval(_ivSilenceCheck);
@@ -2990,41 +3405,63 @@ async function ivToggleMic() {
     }, 90000);
 
   } catch(e) {
-    document.getElementById('iv-status').textContent = 'Mic access needed';
+    document.getElementById('iv-status').textContent = 'Mic access needed — check permissions';
+    _ivListening = false;
+  }
+}
+
+// Manual mic button — tap to force-stop if needed
+function ivToggleMic() {
+  if (_ivRecording) {
+    clearInterval(_ivSilenceCheck);
+    _ivRecording = false;
+    if (_ivMediaRecorder?.state === 'recording') _ivMediaRecorder.stop();
+  } else if (!_ivListening) {
+    ivStartListening();
   }
 }
 
 async function _ivOnRecordDone(stream) {
+  _ivListening  = false;
+  _ivRecording  = false;
   stream.getTracks().forEach(t => t.stop());
   if (_ivAudioCtx) { try { await _ivAudioCtx.close(); } catch(e) {} _ivAudioCtx = null; }
-  document.getElementById('iv-mic-btn').textContent = '🎤';
-  document.getElementById('iv-mic-btn').style.background = 'var(--green)';
-  document.getElementById('iv-status').textContent = 'Transcribing…';
+
+  document.getElementById('iv-mic-btn').textContent = '⏳';
+  document.getElementById('iv-mic-btn').style.background = 'var(--border)';
+  document.getElementById('iv-status').textContent = 'Transcribing your answer…';
 
   if (!_ivChunks.length) {
-    document.getElementById('iv-status').textContent = 'Nothing heard — try again';
+    document.getElementById('iv-status').textContent = 'Nothing heard — listening again…';
+    await sleep(1000);
+    ivStartListening();
     return;
   }
 
   try {
-    const blob = new Blob(_ivChunks, { type: _ivMediaRecorder?.mimeType || 'audio/webm' });
+    const blob     = new Blob(_ivChunks, { type: _ivMediaRecorder?.mimeType || 'audio/webm' });
     const arrayBuf = await blob.arrayBuffer();
-    const lang = _ivState.lang;
+    const lang     = _ivState.lang;
 
     let userText = '';
     if (isIndicUser()) {
       const sarvamCode = SARVAM_LANG[STATE.nativeLang];
-      const indicText = await sarvamTranscribe(arrayBuf, sarvamCode);
+      const indicText  = await sarvamTranscribe(arrayBuf, sarvamCode);
       userText = await sarvamTranslate(indicText, sarvamCode, 'en-IN');
     } else {
-      const res = await fetch(`/api/transcribe?lang=${lang}`, {
+      const res  = await fetch(`/api/transcribe?lang=${lang}`, {
         method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: arrayBuf,
       });
       const data = await res.json();
-      userText = (data.text || '').trim();
+      userText   = (data.text || '').trim();
     }
 
-    if (!userText) { document.getElementById('iv-status').textContent = 'Couldn\'t hear — try again'; return; }
+    if (!userText || userText.length < 2) {
+      document.getElementById('iv-status').textContent = "Couldn't hear clearly — listening again…";
+      await sleep(1000);
+      ivStartListening();
+      return;
+    }
 
     // Count filler words
     const fillers = (userText.toLowerCase().match(/\b(um|uh|like|you know|er|ah)\b/g) || []).length;
@@ -3035,19 +3472,23 @@ async function _ivOnRecordDone(stream) {
     ivAddBubble('user', userText);
     _ivState.transcript.push({ role: 'user', content: userText, timestamp: new Date().toISOString() });
 
-    // Move to next question
+    // Move to next question after natural pause
     _ivState.questionIdx++;
     if (_ivState.questionIdx < INTERVIEW_QUESTIONS[_ivState.lang].length) {
-      // Brief natural pause before next question
-      document.getElementById('iv-status').textContent = 'Good answer! Next question…';
-      await sleep(1500);
+      document.getElementById('iv-status').textContent = 'Good answer!';
+      await sleep(1200);
       await ivAskQuestion();
     } else {
+      document.getElementById('iv-status').textContent = 'Interview complete! Generating report…';
+      await sleep(800);
       await endInterview();
     }
+
   } catch(e) {
-    document.getElementById('iv-status').textContent = 'Error — please try again';
-    console.error('IV record error:', e);
+    console.error('[Interview] Record done error:', e);
+    document.getElementById('iv-status').textContent = 'Error — listening again…';
+    await sleep(1000);
+    if (_ivState.active) ivStartListening();
   }
 }
 
@@ -3847,8 +4288,11 @@ async function launchCall() {
   STATE.questionsAsked = [];
   STATE.correctionsEnabled = true;
   document.getElementById('call-messages').innerHTML = '';
-  document.getElementById('call-avatar').textContent = STATE.selectedTopic.icon;
-  document.getElementById('call-name').textContent = STATE.selectedTopic.name + ' · AI Tutor';
+  document.getElementById('call-avatar').textContent = STATE.selectedBot?.emoji || STATE.selectedTopic.icon;
+  document.getElementById('call-name').textContent =
+    STATE.selectedBot
+      ? `${STATE.selectedBot.name} · ${STATE.selectedBot.role}`
+      : STATE.selectedTopic.name + ' · AI Tutor';
   document.getElementById('correct-btn').textContent = '✏️';
   document.getElementById('skip-btn').style.display = 'none';
   goNext('call-screen');
@@ -4417,10 +4861,12 @@ QUESTION BANK — pick the most natural next question from this list when you ne
 ${availableQs}
 Do NOT invent questions outside this list unless the bank is exhausted.` : '';
 
+  const botPersona = getBotSystemPrompt();
+
   const systemPrompt = [
-    STATE.selectedTopic.system,
+    botPersona || STATE.selectedTopic.system,
     'Level: ' + (levelBehaviour[STATE.level] || levelBehaviour.intermediate),
-    'Persona: ' + goalPersona,
+    botPersona ? '' : 'Persona: ' + goalPersona,
     qBankSection,
     correctionsEnabled
       ? 'CORRECTIONS ON: gently correct grammar errors, keep it brief.'
