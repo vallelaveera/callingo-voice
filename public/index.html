@@ -2819,6 +2819,9 @@ async function startInterview(lang) {
     audioUrl: null, active: true,
   };
 
+  // Pre-load Veera's voice (fallback if user hasn't cloned their own)
+  if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
+
   // Create session in DB
   try {
     const res = await fetch('/api/db?action=save-session', {
@@ -2882,11 +2885,16 @@ async function ivAskQuestion() {
   ivAddBubble('ai', q);
   _ivState.transcript.push({ role: 'ai', content: q, timestamp: new Date().toISOString() });
 
-  // Speak via Fish Audio (same as call screen)
+  // Speak the question — use cloned voice if available, else use Veera's welcome voice
   try {
-    const audio = await tts(q, STATE.voiceId);
-    if (audio) await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
-  } catch(e) {}
+    // Ensure we have a voice to use
+    if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
+    const voiceId = STATE.voiceId || STATE.welcomeVoiceId;
+    if (voiceId) {
+      const audio = await tts(q, voiceId);
+      if (audio) await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+    }
+  } catch(e) { console.warn('[Interview] TTS error:', e); }
 
   // For Indic users — also speak in their language
   if (isIndicUser()) {
