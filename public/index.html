@@ -3158,11 +3158,27 @@ function startLearnLanguage() {
 // ============================================================
 // INTERVIEW CALL
 // ============================================================
+// Bot-specific opening lines — indexed by bot id
+const IV_OPENERS = {
+  en: {
+    sarah: "Hi there! I'm Sarah, HR Manager here. Thanks so much for coming in today — it's great to meet you. Before we dive into the formal questions, I'd love to hear a little about yourself. Tell me about your background, what you've been up to recently, and what brought you here today.",
+    james: "Good morning. I'm James, Senior Partner. Let's get straight to it — I have a full schedule today so I want to make the most of our time. Walk me through your professional background. Be specific — I want facts, not generalities.",
+    priya: "Hey! I'm Priya, co-founder here. Really glad you came in — we do things a bit differently here, so forget the formal script. Just talk to me like a normal person. Who are you, what have you built or worked on, and what genuinely excites you right now?",
+    david: "Hello, I'm David, Engineering Lead. Good to meet you. I like to start simple — give me a quick overview of your technical background and the kinds of problems you most enjoy solving.",
+  },
+  de: {
+    anna: "Hallo! Ich bin Anna, HR-Managerin hier. Schön, dass Sie da sind — herzlich willkommen! Bevor wir mit den formellen Fragen beginnen, würde ich gerne ein bisschen mehr über Sie erfahren. Erzählen Sie mir von sich — Ihrem Hintergrund, was Sie zuletzt gemacht haben und was Sie hierher geführt hat.",
+    michael: "Guten Morgen. Ich bin Michael, Geschäftsführer. Kommen wir direkt zum Punkt — mein Terminkalender ist voll, also nutzen wir unsere Zeit gut. Schildern Sie mir Ihren beruflichen Werdegang. Konkret bitte — ich möchte Fakten, keine Allgemeinheiten.",
+    lena: "Hey! Ich bin Lena, Gründerin hier. Schön, dass du da bist — wir sind hier eher locker drauf, also vergiss das formelle Zeug. Erzähl mir einfach: Wer bist du, was hast du gebaut oder gemacht, und was begeistert dich gerade wirklich?",
+    thomas: "Hallo, ich bin Thomas, Tech Lead. Schön Sie kennenzulernen. Ich fange gerne mit einer einfachen Frage an — geben Sie mir einen kurzen Überblick über Ihren technischen Hintergrund und die Art von Problemen, die Sie am liebsten lösen.",
+  },
+};
+
 const INTERVIEW_QUESTIONS = {
   en: [
-    // Round 1 — Warmup
-    "Hi! How are you doing today? Are you ready to prepare for the interview? Great, let's start! Could you please tell me about yourself?",
-    "Why are you interested in this role?",
+    // Round 1 — Warmup (opener is bot-specific, set dynamically)
+    null, // placeholder — replaced at runtime with bot opener
+    "Thank you for sharing that. Now, why are you interested in this particular role?",
     "What are you currently working on or studying?",
     // Round 2 — Experience
     "Walk me through your biggest professional achievement so far.",
@@ -3179,8 +3195,8 @@ const INTERVIEW_QUESTIONS = {
     "Do you have any questions for me?",
   ],
   de: [
-    "Hallo! Wie geht es Ihnen heute? Sind Sie bereit für das Interview? Super, dann fangen wir an! Können Sie mir bitte etwas über sich erzählen?",
-    "Warum interessieren Sie sich für diese Stelle?",
+    null, // placeholder — replaced at runtime with bot opener
+    "Danke, dass Sie das geteilt haben. Warum interessieren Sie sich für diese Stelle?",
     "Woran arbeiten oder studieren Sie gerade?",
     "Beschreiben Sie Ihren größten beruflichen Erfolg bisher.",
     "Erzählen Sie mir von einer Herausforderung, die Sie gemeistert haben.",
@@ -3233,8 +3249,8 @@ async function startInterview(lang, jobTitleParam) {
   _callActive = true;
   STATE.isSpeaking = false;
   STATE.isListening = false;
-  // Tell _onRecordingDone we're in interview mode
   STATE.interviewMode = true;
+  STATE._sonioxHandledTurn = false;
 
   // Pre-load Veera's voice (fallback if user hasn't cloned their own)
   if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
@@ -3316,7 +3332,15 @@ async function ivAskQuestion() {
   _ivAsking = true;
 
   const questions = INTERVIEW_QUESTIONS[_ivState.lang];
-  const q = questions[_ivState.questionIdx];
+  let q = questions[_ivState.questionIdx];
+
+  // First question — use bot-specific opener
+  if (_ivState.questionIdx === 0) {
+    const botId   = STATE.selectedBot?.id || 'sarah';
+    const openers = IV_OPENERS[_ivState.lang] || IV_OPENERS.en;
+    q = openers[botId] || openers[Object.keys(openers)[0]];
+  }
+
   if (!q) { _ivAsking = false; endInterview(); return; }
 
   document.getElementById('iv-question-num').textContent =
@@ -4619,17 +4643,18 @@ async function startListeningSoniox() {
   _sonioxRecording.on('endpoint', async () => {
     if (endpointFired) return;
     endpointFired = true;
-    STATE._sonioxActive = false; // reset so next turn works cleanly
+    STATE._sonioxActive = false;
     _sonioxRecording.stop();
 
     const finalText = utterance.trim();
     if (!finalText || finalText.length < 2) {
-      // Nothing useful — restart listening
       if (_callActive) setTimeout(startListening, 200);
       return;
     }
 
-    // Process the utterance — same as before
+    // Mark that Soniox handled this turn so _onRecordingDone skips it
+    if (STATE.interviewMode) STATE._sonioxHandledTurn = true;
+
     STATE.isListening = false;
     if (STATE.interviewMode) {
       ivAddBubble('user', finalText);
@@ -4804,7 +4829,13 @@ async function _onRecordingDone() {
     }
 
     if (STATE.interviewMode) {
-      // Interview mode — process answer
+      // Interview mode — only process if Soniox didn't already handle this turn
+      // Soniox endpoint handler is the primary path; _onRecordingDone is fallback only
+      if (STATE._sonioxHandledTurn) {
+        STATE._sonioxHandledTurn = false;
+        if (_callActive) setTimeout(startListening, 200);
+        return;
+      }
       _ivListening = false;
       const fillers = (text.toLowerCase().match(/\b(um|uh|like|you know|er|ah)\b/g) || []).length;
       _ivState.fillerCount += fillers;
@@ -4840,6 +4871,7 @@ let _callActive = false; // guards against recording callbacks firing after call
 function stopListening() {
   STATE.isListening = false;
   STATE._sonioxActive = false;
+  STATE._sonioxHandledTurn = false;
   clearInterval(_silenceCheck);
   _silenceCheck = null;
   // Stop Soniox recording if active
@@ -4860,7 +4892,8 @@ function _fallbackSTT() {
   if (!SR) { setCallStatus('⚠️ Mic access needed'); return; }
   STATE.recognition = new SR();
   const langMap = { de: 'de-DE', en: 'en-US' };
-  STATE.recognition.lang = langMap[STATE.practiceLang] || 'en-US';
+  const activeLang = STATE.interviewMode ? (_ivState.lang || 'en') : (STATE.practiceLang || 'en');
+  STATE.recognition.lang = langMap[activeLang] || 'en-US';
   STATE.recognition.interimResults = false;
   STATE.isListening = true;
   STATE.recognition.onresult = async (e) => {
@@ -5063,11 +5096,12 @@ async function streamClaude(userText, correctionsEnabled, confused, onSentence, 
     fluent:       'FLUENT: Native speed, slang, contractions. Multi-sentence. Complex questions. Never correct — react naturally.',
   };
 
-  const targetLang = STATE.practiceLang === 'de' ? 'German' : 'English';
+  const _activeLang = STATE.interviewMode ? (_ivState?.lang || 'en') : STATE.practiceLang;
+  const targetLang = _activeLang === 'de' ? 'German' : 'English';
   const goalPersona = GOAL_PERSONA[STATE.goal] || GOAL_PERSONA.fun;
 
   // Build question bank for this topic + level
-  const qBank = QUESTION_BANK[STATE.practiceLang]?.[STATE.selectedTopic?.id]?.[STATE.level] || [];
+  const qBank = QUESTION_BANK[_activeLang]?.[STATE.selectedTopic?.id]?.[STATE.level] || [];
   const usedQs = STATE.callHistory
     .filter(m => m.role === 'assistant')
     .map(m => m.content.toLowerCase().trim().slice(0, 40));
@@ -5206,7 +5240,8 @@ async function callClaude(userText, correctionsEnabled) {
     { role: 'user', content: userText }
   ];
 
-  const targetLang  = STATE.practiceLang === 'de' ? 'German' : 'English';
+  const _activeLang2 = STATE.interviewMode ? (_ivState?.lang || 'en') : STATE.practiceLang;
+  const targetLang  = _activeLang2 === 'de' ? 'German' : 'English';
   const goalPersona = GOAL_PERSONA[STATE.goal] || GOAL_PERSONA.fun;
   const topicRole   = STATE.selectedTopic?.system || '';
 
