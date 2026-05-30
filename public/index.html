@@ -3309,11 +3309,15 @@ let _ivSilenceCheck = null;
 let _ivAudioCtx    = null;
 let _ivListening   = false;
 
+let _ivAsking = false; // prevent concurrent ivAskQuestion calls
+
 async function ivAskQuestion() {
-  if (!_ivState.active) return;
+  if (!_ivState.active || _ivAsking) return;
+  _ivAsking = true;
+
   const questions = INTERVIEW_QUESTIONS[_ivState.lang];
   const q = questions[_ivState.questionIdx];
-  if (!q) { endInterview(); return; }
+  if (!q) { _ivAsking = false; endInterview(); return; }
 
   document.getElementById('iv-question-num').textContent =
     `Q${_ivState.questionIdx + 1} / ${questions.length}`;
@@ -3325,14 +3329,14 @@ async function ivAskQuestion() {
   ivAddBubble('ai', q);
   _ivState.transcript.push({ role: 'ai', content: q, timestamp: new Date().toISOString() });
 
-  // Speak using the SAME speakAIAtRate as the learn call — sets STATE.isSpeaking correctly
+  // Speak — always ensure welcome voice is loaded (Veera's cloned voice)
+  STATE.isSpeaking = true;
   try {
     if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
-    const botVoiceId = STATE.selectedBot?.fishVoiceId;
-    const voiceId = botVoiceId || STATE.voiceId || STATE.welcomeVoiceId;
+    // Priority: bot's own voice → user's cloned voice → Veera's welcome voice → browser TTS
+    const voiceId = STATE.selectedBot?.fishVoiceId || STATE.voiceId || STATE.welcomeVoiceId;
+
     if (voiceId) {
-      // Use speakAIAtRate — identical to learn call, sets isSpeaking flag properly
-      STATE.isSpeaking = true;
       const audio = await tts(q, voiceId);
       if (audio) {
         await new Promise(r => {
@@ -3341,31 +3345,34 @@ async function ivAskQuestion() {
           audio.play();
         });
       } else {
+        // tts() returned null — fall back to browser TTS
+        console.warn('[Interview] Fish Audio returned null, using browser TTS');
         STATE.isSpeaking = false;
+        await browserTTS(q);
       }
     } else {
-      // Browser TTS fallback
-      STATE.isSpeaking = true;
-      await browserTTS(q);
+      // No voice ID at all — use browser TTS
       STATE.isSpeaking = false;
+      await browserTTS(q);
     }
   } catch(e) {
+    console.warn('[Interview] TTS error:', e.message);
     STATE.isSpeaking = false;
     await browserTTS(q).catch(() => {});
   }
 
-  if (!_ivState.active) return;
+  STATE.isSpeaking = false;
+  if (!_ivState.active) { _ivAsking = false; return; }
 
-  // Wait for isSpeaking to clear then start listening — SAME as learn call
-  await sleep(300);
-  while (STATE.isSpeaking) await sleep(150);
+  // Small natural pause before listening
+  await sleep(400);
 
   document.getElementById('iv-status').textContent = 'Listening… speak your answer';
   document.getElementById('iv-mic-btn').textContent = '🎤';
   document.getElementById('iv-mic-btn').style.background = 'var(--green)';
 
-  // Use the SAME startListening from learn call — handles silence detection, transcription, everything
   _ivListening = true;
+  _ivAsking = false;
   startListening();
 }
 
@@ -3524,6 +3531,8 @@ async function _ivOnRecordDone(stream) {
 async function endInterview() {
   if (!_ivState.active) return;
   _ivState.active = false;
+  _ivAsking = false;
+  _ivListening = false;
   _callActive = false;
   STATE.interviewMode = false;
   stopListening();
@@ -4583,7 +4592,7 @@ async function startListeningSoniox() {
   _sonioxRecording = client.realtime.record({
     model: 'stt-rt-v4',
     language_hints: langHints,
-    enable_endpoint_detection: true, // key feature — detects natural turn end
+    enable_endpoint_detection: true,
     audio_format: 'auto',
     context: {
       general: [
@@ -4592,6 +4601,9 @@ async function startListeningSoniox() {
       ],
     },
   });
+
+  // Mark that Soniox is handling STT — _onRecordingDone should be skipped
+  STATE._sonioxActive = true;
 
   let utterance = '';
   let endpointFired = false;
@@ -4605,10 +4617,9 @@ async function startListeningSoniox() {
   });
 
   _sonioxRecording.on('endpoint', async () => {
-    // User finished speaking — natural turn end detected by Soniox
     if (endpointFired) return;
     endpointFired = true;
-
+    STATE._sonioxActive = false; // reset so next turn works cleanly
     _sonioxRecording.stop();
 
     const finalText = utterance.trim();
@@ -4730,6 +4741,12 @@ async function _onRecordingDone() {
   // Don't process if call has ended
   if (!_callActive) return;
 
+  // Skip if Soniox already handled transcription for this turn
+  if (STATE._sonioxActive) {
+    console.log('[STT] Soniox active — skipping Groq _onRecordingDone');
+    return;
+  }
+
   const elapsed = Date.now() - _recordStart;
   if (elapsed < MIN_RECORD_MS || _audioChunks.length === 0) {
     if (_callActive) setTimeout(startListening, 200);
@@ -4822,6 +4839,7 @@ let _callActive = false; // guards against recording callbacks firing after call
 
 function stopListening() {
   STATE.isListening = false;
+  STATE._sonioxActive = false;
   clearInterval(_silenceCheck);
   _silenceCheck = null;
   // Stop Soniox recording if active
