@@ -3319,8 +3319,8 @@ function ivAddBubble(role, text) {
   el.appendChild(bubble);
   const container = document.getElementById('iv-messages');
   container.appendChild(el);
-  // Always scroll to latest message
   container.scrollTop = container.scrollHeight;
+  return bubble; // return so caller can update text live
 }
 
 let _ivRecording   = false;
@@ -3329,6 +3329,18 @@ let _ivChunks      = [];
 let _ivSilenceCheck = null;
 let _ivAudioCtx    = null;
 let _ivListening   = false;
+
+function stripMarkdown(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/__(.+?)__/g, '$1')
+    .replace(/_(.+?)_/g, '$1')
+    .replace(/#{1,6}\s/g, '')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+    .trim();
+}
 
 let _ivAsking = false; // prevent concurrent ivAskQuestion calls
 
@@ -3354,43 +3366,58 @@ async function ivAskQuestion() {
   document.getElementById('iv-mic-btn').style.background = 'var(--border)';
   document.getElementById('iv-mic-btn').textContent = '🔊';
 
-  // Add AI bubble
-  ivAddBubble('ai', q);
+  // Create bubble first (empty), fill word by word as audio plays
+  const cleanQ = stripMarkdown(q);
+  const bubble = ivAddBubble('ai', '');
   _ivState.transcript.push({ role: 'ai', content: q, timestamp: new Date().toISOString() });
 
-  // Speak with natural pauses between sentences
   STATE.isSpeaking = true;
   try {
     if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
     const voiceId = STATE.selectedBot?.fishVoiceId || STATE.voiceId || STATE.welcomeVoiceId;
 
     if (voiceId) {
-      // Split into sentences for natural pacing
-      const sentences = q.match(/[^.!?]+[.!?]+/g) || [q];
+      const sentences = cleanQ.match(/[^.!?]+[.!?]+/g) || [cleanQ];
+      let fullText = '';
       for (const sentence of sentences) {
         if (!_ivState.active) break;
         const trimmed = sentence.trim();
         if (!trimmed) continue;
+        // Start audio and typewriter in parallel
         const audio = await tts(trimmed, voiceId);
         if (audio) {
+          // Typewriter: spread words over audio duration estimate
+          const words = trimmed.split(' ');
+          const msPerWord = Math.max(60, (words.length * 400) / words.length);
+          let wi = 0;
+          const typer = setInterval(() => {
+            if (wi < words.length) {
+              fullText += (wi === 0 && fullText.length > 0 ? ' ' : '') + words[wi];
+              if (bubble) bubble.textContent = fullText;
+              wi++;
+            } else {
+              clearInterval(typer);
+            }
+          }, msPerWord);
           await new Promise(r => {
-            audio.onended = r;
-            audio.onerror = r;
+            audio.onended = () => { clearInterval(typer); fullText += ' '; if(bubble) bubble.textContent = fullText.trim(); r(); };
+            audio.onerror = () => { clearInterval(typer); r(); };
             audio.play();
           });
-          // Natural pause between sentences
-          await sleep(300);
+          await sleep(80);
         }
       }
       STATE.isSpeaking = false;
     } else {
       STATE.isSpeaking = false;
-      await browserTTS(q);
+      if (bubble) bubble.textContent = cleanQ;
+      await browserTTS(cleanQ);
     }
   } catch(e) {
     console.warn('[Interview] TTS error:', e.message);
     STATE.isSpeaking = false;
-    await browserTTS(q).catch(() => {});
+    if (bubble) bubble.textContent = cleanQ;
+    await browserTTS(cleanQ).catch(() => {});
   }
   if (!_ivState.active) { _ivAsking = false; return; }
 
@@ -3410,37 +3437,25 @@ async function ivAskQuestion() {
 async function ivReactAndNext(userAnswer) {
   if (!_ivState.active) return;
 
-  const bot = STATE.selectedBot;
+  const bot  = STATE.selectedBot;
   const lang = _ivState.lang;
-  const nextQ = INTERVIEW_QUESTIONS[lang][_ivState.questionIdx + 1];
 
   document.getElementById('iv-status').textContent = 'Thinking…';
 
   try {
-    // Ask Claude for a short natural reaction + transition
-    const systemPrompt = bot?.system || `You are a professional interviewer.`;
-    const prompt = `${systemPrompt}
+    const prompt = `You are reacting to a job interview answer. The candidate said: "${userAnswer}"
 
-The candidate just answered: "${userAnswer}"
-
-Write a SHORT natural reaction (1-2 sentences max) to what they said — acknowledge it, comment briefly, or follow up naturally. Then transition to this next question: "${nextQ || 'That was our last question.'}"
-
-${!nextQ ? 'Since this is the last question, close the interview warmly.' : ''}
-
-Rules:
-- Sound completely human and conversational
-- React to what they ACTUALLY said — don't be generic
-- Keep it under 3 sentences total
-- ${lang === 'de' ? 'Respond entirely in German.' : 'Respond in English.'}
-- Do NOT say "Great answer" or "That's great" — be specific
-- Just return the spoken text, nothing else`;
+Write ONE or TWO sentences acknowledging what they said. 
+DO NOT ask any question. DO NOT transition to anything. DO NOT say what comes next.
+Just react to what they said. Stop after your reaction.
+No markdown. Plain text only.
+${lang === 'de' ? 'Respond in German.' : 'Respond in English.'}`;
 
     const res = await fetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messages: [{ role: 'user', content: prompt }],
-        system: systemPrompt,
         stream: false,
       }),
     });
@@ -3448,28 +3463,68 @@ Rules:
     let reaction = '';
     if (res.ok) {
       const data = await res.json();
-      reaction = data.content?.[0]?.text?.trim() || '';
+      reaction = (data.content?.[0]?.text || '').trim();
     }
 
+    // Strip markdown
+    reaction = reaction
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/\*(.+?)\*/g, '$1')
+      .replace(/#{1,6}\s/g, '')
+      .replace(/`(.+?)`/g, '$1')
+      .trim();
+
+    // Cut off anything after the first question mark or "let me ask" / "first" transitions
+    // These indicate Claude sneaked in a question despite instructions
+    const questionIdx = reaction.search(/[^!][?]/);
+    if (questionIdx > 10) {
+      reaction = reaction.substring(0, questionIdx + 1).trim();
+    }
+    // Also cut known transition phrases
+    reaction = reaction
+      .replace(/[,.]?\s*(but\s+)?(first|before that|let me ask|so tell me|can you|I'd love to|I want to|now,?).*/i, '.')
+      .trim();
+
     if (!reaction) {
-      // Fallback reactions if Claude fails
       const fallbacks = {
-        en: ["I see, thank you for that.", "Interesting, I appreciate you sharing that.", "Got it, thanks."],
-        de: ["Ich verstehe, danke dafür.", "Interessant, danke für Ihre Antwort.", "Gut, danke."],
+        en: ["I see, thank you for sharing that.", "Interesting, appreciate you being candid.", "Got it, thanks."],
+        de: ["Ich verstehe, danke dafür.", "Interessant, danke für Ihre Offenheit.", "Gut, danke."],
       };
       reaction = fallbacks[lang]?.[Math.floor(Math.random() * 3)] || "Thank you.";
     }
 
-    // Show reaction in bubble
-    ivAddBubble('ai', reaction);
+    // Show bubble (empty) and fill word by word as audio plays
+    const reactionBubble = ivAddBubble('ai', '');
     _ivState.transcript.push({ role: 'ai', content: reaction, timestamp: new Date().toISOString() });
 
-    // Speak reaction
+    // Speak reaction sentence by sentence with typewriter
     const voiceId = bot?.fishVoiceId || STATE.voiceId || STATE.welcomeVoiceId;
     if (voiceId) {
-      const audio = await tts(reaction, voiceId);
-      if (audio) await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+      const sentences = reaction.match(/[^.!?]+[.!?]+/g) || [reaction];
+      let fullText = '';
+      for (const s of sentences) {
+        if (!_ivState.active) break;
+        const audio = await tts(s.trim(), voiceId);
+        if (audio) {
+          const words = s.trim().split(' ');
+          const msPerWord = Math.max(60, 400 / words.length * words.length);
+          let wi = 0;
+          const typer = setInterval(() => {
+            if (wi < words.length) {
+              fullText += (wi === 0 && fullText.length > 0 ? ' ' : '') + words[wi++];
+              if (reactionBubble) reactionBubble.textContent = fullText;
+            } else clearInterval(typer);
+          }, msPerWord);
+          await new Promise(r => {
+            audio.onended = () => { clearInterval(typer); fullText += ' '; if(reactionBubble) reactionBubble.textContent = fullText.trim(); r(); };
+            audio.onerror = () => { clearInterval(typer); r(); };
+            audio.play();
+          });
+          await sleep(80);
+        }
+      }
     } else {
+      if (reactionBubble) reactionBubble.textContent = reaction;
       await browserTTS(reaction).catch(() => {});
     }
 
@@ -3477,9 +3532,9 @@ Rules:
     console.warn('[Interview] Reaction failed:', e.message);
   }
 
-  // Move to next question
+  // Now ask the next question
   _ivState.questionIdx++;
-  await sleep(500);
+  await sleep(400);
   if (_ivState.questionIdx < INTERVIEW_QUESTIONS[_ivState.lang].length) {
     await ivAskQuestion();
   } else {
