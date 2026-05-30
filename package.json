@@ -1,0 +1,18 @@
+{
+  "name": "callingo",
+  "version": "1.0.0",
+  "description": "Callingo - Learn by Talking",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.4.0",
+    "@vercel/postgres": "^0.10.0",
+    "@neondatabase/serverless": "^0.9.0"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
