@@ -620,7 +620,19 @@ body{
 .top-title{font-size:14px;font-weight:700;}
 
 /* VOICE BADGE */
-.voice-badge{
+.page-num{position:fixed;bottom:8px;right:12px;font-size:10px;font-family:'DM Mono',monospace;color:var(--sub);opacity:0.5;pointer-events:none;z-index:100;}
+.mode-card{width:100%;background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;margin-bottom:10px;}
+.mode-card:hover{border-color:var(--green);background:var(--green-dim);}
+.mode-icon{font-size:32px;flex-shrink:0;}
+.mode-info{flex:1;}
+.mode-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.mode-sub{font-size:12px;color:var(--sub);line-height:1.4;}
+.mode-arrow{font-size:18px;color:var(--sub);}
+.iv-bubble{padding:10px 14px;border-radius:16px;max-width:85%;font-size:14px;line-height:1.5;margin-bottom:4px;}
+.iv-bubble.ai{background:var(--s1);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px;}
+.iv-bubble.user{background:var(--green-dim);border:1px solid rgba(0,168,107,0.2);align-self:flex-end;border-bottom-right-radius:4px;}
+.iv-score-bar{height:8px;border-radius:4px;background:var(--border);overflow:hidden;flex:1;}
+.iv-score-fill{height:100%;border-radius:4px;transition:width 0.8s ease;}
   display:flex;align-items:center;gap:8px;
   background:var(--green-dim);
   border:1px solid rgba(0,214,143,0.2);
@@ -665,7 +677,7 @@ body{
 <body>
 <div id="app">
 
-<!-- ============ SCREEN: NAME ============ -->
+<!-- ============ SCREEN: NAME (Page 1) ============ -->
 <div id="screen-name" class="screen active">
   <div class="scroll-content" style="justify-content:center;min-height:100vh;">
     <div style="text-align:center;padding:20px 0;">
@@ -687,12 +699,236 @@ body{
     </div>
     <button class="btn btn-primary" id="name-btn" disabled onclick="saveName()">Continue →</button>
   </div>
+  <div class="page-num">Page 1</div>
 </div>
 
-<!-- ============ SCREEN: NATIVE LANGUAGE ============ -->
+<!-- ============ SCREEN: MODE SELECTION (Page 2) ============ -->
+<div id="screen-mode" class="screen">
+  <div class="scroll-content" style="justify-content:center;min-height:100vh;">
+    <div style="text-align:center;margin-bottom:32px;">
+      <div class="logo" style="margin-bottom:8px;">Callingo</div>
+      <div class="headline" id="mode-greeting">Hi there!</div>
+      <div class="subtext" style="margin-top:8px;">What would you like to do today?</div>
+    </div>
+
+    <button class="mode-card" onclick="startInterviewSetup('en')">
+      <div class="mode-icon">💼</div>
+      <div class="mode-info">
+        <div class="mode-title">Prepare for Interview</div>
+        <div class="mode-sub">Practice in English — AI interviewer, real feedback</div>
+      </div>
+      <div class="mode-arrow">→</div>
+    </button>
+
+    <button class="mode-card" onclick="startInterviewSetup('de')">
+      <div class="mode-icon">🇩🇪</div>
+      <div class="mode-info">
+        <div class="mode-title">Interview auf Deutsch</div>
+        <div class="mode-sub">Practice in German — AI interviewer, real feedback</div>
+      </div>
+      <div class="mode-arrow">→</div>
+    </button>
+
+    <button class="mode-card" onclick="startLearnLanguage()">
+      <div class="mode-icon">🌍</div>
+      <div class="mode-info">
+        <div class="mode-title">Learn a Language</div>
+        <div class="mode-sub">Practice conversations in German, English + more</div>
+      </div>
+      <div class="mode-arrow">→</div>
+    </button>
+  </div>
+  <div class="page-num">Page 2</div>
+</div>
+
+<!-- ============ SCREEN: INTERVIEW SETUP ENGLISH (Page 3) ============ -->
+<div id="screen-interview-setup-en" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-mode')">←</button>
+    <span class="top-title">💼 Interview in English</span>
+    <span></span>
+  </div>
+  <div class="scroll-content" style="gap:16px;">
+    <div>
+      <div class="headline" style="font-size:22px;">Let's prepare you<br>for your interview</div>
+      <div class="subtext" style="margin-top:8px;">The AI will act as a professional interviewer and give you real feedback.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Job title or industry <span style="color:var(--sub);font-weight:400;">(optional)</span></div>
+      <input class="inp" id="job-title-en" type="text" placeholder="e.g. Software Engineer, Marketing Manager…" style="margin-bottom:0;"/>
+    </div>
+
+    <div class="card">
+      <div class="card-label" style="margin-bottom:12px;">What to expect</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:13px;color:var(--sub);">🎙 10–15 minute AI interview session</div>
+        <div style="font-size:13px;color:var(--sub);">📊 Scored across 5 categories</div>
+        <div style="font-size:13px;color:var(--sub);">💡 Specific feedback on what to improve</div>
+        <div style="font-size:13px;color:var(--sub);">📄 Downloadable PDF report</div>
+        <div style="font-size:13px;color:var(--sub);">🔊 Full session recording to play back</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="startInterview('en')" style="padding:16px;font-size:16px;">
+      🎙 Start Interview →
+    </button>
+  </div>
+  <div class="page-num">Page 3</div>
+</div>
+
+<!-- ============ SCREEN: INTERVIEW SETUP GERMAN (Page 4) ============ -->
+<div id="screen-interview-setup-de" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-mode')">←</button>
+    <span class="top-title">🇩🇪 Interview auf Deutsch</span>
+    <span></span>
+  </div>
+  <div class="scroll-content" style="gap:16px;">
+    <div>
+      <div class="headline" style="font-size:22px;">Bereite dich auf<br>dein Interview vor</div>
+      <div class="subtext" style="margin-top:8px;">Die KI führt ein professionelles Interview auf Deutsch und gibt dir echtes Feedback.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Berufsbezeichnung <span style="color:var(--sub);font-weight:400;">(optional)</span></div>
+      <input class="inp" id="job-title-de" type="text" placeholder="z.B. Software-Entwickler, Marketing-Manager…" style="margin-bottom:0;"/>
+    </div>
+
+    <div class="card">
+      <div class="card-label" style="margin-bottom:12px;">Was dich erwartet</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:13px;color:var(--sub);">🎙 10–15 Minuten KI-Interview auf Deutsch</div>
+        <div style="font-size:13px;color:var(--sub);">📊 Bewertung in 5 Kategorien</div>
+        <div style="font-size:13px;color:var(--sub);">💡 Konkretes Feedback zur Verbesserung</div>
+        <div style="font-size:13px;color:var(--sub);">📄 PDF-Bericht zum Herunterladen</div>
+        <div style="font-size:13px;color:var(--sub);">🔊 Vollständige Aufnahme zum Anhören</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="startInterview('de')" style="padding:16px;font-size:16px;">
+      🎙 Interview starten →
+    </button>
+  </div>
+  <div class="page-num">Page 4</div>
+</div>
+
+<!-- ============ SCREEN: INTERVIEW CALL (Page 5) ============ -->
+<div id="screen-interview-call" class="screen">
+  <div class="top-bar" style="background:rgba(26,26,26,0.95);">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--green-dim);display:flex;align-items:center;justify-content:center;font-size:18px;">💼</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#fff;" id="iv-call-name">AI Interviewer</div>
+        <div style="font-size:11px;color:var(--sub);" id="iv-call-timer">0:00</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--sub);" id="iv-question-num">Q1 / 12</div>
+      <button onclick="endInterview()" style="background:rgba(255,71,87,0.15);border:1px solid var(--red);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--red);">End</button>
+    </div>
+  </div>
+
+  <div id="iv-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;padding-bottom:140px;"></div>
+
+  <div style="position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;padding:16px;background:var(--bg);border-top:1px solid var(--border);">
+    <div style="text-align:center;font-size:12px;color:var(--sub);margin-bottom:10px;" id="iv-status">Getting ready…</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;">
+      <div style="font-size:11px;color:var(--sub);text-align:center;">
+        <div id="iv-rec-indicator" style="width:8px;height:8px;border-radius:50%;background:var(--sub);margin:0 auto 4px;"></div>
+        Recording
+      </div>
+      <button id="iv-mic-btn" onclick="ivToggleMic()" style="width:64px;height:64px;border-radius:50%;background:var(--green);border:none;cursor:pointer;font-size:24px;color:#fff;box-shadow:0 4px 16px rgba(0,168,107,0.3);">🎤</button>
+      <div style="font-size:11px;color:var(--sub);text-align:center;">
+        <div id="iv-filler-count" style="font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--text);">0</div>
+        fillers
+      </div>
+    </div>
+  </div>
+  <div class="page-num">Page 5</div>
+</div>
+
+<!-- ============ SCREEN: INTERVIEW REPORT (Page 6) ============ -->
+<div id="screen-interview-report" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-mode')">←</button>
+    <span class="top-title">📊 Interview Report</span>
+    <span></span>
+  </div>
+  <div class="scroll-content" style="gap:16px;">
+
+    <!-- Overall score -->
+    <div style="text-align:center;padding:8px 0;">
+      <div class="shadow-score-ring" id="iv-score-ring" style="margin:0 auto 12px;background:conic-gradient(var(--green) 0%, var(--border) 0%);">
+        <div class="shadow-score-num" id="iv-score-num">—</div>
+      </div>
+      <div style="font-size:14px;color:var(--sub);" id="iv-score-summary">Analysing your interview…</div>
+    </div>
+
+    <!-- Loading state -->
+    <div id="iv-report-loading" style="text-align:center;padding:32px;">
+      <div style="font-size:32px;margin-bottom:12px;">⏳</div>
+      <div style="font-size:14px;color:var(--sub);">AI is analysing your interview…<br>This takes about 15 seconds.</div>
+    </div>
+
+    <!-- Report content (shown after loading) -->
+    <div id="iv-report-content" style="display:none;flex-direction:column;gap:16px;">
+
+      <!-- Category scores -->
+      <div class="card">
+        <div class="card-label" style="margin-bottom:12px;">Category Scores</div>
+        <div id="iv-cat-scores" style="display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+
+      <!-- Strengths -->
+      <div class="card" id="iv-strengths-card">
+        <div class="card-label" style="margin-bottom:10px;">✅ Strengths</div>
+        <div id="iv-strengths"></div>
+      </div>
+
+      <!-- Improvements -->
+      <div class="card" id="iv-improvements-card">
+        <div class="card-label" style="margin-bottom:10px;">💡 Areas to Improve</div>
+        <div id="iv-improvements"></div>
+      </div>
+
+      <!-- Recording playback -->
+      <div class="card" id="iv-recording-card" style="display:none;">
+        <div class="card-label" style="margin-bottom:10px;">🔊 Your Recording</div>
+        <audio id="iv-playback" controls style="width:100%;"></audio>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" onclick="downloadReport()" style="flex:1;padding:12px;font-size:13px;">📄 Download Report</button>
+        <button class="btn btn-outline" onclick="viewPastSessions()" style="flex:1;padding:12px;font-size:13px;">📋 Past Sessions</button>
+      </div>
+
+      <button class="btn btn-outline" onclick="goNext('screen-mode')" style="padding:12px;font-size:13px;">🔄 Start New Interview</button>
+    </div>
+  </div>
+  <div class="page-num">Page 6</div>
+</div>
+
+<!-- ============ SCREEN: PAST SESSIONS (Page 7) ============ -->
+<div id="screen-past-sessions" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goNext('screen-mode')">←</button>
+    <span class="top-title">📋 Past Sessions</span>
+    <span></span>
+  </div>
+  <div class="scroll-content" style="gap:12px;">
+    <div id="past-sessions-list">
+      <div style="text-align:center;padding:32px;color:var(--sub);font-size:14px;">Loading…</div>
+    </div>
+  </div>
+  <div class="page-num">Page 7</div>
+</div>
+
+<!-- ============ SCREEN: NATIVE LANGUAGE (Page 8) ============ -->
 <div id="screen-native-lang" class="screen">
   <div class="top-bar">
-    <button class="back-btn" onclick="goNext('screen-name')">←</button>
+    <button class="back-btn" onclick="goNext('screen-mode')">←</button>
     <span class="top-title">Your Language</span>
     <span></span>
   </div>
@@ -2506,8 +2742,488 @@ function selectPracticeLang(code, name, native) {
 }
 
 // ============================================================
-// SETTINGS SCREEN
+// MODE SELECTION
 // ============================================================
+function startInterviewSetup(lang) {
+  STATE.interviewLang = lang;
+  goNext(lang === 'de' ? 'screen-interview-setup-de' : 'screen-interview-setup-en');
+}
+
+function startLearnLanguage() {
+  goNext('screen-native-lang');
+}
+
+// ============================================================
+// INTERVIEW CALL
+// ============================================================
+const INTERVIEW_QUESTIONS = {
+  en: [
+    // Round 1 — Warmup
+    "Hi! How are you doing today? Are you ready to prepare for the interview? Great, let's start! Could you please tell me about yourself?",
+    "Why are you interested in this role?",
+    "What are you currently working on or studying?",
+    // Round 2 — Experience
+    "Walk me through your biggest professional achievement so far.",
+    "Tell me about a challenge you faced and how you overcame it.",
+    "Can you describe a time when you worked as part of a team?",
+    "What does a typical day look like for you in your current role?",
+    // Round 3 — Behavioural
+    "Tell me about a time you disagreed with a manager or colleague. How did you handle it?",
+    "How do you handle pressure or tight deadlines?",
+    "What would you say is your biggest weakness, and what are you doing about it?",
+    "Where do you see yourself in five years?",
+    // Round 4 — Closing
+    "What makes you the right person for this role?",
+    "Do you have any questions for me?",
+  ],
+  de: [
+    "Hallo! Wie geht es Ihnen heute? Sind Sie bereit für das Interview? Super, dann fangen wir an! Können Sie mir bitte etwas über sich erzählen?",
+    "Warum interessieren Sie sich für diese Stelle?",
+    "Woran arbeiten oder studieren Sie gerade?",
+    "Beschreiben Sie Ihren größten beruflichen Erfolg bisher.",
+    "Erzählen Sie mir von einer Herausforderung, die Sie gemeistert haben.",
+    "Können Sie eine Situation beschreiben, in der Sie im Team gearbeitet haben?",
+    "Wie sieht ein typischer Arbeitstag bei Ihnen aus?",
+    "Erzählen Sie mir von einem Moment, in dem Sie mit einem Vorgesetzten nicht einer Meinung waren.",
+    "Wie gehen Sie mit Druck oder engen Deadlines um?",
+    "Was würden Sie als Ihre größte Schwäche bezeichnen?",
+    "Wo sehen Sie sich in fünf Jahren?",
+    "Was macht Sie zur richtigen Person für diese Stelle?",
+    "Haben Sie noch Fragen an mich?",
+  ],
+};
+
+let _ivState = {
+  sessionId: null,
+  lang: 'en',
+  jobTitle: 'General',
+  questionIdx: 0,
+  transcript: [],
+  recording: { chunks: [], recorder: null, sessionChunks: [] },
+  timer: null,
+  seconds: 0,
+  fillerCount: 0,
+  audioUrl: null,
+  active: false,
+};
+
+async function startInterview(lang) {
+  const jobInput = document.getElementById(lang === 'de' ? 'job-title-de' : 'job-title-en');
+  const jobTitle = jobInput?.value.trim() || 'General';
+
+  _ivState = {
+    sessionId: null, lang, jobTitle,
+    questionIdx: 0, transcript: [],
+    recording: { chunks: [], recorder: null, sessionChunks: [] },
+    timer: null, seconds: 0, fillerCount: 0,
+    audioUrl: null, active: true,
+  };
+
+  // Create session in DB
+  try {
+    const res = await fetch('/api/db?action=save-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_email: STATE.email, language: lang, job_title: jobTitle }),
+    });
+    const data = await res.json();
+    _ivState.sessionId = data.session?.id;
+  } catch(e) { console.warn('Session create failed:', e); }
+
+  // Start session recording
+  ivStartSessionRecording();
+
+  // Go to call screen
+  goNext('screen-interview-call');
+  document.getElementById('iv-messages').innerHTML = '';
+  document.getElementById('iv-filler-count').textContent = '0';
+  document.getElementById('iv-call-name').textContent = lang === 'de' ? 'KI-Interviewer' : 'AI Interviewer';
+  document.getElementById('iv-question-num').textContent = `Q1 / ${INTERVIEW_QUESTIONS[lang].length}`;
+
+  // Start timer
+  _ivState.seconds = 0;
+  _ivState.timer = setInterval(() => {
+    _ivState.seconds++;
+    const m = Math.floor(_ivState.seconds / 60);
+    const s = _ivState.seconds % 60;
+    document.getElementById('iv-call-timer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  }, 1000);
+
+  // AI asks first question
+  await ivAskQuestion();
+}
+
+async function ivStartSessionRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mimeType = ['audio/webm;codecs=opus','audio/webm','audio/ogg'].find(m => MediaRecorder.isTypeSupported(m)) || '';
+    _ivState.recording.recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+    _ivState.recording.recorder.ondataavailable = e => {
+      if (e.data.size > 0) _ivState.recording.sessionChunks.push(e.data);
+    };
+    _ivState.recording.recorder.start(1000); // chunk every second
+    document.getElementById('iv-rec-indicator').style.background = 'var(--red)';
+    console.log('[Interview] Session recording started');
+  } catch(e) { console.warn('[Interview] Recording failed:', e); }
+}
+
+async function ivAskQuestion() {
+  if (!_ivState.active) return;
+  const questions = INTERVIEW_QUESTIONS[_ivState.lang];
+  const q = questions[_ivState.questionIdx];
+  if (!q) { endInterview(); return; }
+
+  document.getElementById('iv-question-num').textContent =
+    `Q${_ivState.questionIdx + 1} / ${questions.length}`;
+  document.getElementById('iv-status').textContent = 'AI is speaking…';
+  document.getElementById('iv-mic-btn').disabled = true;
+
+  // Add bubble
+  ivAddBubble('ai', q);
+  _ivState.transcript.push({ role: 'ai', content: q, timestamp: new Date().toISOString() });
+
+  // Speak via Fish Audio (same as call screen)
+  try {
+    const audio = await tts(q, STATE.voiceId);
+    if (audio) await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+  } catch(e) {}
+
+  // For Indic users — also speak in their language
+  if (isIndicUser()) {
+    try {
+      const sarvamCode = SARVAM_LANG[STATE.nativeLang];
+      const translated = await sarvamTranslate(q, 'en-IN', sarvamCode);
+      if (translated) {
+        const audio = await sarvamTTS(translated, sarvamCode);
+        if (audio) await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+      }
+    } catch(e) {}
+  }
+
+  document.getElementById('iv-status').textContent = 'Your turn — speak your answer';
+  document.getElementById('iv-mic-btn').disabled = false;
+  document.getElementById('iv-mic-btn').style.background = 'var(--green)';
+}
+
+function ivAddBubble(role, text) {
+  const el = document.createElement('div');
+  el.style.display = 'flex';
+  el.style.justifyContent = role === 'ai' ? 'flex-start' : 'flex-end';
+  const bubble = document.createElement('div');
+  bubble.className = `iv-bubble ${role}`;
+  bubble.textContent = text;
+  el.appendChild(bubble);
+  const container = document.getElementById('iv-messages');
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+}
+
+let _ivRecording = false;
+let _ivMediaRecorder = null;
+let _ivChunks = [];
+let _ivSilenceCheck = null;
+let _ivAudioCtx = null;
+
+async function ivToggleMic() {
+  if (_ivRecording) {
+    // Stop recording
+    clearInterval(_ivSilenceCheck);
+    _ivRecording = false;
+    if (_ivMediaRecorder?.state === 'recording') _ivMediaRecorder.stop();
+    document.getElementById('iv-mic-btn').textContent = '🎤';
+    document.getElementById('iv-mic-btn').style.background = 'var(--green)';
+    document.getElementById('iv-status').textContent = 'Processing…';
+    return;
+  }
+
+  // Start recording
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    _ivChunks = [];
+    _ivRecording = true;
+    document.getElementById('iv-mic-btn').textContent = '⏹';
+    document.getElementById('iv-mic-btn').style.background = 'var(--red)';
+    document.getElementById('iv-status').textContent = 'Recording — tap to stop';
+
+    // Silence detection
+    if (_ivAudioCtx) { try { await _ivAudioCtx.close(); } catch(e) {} }
+    _ivAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = _ivAudioCtx.createMediaStreamSource(stream);
+    const analyser = _ivAudioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    source.connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    let lastSound = Date.now(), spoke = false;
+
+    const mimeType = ['audio/webm;codecs=opus','audio/webm'].find(m => MediaRecorder.isTypeSupported(m)) || '';
+    _ivMediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+    _ivMediaRecorder.ondataavailable = e => { if (e.data.size > 0) _ivChunks.push(e.data); };
+    _ivMediaRecorder.onstop = () => _ivOnRecordDone(stream);
+    _ivMediaRecorder.start(100);
+
+    _ivSilenceCheck = setInterval(() => {
+      analyser.getByteFrequencyData(data);
+      const vol = data.reduce((a,b)=>a+b,0)/data.length;
+      if (vol > 10) { spoke = true; lastSound = Date.now(); }
+      else if (spoke && Date.now()-lastSound > 1500) {
+        clearInterval(_ivSilenceCheck);
+        _ivRecording = false;
+        if (_ivMediaRecorder?.state === 'recording') _ivMediaRecorder.stop();
+      }
+    }, 100);
+
+    // Max 90 seconds
+    setTimeout(() => {
+      if (_ivRecording) {
+        clearInterval(_ivSilenceCheck);
+        _ivRecording = false;
+        if (_ivMediaRecorder?.state === 'recording') _ivMediaRecorder.stop();
+      }
+    }, 90000);
+
+  } catch(e) {
+    document.getElementById('iv-status').textContent = 'Mic access needed';
+  }
+}
+
+async function _ivOnRecordDone(stream) {
+  stream.getTracks().forEach(t => t.stop());
+  if (_ivAudioCtx) { try { await _ivAudioCtx.close(); } catch(e) {} _ivAudioCtx = null; }
+  document.getElementById('iv-mic-btn').textContent = '🎤';
+  document.getElementById('iv-mic-btn').style.background = 'var(--green)';
+  document.getElementById('iv-status').textContent = 'Transcribing…';
+
+  if (!_ivChunks.length) {
+    document.getElementById('iv-status').textContent = 'Nothing heard — try again';
+    return;
+  }
+
+  try {
+    const blob = new Blob(_ivChunks, { type: _ivMediaRecorder?.mimeType || 'audio/webm' });
+    const arrayBuf = await blob.arrayBuffer();
+    const lang = _ivState.lang;
+
+    let userText = '';
+    if (isIndicUser()) {
+      const sarvamCode = SARVAM_LANG[STATE.nativeLang];
+      const indicText = await sarvamTranscribe(arrayBuf, sarvamCode);
+      userText = await sarvamTranslate(indicText, sarvamCode, 'en-IN');
+    } else {
+      const res = await fetch(`/api/transcribe?lang=${lang}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: arrayBuf,
+      });
+      const data = await res.json();
+      userText = (data.text || '').trim();
+    }
+
+    if (!userText) { document.getElementById('iv-status').textContent = 'Couldn\'t hear — try again'; return; }
+
+    // Count filler words
+    const fillers = (userText.toLowerCase().match(/\b(um|uh|like|you know|er|ah)\b/g) || []).length;
+    _ivState.fillerCount += fillers;
+    document.getElementById('iv-filler-count').textContent = _ivState.fillerCount;
+
+    // Show user bubble
+    ivAddBubble('user', userText);
+    _ivState.transcript.push({ role: 'user', content: userText, timestamp: new Date().toISOString() });
+
+    // Move to next question
+    _ivState.questionIdx++;
+    if (_ivState.questionIdx < INTERVIEW_QUESTIONS[_ivState.lang].length) {
+      // Brief natural pause before next question
+      document.getElementById('iv-status').textContent = 'Good answer! Next question…';
+      await sleep(1500);
+      await ivAskQuestion();
+    } else {
+      await endInterview();
+    }
+  } catch(e) {
+    document.getElementById('iv-status').textContent = 'Error — please try again';
+    console.error('IV record error:', e);
+  }
+}
+
+async function endInterview() {
+  if (!_ivState.active) return;
+  _ivState.active = false;
+  clearInterval(_ivState.timer);
+
+  // Stop session recording
+  if (_ivState.recording.recorder?.state === 'recording') {
+    _ivState.recording.recorder.stop();
+    await sleep(500);
+  }
+
+  document.getElementById('iv-status').textContent = 'Session ended — generating report…';
+  goNext('screen-interview-report');
+
+  // Upload session recording
+  let audioUrl = null;
+  if (_ivState.recording.sessionChunks.length > 0) {
+    try {
+      const audioBlob = new Blob(_ivState.recording.sessionChunks, { type: 'audio/webm' });
+      const arrayBuf  = await audioBlob.arrayBuffer();
+      const uploadRes = await fetch('/api/db?action=save-recording', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'X-Session-Id': _ivState.sessionId || 'unknown',
+          'X-User-Email': STATE.email || 'unknown',
+        },
+        body: arrayBuf,
+      });
+      const uploadData = await uploadRes.json();
+      audioUrl = uploadData.url;
+      _ivState.audioUrl = audioUrl;
+      // Show playback
+      if (audioUrl) {
+        document.getElementById('iv-recording-card').style.display = 'block';
+        document.getElementById('iv-playback').src = audioUrl;
+      }
+    } catch(e) { console.warn('Audio upload failed:', e); }
+  }
+
+  // Generate report with Claude
+  try {
+    const reportRes = await fetch('/api/db?action=generate-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: _ivState.sessionId,
+        user_name: STATE.name,
+        user_email: STATE.email,
+      }),
+    });
+    const report = await reportRes.json();
+
+    if (report.ok) {
+      showInterviewReport(report);
+
+      // Update session in DB
+      await fetch('/api/db?action=save-session', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: _ivState.sessionId,
+          transcript: _ivState.transcript,
+          scores: report.scores,
+          feedback: report.feedback,
+          overall_score: report.overall,
+          duration_seconds: _ivState.seconds,
+          audio_url: audioUrl,
+          pdf_url: report.pdf_url,
+        }),
+      });
+
+      _ivState.pdfUrl = report.pdf_url;
+    }
+  } catch(e) {
+    console.error('Report generation failed:', e);
+    document.getElementById('iv-report-loading').innerHTML =
+      '<div style="color:var(--red);text-align:center;padding:32px;">Report generation failed.<br>Your recording was saved.</div>';
+  }
+}
+
+function showInterviewReport(report) {
+  const { scores, overall, feedback } = report;
+
+  // Hide loading, show content
+  document.getElementById('iv-report-loading').style.display = 'none';
+  const content = document.getElementById('iv-report-content');
+  content.style.display = 'flex';
+
+  // Score ring
+  const color = overall >= 75 ? 'var(--green)' : overall >= 50 ? 'var(--gold)' : 'var(--red)';
+  document.getElementById('iv-score-ring').style.background =
+    `conic-gradient(${color} ${overall * 3.6}deg, var(--border) 0deg)`;
+  document.getElementById('iv-score-num').textContent = overall;
+  document.getElementById('iv-score-num').style.color = color;
+  document.getElementById('iv-score-summary').textContent = feedback.summary || '';
+
+  // Category scores
+  const cats = [
+    { key: 'clarity',    label: 'Communication Clarity' },
+    { key: 'confidence', label: 'Confidence' },
+    { key: 'depth',      label: 'Answer Depth' },
+    { key: 'relevance',  label: 'Relevance' },
+    { key: 'fluency',    label: 'Language & Fluency' },
+  ];
+  const catEl = document.getElementById('iv-cat-scores');
+  catEl.innerHTML = cats.map(c => {
+    const val = scores[c.key] || 0;
+    const pct = (val / 20) * 100;
+    const col = pct >= 75 ? '#1a7a4a' : pct >= 50 ? '#c07a00' : '#c0392b';
+    return `<div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:150px;font-size:12px;color:var(--sub);flex-shrink:0;">${c.label}</div>
+      <div class="iv-score-bar"><div class="iv-score-fill" style="width:${pct}%;background:${col};"></div></div>
+      <div style="font-size:12px;font-weight:700;width:36px;text-align:right;">${val}/20</div>
+    </div>`;
+  }).join('');
+
+  // Strengths
+  const strengthsEl = document.getElementById('iv-strengths');
+  strengthsEl.innerHTML = (feedback.strengths || []).map(s =>
+    `<div style="background:var(--green-dim);border-left:3px solid var(--green);padding:10px 14px;margin-bottom:8px;border-radius:0 8px 8px 0;font-size:13px;">${s}</div>`
+  ).join('');
+
+  // Improvements
+  const impEl = document.getElementById('iv-improvements');
+  impEl.innerHTML = (feedback.improvements || []).map(i =>
+    `<div style="background:#fff8f0;border-left:3px solid var(--gold);padding:10px 14px;margin-bottom:10px;border-radius:0 8px 8px 0;">
+      <div style="font-weight:700;font-size:13px;color:var(--gold);margin-bottom:4px;">${i.issue}</div>
+      ${i.example ? `<div style="font-size:12px;color:var(--sub);font-style:italic;margin-bottom:4px;">"${i.example}"</div>` : ''}
+      <div style="font-size:12px;">→ ${i.fix}</div>
+    </div>`
+  ).join('');
+
+  if (feedback.filler_count > 0) {
+    impEl.innerHTML += `<div style="font-size:13px;color:var(--sub);margin-top:8px;">⚠️ Filler words used: <strong>${feedback.filler_count}</strong> times</div>`;
+  }
+}
+
+function downloadReport() {
+  if (_ivState.pdfUrl) {
+    window.open(_ivState.pdfUrl, '_blank');
+  } else {
+    alert('Report not ready yet — please wait a moment.');
+  }
+}
+
+async function viewPastSessions() {
+  goNext('screen-past-sessions');
+  const el = document.getElementById('past-sessions-list');
+  el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--sub);">Loading…</div>';
+  try {
+    const res = await fetch(`/api/db?action=get-sessions?email=${encodeURIComponent(STATE.email)}`);
+    const data = await res.json();
+    const sessions = data.sessions || [];
+    if (!sessions.length) {
+      el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--sub);">No sessions yet.</div>';
+      return;
+    }
+    el.innerHTML = sessions.map(s => {
+      const date = new Date(s.started_at).toLocaleDateString('en-GB', { day:'numeric',month:'short',year:'numeric' });
+      const dur  = Math.round((s.duration_seconds || 0) / 60);
+      const lang = s.language === 'de' ? '🇩🇪 German' : '🇬🇧 English';
+      const col  = s.overall_score >= 75 ? '#1a7a4a' : s.overall_score >= 50 ? '#c07a00' : '#c0392b';
+      return `<div style="background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div>
+            <div style="font-size:14px;font-weight:700;">${lang} · ${s.job_title || 'General'}</div>
+            <div style="font-size:12px;color:var(--sub);">${date} · ${dur} min</div>
+          </div>
+          <div style="font-size:24px;font-weight:800;color:${col};">${s.overall_score}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          ${s.audio_url ? `<button onclick="window.open('${s.audio_url}','_blank')" style="flex:1;padding:8px;font-size:12px;border-radius:8px;border:1px solid var(--border);background:var(--s1);cursor:pointer;">🔊 Play</button>` : ''}
+          ${s.pdf_url   ? `<button onclick="window.open('${s.pdf_url}','_blank')" style="flex:1;padding:8px;font-size:12px;border-radius:8px;border:1px solid var(--border);background:var(--s1);cursor:pointer;">📄 Report</button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--red);">Failed to load sessions.</div>';
+  }
+}
 function openSettings() {
   // Mark current selections
   document.querySelectorAll('#settings-lang-list .lang-btn').forEach(b => b.classList.remove('selected'));
@@ -3214,7 +3930,31 @@ async function transitionToTopic() {
 
   addBubble('ai', openerEn, opener !== openerEn ? opener : null);
   STATE.callHistory.push({ role: 'assistant', content: opener });
-  await speakAI(opener);
+
+  if (isIndicUser()) {
+    // Translate opener to Telugu/Kannada and speak via Soniox
+    const sarvamCode = SARVAM_LANG[STATE.nativeLang];
+    try {
+      const indicOpener = await sarvamTranslate(openerEn, 'en-IN', sarvamCode);
+      // Update bubble with translation
+      const bubbles = document.querySelectorAll('.bubble.ai');
+      const last = bubbles[bubbles.length - 1];
+      if (last && indicOpener) {
+        const indicDiv = document.createElement('div');
+        indicDiv.className = 'bubble-sub';
+        indicDiv.style.cssText = 'color:#6366f1;';
+        indicDiv.textContent = indicOpener;
+        last.appendChild(indicDiv);
+      }
+      const audio = await sarvamTTS(indicOpener || openerEn, sarvamCode);
+      if (audio) {
+        STATE.isSpeaking = true;
+        await new Promise(r => { audio.onended = () => { STATE.isSpeaking = false; r(); }; audio.onerror = () => { STATE.isSpeaking = false; r(); }; audio.play(); });
+      }
+    } catch(e) { console.error('[Opener] Soniox error:', e); }
+  } else {
+    await speakAI(opener);
+  }
 }
 
 function setCallStatus(text) {
@@ -3759,7 +4499,7 @@ Line 2: the English translation of line 1`,
                 firstSentenceFired = true;
                 const rate = STATE.ttsSpeed === 'slow' ? 0.75 : STATE.ttsSpeed === 'fast' ? 1.3 : 1.0;
                 _enqueueTTS(targetAccum, rate);
-                onSentence(targetAccum, ''); // show target immediately, english coming
+                onSentence(targetAccum, '');
               }
             }
           } else {
@@ -5203,7 +5943,7 @@ async function _processUserSpeech(text) {
           }
         });
 
-        // For Indic users — translate AI reply to their language, show it, and speak it
+        // For Indic users — speak English FIRST (learning), then Telugu (understanding)
         if (isIndicUser() && englishFinal) {
           const sarvamCode = SARVAM_LANG[STATE.nativeLang];
           sarvamTranslate(englishFinal, 'en-IN', sarvamCode).then(async indicTranslation => {
@@ -5224,25 +5964,21 @@ async function _processUserSpeech(text) {
               else lastBub.appendChild(indicDiv);
             }
 
-            // Pre-fetch Sarvam audio while English is still playing
+            // Pre-fetch Telugu audio while English is playing
             const indicAudio = await sarvamTTS(indicTranslation, sarvamCode);
 
-            // Wait for English (Fish Audio) to finish, then play Telugu/Kannada
+            // Wait for English (Fish Audio) to finish
             while (STATE.isSpeaking) await sleep(150);
 
+            // Then play Telugu
             if (indicAudio && document.getElementById('call-screen')?.classList.contains('active')) {
-              // Brief pause between English and Telugu
-              await sleep(300);
+              await sleep(200);
+              STATE.isSpeaking = true;
               await new Promise(r => {
-                indicAudio.onended = r;
-                indicAudio.onerror = r;
+                indicAudio.onended = () => { STATE.isSpeaking = false; r(); };
+                indicAudio.onerror = () => { STATE.isSpeaking = false; r(); };
                 indicAudio.play();
               });
-            }
-
-            // Start listening after Telugu finishes
-            if (document.getElementById('call-screen')?.classList.contains('active')) {
-              setTimeout(startListening, 200);
             }
 
             // If confused — show indicator
@@ -5253,14 +5989,21 @@ async function _processUserSpeech(text) {
               note.textContent = `↑ explained in ${lang}`;
               lastBub.appendChild(note);
             }
+
+            // Start listening after Telugu finishes
+            if (document.getElementById('call-screen')?.classList.contains('active')) {
+              setTimeout(startListening, 200);
+            }
           }).catch(() => {});
         }
 
-        // Speak English then Telugu, then listen
+        // Speak English via Fish Audio for ALL users (learning language)
+        // For Indic users this plays first, then Telugu plays after
+        // For non-Indic users this is the only voice
         await speakAI(targetFinal);
 
-        // For non-Indic users — start listening immediately after English
-        // For Indic users — the Sarvam block above handles listening after Telugu finishes
+        // Non-Indic users start listening after English
+        // Indic users start listening after Telugu (handled above)
         if (!isIndicUser()) {
           (async () => {
             await sleep(300);
@@ -5354,8 +6097,19 @@ async function saveName() {
   } catch(e) {}
 
   btn.disabled = false; btn.textContent = origLabel;
+
+  // Save user to DB
+  fetch('/api/db?action=save-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: STATE.name, email: STATE.email, native_lang: STATE.nativeLang || 'en' }),
+  }).catch(() => {});
+
   saveState();
-  goNext('screen-native-lang'); // language picker first, then goal → onboarding
+
+  // Show mode selection
+  document.getElementById('mode-greeting').textContent = `Hi ${STATE.name}! 👋`;
+  goNext('screen-mode');
 }
 
 // ============================================================
