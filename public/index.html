@@ -3801,7 +3801,7 @@ function isIndicUser() {
 
 // Sarvam STT — transcribe audio in Telugu/Kannada
 async function sarvamTranscribe(audioBuffer, langCode) {
-  const res = await fetch(`/api/sarvam-transcribe?lang=${langCode}`, {
+  const res = await fetch(`/api/voice?action=sarvam-transcribe?lang=${langCode}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/octet-stream' },
     body: audioBuffer,
@@ -3814,7 +3814,7 @@ async function sarvamTranscribe(audioBuffer, langCode) {
 // Sarvam Translate — Indic → English (before Claude) or English → Indic (for subtitle)
 async function sarvamTranslate(text, source, target) {
   try {
-    const res = await fetch('/api/sarvam-translate', {
+    const res = await fetch('/api/voice?action=sarvam-translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, source, target }),
@@ -3836,7 +3836,7 @@ async function sarvamTranslate(text, source, target) {
 // Soniox TTS — speaks Telugu/Kannada with native-speaker quality
 async function sarvamTTS(text, langCode) {
   try {
-    const res = await fetch('/api/soniox-tts', {
+    const res = await fetch('/api/voice?action=soniox-tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, language: langCode }),
@@ -4529,7 +4529,7 @@ let _useSoniox      = true; // try Soniox first, fall back to Groq
 async function initSonioxClient() {
   if (_sonioxClient) return _sonioxClient;
   try {
-    const res  = await fetch('/api/soniox-tmp-key');
+    const res  = await fetch('/api/voice?action=soniox-tmp-key');
     const data = await res.json();
     if (!data.api_key) throw new Error('No temp key');
 
@@ -4537,7 +4537,7 @@ async function initSonioxClient() {
     _sonioxClient = new Soniox.SonioxClient({
       apiKey: async () => {
         // Refresh key before each session
-        const r = await fetch('/api/soniox-tmp-key');
+        const r = await fetch('/api/voice?action=soniox-tmp-key');
         const d = await r.json();
         return d.api_key;
       },
