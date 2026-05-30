@@ -691,27 +691,107 @@ body{
 
 <!-- ============ SCREEN: NAME (Page 1) ============ -->
 <div id="screen-name" class="screen active">
-  <div class="scroll-content" style="justify-content:center;min-height:100vh;">
-    <div style="text-align:center;padding:20px 0;">
-      <div class="logo" style="margin-bottom:16px;">Callingo</div>
-      <div class="headline">Learn by<br><em>Talking</em></div>
-      <div class="subtext" style="margin-top:12px;">Real voice conversations.<br>In your own voice.</div>
+  <div class="scroll-content" style="justify-content:center;min-height:100vh;gap:24px;">
+
+    <!-- Logo + hero -->
+    <div style="text-align:center;padding:32px 0 8px;">
+      <div style="font-size:48px;margin-bottom:12px;">🎙️</div>
+      <div class="logo" style="font-size:32px;margin-bottom:8px;">Callingo</div>
+      <div style="font-size:22px;font-weight:800;color:var(--text);line-height:1.3;">Learn by<br><em style="color:var(--green);">Talking</em></div>
+      <div class="subtext" style="margin-top:12px;font-size:14px;">Real AI voice conversations.<br>Practice anytime, get real feedback.</div>
     </div>
+
+    <!-- Features row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+      <div style="background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px 8px;">
+        <div style="font-size:20px;margin-bottom:4px;">🤖</div>
+        <div style="font-size:11px;color:var(--sub);line-height:1.3;">AI Interview Practice</div>
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px 8px;">
+        <div style="font-size:20px;margin-bottom:4px;">🌍</div>
+        <div style="font-size:11px;color:var(--sub);line-height:1.3;">Learn German & English</div>
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px 8px;">
+        <div style="font-size:20px;margin-bottom:4px;">🎙️</div>
+        <div style="font-size:11px;color:var(--sub);line-height:1.3;">Your Cloned Voice</div>
+      </div>
+    </div>
+
+    <!-- Login form -->
     <div class="card">
-      <div class="card-label">Let's start</div>
-      <div class="subtext" style="margin-bottom:16px;">What's your name and email?</div>
+      <div class="card-label" style="margin-bottom:12px;">Create your account</div>
       <input class="inp" id="name-inp" type="text" placeholder="Your first name…"
         oninput="validateNameForm()"
         onkeydown="if(event.key==='Enter')document.getElementById('email-inp').focus()"/>
-      <input class="inp" id="email-inp" type="email" placeholder="Your email…"
+      <input class="inp" id="email-inp" type="email" placeholder="Your email address…"
         style="margin-top:10px;"
         oninput="validateNameForm()"
         onkeydown="if(event.key==='Enter')saveName()"/>
       <div class="err" id="name-err" style="margin-top:8px;">Please enter your name and email</div>
     </div>
-    <button class="btn btn-primary" id="name-btn" disabled onclick="saveName()">Continue →</button>
+
+    <button class="btn btn-primary" id="name-btn" disabled onclick="saveName()" style="padding:16px;font-size:16px;">
+      Get Started →
+    </button>
+
+    <div style="text-align:center;font-size:11px;color:var(--sub);">
+      Free to try · No credit card needed
+    </div>
   </div>
   <div class="page-num">Page 1</div>
+</div>
+
+<!-- ============ SCREEN: VOICE CLONE ONBOARDING (Page 1.5) ============ -->
+<div id="screen-voice-onboard" class="screen">
+  <div class="scroll-content" style="gap:20px;justify-content:center;min-height:100vh;">
+
+    <div style="text-align:center;">
+      <div style="font-size:48px;margin-bottom:12px;">🎙️</div>
+      <div class="headline" style="font-size:24px;">Clone your voice</div>
+      <div class="subtext" style="margin-top:8px;">Read these 2 sentences aloud so the AI can speak in your voice. Takes 30 seconds.</div>
+    </div>
+
+    <div class="card" style="border-color:var(--green);">
+      <div class="card-label" style="color:var(--green);margin-bottom:10px;">SENTENCE 1 OF 2</div>
+      <div style="font-size:16px;font-weight:600;line-height:1.6;color:var(--text);">
+        "The quick brown fox jumps over the lazy dog near the river bank."
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label" style="margin-bottom:10px;">SENTENCE 2 OF 2</div>
+      <div style="font-size:16px;font-weight:600;line-height:1.6;color:var(--text);">
+        "She sells sea shells by the sea shore and the shells she sells are sea shells."
+      </div>
+    </div>
+
+    <div class="mic-wrap">
+      <button class="mic-btn" id="onboard-mic-btn" onclick="toggleOnboardRecord()">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="currentColor"/>
+          <path d="M19 10a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V22h2v-3.06A9 9 0 0 0 21 10z" fill="currentColor"/>
+        </svg>
+      </button>
+      <div class="wave" id="onboard-wave">
+        <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
+        <div class="wbar" style="height:4px"></div><div class="wbar" style="height:4px"></div>
+        <div class="wbar" style="height:4px"></div>
+      </div>
+      <div class="mic-hint" id="onboard-mic-hint">TAP TO RECORD BOTH SENTENCES</div>
+    </div>
+
+    <div id="onboard-rec-status" style="text-align:center;font-size:13px;color:var(--sub);min-height:20px;"></div>
+
+    <button class="btn btn-primary" id="onboard-clone-btn" disabled onclick="startOnboardCloning()" style="padding:16px;font-size:15px;">
+      🎙️ Clone My Voice →
+    </button>
+
+    <button class="btn btn-outline" onclick="skipVoiceClone()" style="padding:12px;font-size:13px;">
+      Skip for now — use default voice
+    </button>
+
+  </div>
+  <div class="page-num">Page 1.5</div>
 </div>
 
 <!-- ============ SCREEN: MODE SELECTION (Page 2) ============ -->
@@ -3098,10 +3178,28 @@ function openBotSelect(mode, lang, backScreen) {
   const backBtn = document.getElementById('bot-back-btn');
   backBtn.onclick = () => goNext(backScreen || 'screen-mode');
 
-  // Render bot cards
+  // Render bot cards — cloned voice first if user has one
   const bots = (BOT_CONFIGS[mode]?.[lang] || BOT_CONFIGS[mode]?.en || []);
   const list = document.getElementById('bot-list');
-  list.innerHTML = bots.map(bot => `
+
+  // Cloned voice card (only shown if user has cloned their voice)
+  let clonedVoiceCard = '';
+  if (STATE.voiceId) {
+    clonedVoiceCard = `
+    <button class="bot-card" id="botcard-cloned" onclick="selectBot('cloned')" style="border-color:var(--green);">
+      <div class="bot-avatar" style="background:var(--green-dim);">🎙️</div>
+      <div class="bot-info">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+          <div class="bot-name">Your Voice</div>
+          <span class="bot-tag friendly">Cloned</span>
+        </div>
+        <div class="bot-role">Your own cloned voice</div>
+        <div class="bot-desc">The AI interviewer speaks in your own cloned voice — the most personal experience.</div>
+      </div>
+    </button>`;
+  }
+
+  list.innerHTML = clonedVoiceCard + bots.map(bot => `
     <button class="bot-card" id="botcard-${bot.id}" onclick="selectBot('${bot.id}')">
       <div class="bot-avatar" style="background:${bot.color}22;">${bot.emoji}</div>
       <div class="bot-info">
@@ -3119,12 +3217,29 @@ function openBotSelect(mode, lang, backScreen) {
 }
 
 function selectBot(botId) {
+  // Special case — user's cloned voice
+  if (botId === 'cloned') {
+    STATE.selectedBot = {
+      id: 'cloned',
+      name: 'Your Voice',
+      emoji: '🎙️',
+      fishVoiceId: STATE.voiceId,
+      system: `You are a professional interviewer conducting a job interview. Ask clear, structured questions. React naturally to answers. Be professional and encouraging.`,
+      role: 'Your cloned voice',
+    };
+    document.querySelectorAll('.bot-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('botcard-cloned')?.classList.add('selected');
+    document.getElementById('bot-start-btn').disabled = false;
+    document.getElementById('bot-start-btn').textContent =
+      _botMode === 'interview' ? '🎙 Interview with Your Voice →' : '📞 Call with Your Voice →';
+    return;
+  }
+
   const bots = BOT_CONFIGS[_botMode]?.[_botLang] || BOT_CONFIGS[_botMode]?.en || [];
   const bot  = bots.find(b => b.id === botId);
   if (!bot) return;
   STATE.selectedBot = bot;
 
-  // Update UI
   document.querySelectorAll('.bot-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('botcard-' + botId)?.classList.add('selected');
   document.getElementById('bot-start-btn').disabled = false;
@@ -3255,6 +3370,7 @@ async function startInterview(lang, jobTitleParam) {
   STATE.isListening = false;
   STATE.interviewMode = true;
   STATE._sonioxHandledTurn = false;
+  _ivEnding = false;
 
   // Pre-load Veera's voice (fallback if user hasn't cloned their own)
   if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
@@ -3342,7 +3458,8 @@ function stripMarkdown(text) {
     .trim();
 }
 
-let _ivAsking = false; // prevent concurrent ivAskQuestion calls
+let _ivAsking   = false;
+let _ivEnding   = false;
 
 async function ivAskQuestion() {
   if (!_ivState.active || _ivAsking) return;
@@ -3388,13 +3505,13 @@ async function ivAskQuestion() {
         if (audio) {
           // Typewriter: spread words over audio duration estimate
           const words = trimmed.split(' ');
-          const msPerWord = Math.max(60, (words.length * 400) / words.length);
+          const msPerWord = Math.max(60, Math.floor(350 / words.length));
           let wi = 0;
           const typer = setInterval(() => {
             if (wi < words.length) {
-              fullText += (wi === 0 && fullText.length > 0 ? ' ' : '') + words[wi];
+              fullText += (fullText.length > 0 ? ' ' : '') + words[wi++];
               if (bubble) bubble.textContent = fullText;
-              wi++;
+              document.getElementById('iv-messages').scrollTop = 99999;
             } else {
               clearInterval(typer);
             }
@@ -3507,12 +3624,13 @@ ${lang === 'de' ? 'Respond in German.' : 'Respond in English.'}`;
         const audio = await tts(s.trim(), voiceId);
         if (audio) {
           const words = s.trim().split(' ');
-          const msPerWord = Math.max(60, 400 / words.length * words.length);
+          const msPerWord = Math.max(60, Math.floor(350 / words.length));
           let wi = 0;
           const typer = setInterval(() => {
             if (wi < words.length) {
-              fullText += (wi === 0 && fullText.length > 0 ? ' ' : '') + words[wi++];
+              fullText += (fullText.length > 0 ? ' ' : '') + words[wi++];
               if (reactionBubble) reactionBubble.textContent = fullText;
+              document.getElementById('iv-messages').scrollTop = 99999;
             } else clearInterval(typer);
           }, msPerWord);
           await new Promise(r => {
@@ -3682,19 +3800,29 @@ async function _ivOnRecordDone(stream) {
 }
 
 async function endInterview() {
-  if (!_ivState.active) return;
+  if (!_ivState.active || _ivEnding) return;
+  _ivEnding = true;
   _ivState.active = false;
   _ivAsking = false;
   _ivListening = false;
   _callActive = false;
   STATE.interviewMode = false;
+  STATE._sonioxHandledTurn = false;
+  STATE.isSpeaking = false;
+
+  // Stop all audio immediately
+  window.speechSynthesis?.cancel();
+
+  // Stop mic / Soniox
   stopListening();
   clearInterval(_ivState.timer);
+  clearInterval(_ivSilenceCheck);
+  _ivSilenceCheck = null;
 
   // Stop session recording
   if (_ivState.recording.recorder?.state === 'recording') {
     _ivState.recording.recorder.stop();
-    await sleep(500);
+    await sleep(300);
   }
 
   document.getElementById('iv-status').textContent = 'Session ended — generating report…';
@@ -3744,6 +3872,15 @@ async function endInterview() {
 
   // Generate report with Claude
   try {
+    if (!_ivState.sessionId) {
+      console.error('[Report] No session ID — DB session was not created at interview start');
+      document.getElementById('iv-report-loading').innerHTML =
+        '<div style="color:var(--red);text-align:center;padding:32px;">No session found.<br>Please try again.</div>';
+      _ivEnding = false;
+      return;
+    }
+
+    console.log('[Report] Generating for session:', _ivState.sessionId);
     const reportRes = await fetch('/api/db?action=generate-report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -3754,6 +3891,7 @@ async function endInterview() {
       }),
     });
     const report = await reportRes.json();
+    console.log('[Report] Response:', reportRes.status, report.ok ? 'OK' : report.error);
 
     if (report.ok) {
       showInterviewReport(report);
@@ -3883,6 +4021,94 @@ async function viewPastSessions() {
     el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--red);">Failed to load sessions.</div>';
   }
 }
+// ============================================================
+// VOICE CLONING ONBOARDING
+// ============================================================
+let _onboardRecording = false;
+let _onboardRecorder  = null;
+let _onboardChunks    = [];
+let _onboardAudioBlob = null;
+
+async function toggleOnboardRecord() {
+  if (_onboardRecording) {
+    _onboardRecording = false;
+    if (_onboardRecorder?.state === 'recording') _onboardRecorder.stop();
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    _onboardChunks = [];
+    _onboardRecording = true;
+    const btn  = document.getElementById('onboard-mic-btn');
+    const hint = document.getElementById('onboard-mic-hint');
+    const wave = document.getElementById('onboard-wave');
+    btn.style.background = 'var(--red)';
+    hint.textContent     = 'RECORDING… TAP TO STOP';
+    wave.style.display   = 'flex';
+    const mimeType = ['audio/webm;codecs=opus','audio/webm'].find(m => MediaRecorder.isTypeSupported(m)) || '';
+    _onboardRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+    _onboardRecorder.ondataavailable = e => { if (e.data.size > 0) _onboardChunks.push(e.data); };
+    _onboardRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      _onboardAudioBlob = new Blob(_onboardChunks, { type: mimeType || 'audio/webm' });
+      btn.style.background = 'var(--green)';
+      hint.textContent     = '✅ Done — clone your voice!';
+      wave.style.display   = 'none';
+      document.getElementById('onboard-rec-status').textContent =
+        `Recorded ${(_onboardAudioBlob.size/1024).toFixed(0)}KB — ready to clone`;
+      document.getElementById('onboard-clone-btn').disabled = false;
+    };
+    _onboardRecorder.start(100);
+  } catch(e) {
+    document.getElementById('onboard-mic-hint').textContent = 'Mic access needed';
+  }
+}
+
+async function startOnboardCloning() {
+  if (!_onboardAudioBlob) return;
+  const btn = document.getElementById('onboard-clone-btn');
+  btn.disabled = true; btn.textContent = '⏳ Cloning…';
+  document.getElementById('onboard-rec-status').textContent = 'Uploading and cloning your voice…';
+  try {
+    // Convert blob to base64 — same as startCloning()
+    const base64 = await blobToBase64(_onboardAudioBlob);
+    const res = await fetch('/api/fish-clone', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ audioBase64: base64, name: `${STATE.name} Voice` }),
+    });
+    if (!res.ok) throw new Error('Clone failed: ' + res.status);
+    const data = await res.json();
+    const voiceId = data._id || data.id;
+    if (!voiceId) throw new Error(data.message || 'No voice ID returned');
+
+    STATE.voiceId = voiceId;
+    saveState();
+
+    // Persist to server — same as startCloning()
+    if (STATE.email && STATE.voiceId) {
+      fetch('/api/voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: STATE.email, voiceId: STATE.voiceId, name: STATE.name }),
+      }).catch(() => {});
+    }
+
+    document.getElementById('onboard-rec-status').textContent = '✅ Voice cloned successfully!';
+    document.getElementById('onboard-mic-hint').textContent = '✅ Ready!';
+    await sleep(800);
+    goNext('screen-mode');
+
+  } catch(e) {
+    console.error('[Clone]', e);
+    btn.disabled = false; btn.textContent = '🎙️ Clone My Voice →';
+    document.getElementById('onboard-rec-status').textContent = '❌ ' + e.message + ' — try again';
+  }
+}
+
+function skipVoiceClone() { goNext('screen-mode'); }
+
+// ============================================================
 function openSettings() {
   // Mark current selections
   document.querySelectorAll('#settings-lang-list .lang-btn').forEach(b => b.classList.remove('selected'));
@@ -6949,9 +7175,9 @@ async function saveName() {
 
   saveState();
 
-  // Show mode selection
+  // New user — go to voice cloning first
   document.getElementById('mode-greeting').textContent = `Hi ${STATE.name}! 👋`;
-  goNext('screen-mode');
+  goNext('screen-voice-onboard');
 }
 
 // ============================================================
