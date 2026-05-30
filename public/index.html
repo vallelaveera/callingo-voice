@@ -4583,7 +4583,7 @@ async function startListeningSoniox() {
   const client = await initSonioxClient();
   if (!client) throw new Error('No Soniox client');
 
-  const lang = STATE.practiceLang || 'en';
+  const lang = STATE.interviewMode ? (_ivState.lang || 'en') : (STATE.practiceLang || 'en');
   const nativeLang = STATE.nativeLang || 'en';
 
   // Language hints — include both practice and native languages
@@ -4775,9 +4775,9 @@ async function _onRecordingDone() {
       // Show original Indic in user bubble, English as subtitle
       addBubble('user', indicText);
     } else {
-      // Groq Whisper for English / other language users
+      // Groq Whisper — use interview lang if in interview mode, else practice lang
       const langMap = { de: 'de', en: 'en' };
-      const lang = langMap[STATE.practiceLang] || 'en';
+      const lang = langMap[STATE.interviewMode ? _ivState.lang : STATE.practiceLang] || 'en';
       const res = await fetch(`/api/transcribe?lang=${lang}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/octet-stream' },
