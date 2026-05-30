@@ -3228,6 +3228,13 @@ async function startInterview(lang, jobTitleParam) {
     audioUrl: null, active: true,
   };
 
+  // Use the SAME _callActive flag as learn call
+  _callActive = true;
+  STATE.isSpeaking = false;
+  STATE.isListening = false;
+  // Tell _onRecordingDone we're in interview mode
+  STATE.interviewMode = true;
+
   // Pre-load Veera's voice (fallback if user hasn't cloned their own)
   if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
 
@@ -3312,32 +3319,53 @@ async function ivAskQuestion() {
   document.getElementById('iv-status').textContent = 'AI is speaking…';
   document.getElementById('iv-mic-btn').style.background = 'var(--border)';
   document.getElementById('iv-mic-btn').textContent = '🔊';
-  _ivListening = false;
 
   // Add AI bubble
   ivAddBubble('ai', q);
   _ivState.transcript.push({ role: 'ai', content: q, timestamp: new Date().toISOString() });
 
-  // Speak the question — use bot's voice if set, else welcome voice, else browser TTS
+  // Speak using the SAME speakAIAtRate as the learn call — sets STATE.isSpeaking correctly
   try {
     if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
     const botVoiceId = STATE.selectedBot?.fishVoiceId;
     const voiceId = botVoiceId || STATE.voiceId || STATE.welcomeVoiceId;
     if (voiceId) {
+      // Use speakAIAtRate — identical to learn call, sets isSpeaking flag properly
+      STATE.isSpeaking = true;
       const audio = await tts(q, voiceId);
-      if (audio) await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+      if (audio) {
+        await new Promise(r => {
+          audio.onended = () => { STATE.isSpeaking = false; r(); };
+          audio.onerror = () => { STATE.isSpeaking = false; r(); };
+          audio.play();
+        });
+      } else {
+        STATE.isSpeaking = false;
+      }
     } else {
+      // Browser TTS fallback
+      STATE.isSpeaking = true;
       await browserTTS(q);
+      STATE.isSpeaking = false;
     }
   } catch(e) {
+    STATE.isSpeaking = false;
     await browserTTS(q).catch(() => {});
   }
 
   if (!_ivState.active) return;
 
-  // Auto-start listening after question finishes
-  await sleep(400);
-  ivStartListening();
+  // Wait for isSpeaking to clear then start listening — SAME as learn call
+  await sleep(300);
+  while (STATE.isSpeaking) await sleep(150);
+
+  document.getElementById('iv-status').textContent = 'Listening… speak your answer';
+  document.getElementById('iv-mic-btn').textContent = '🎤';
+  document.getElementById('iv-mic-btn').style.background = 'var(--green)';
+
+  // Use the SAME startListening from learn call — handles silence detection, transcription, everything
+  _ivListening = true;
+  startListening();
 }
 
 async function ivStartListening() {
@@ -3495,6 +3523,9 @@ async function _ivOnRecordDone(stream) {
 async function endInterview() {
   if (!_ivState.active) return;
   _ivState.active = false;
+  _callActive = false;
+  STATE.interviewMode = false;
+  stopListening();
   clearInterval(_ivState.timer);
 
   // Stop session recording
@@ -4280,6 +4311,7 @@ async function startCall() {
 
 async function launchCall() {
   _callActive = true;
+  STATE.interviewMode = false;
   STATE.silenceStrikes = 0;
   _nudgeAudio = null;
   STATE.callHistory = [];
@@ -4607,12 +4639,39 @@ async function _onRecordingDone() {
     }
 
     STATE.isListening = false;
-    if (!isIndicUser()) addBubble('user', text);
-    STATE.callHistory.push({ role: 'user', content: text });
-    STATE.silenceStrikes = 0;
-    setMicState('processing');
-    addTyping();
-    await _processUserSpeech(text);
+    if (!isIndicUser()) {
+      // Add bubble to correct screen
+      if (STATE.interviewMode) {
+        ivAddBubble('user', text);
+      } else {
+        addBubble('user', text);
+      }
+    }
+
+    if (STATE.interviewMode) {
+      // Interview mode — process answer
+      _ivListening = false;
+      const fillers = (text.toLowerCase().match(/\b(um|uh|like|you know|er|ah)\b/g) || []).length;
+      _ivState.fillerCount += fillers;
+      const el = document.getElementById('iv-filler-count');
+      if (el) el.textContent = _ivState.fillerCount;
+      _ivState.transcript.push({ role: 'user', content: text, timestamp: new Date().toISOString() });
+      document.getElementById('iv-status').textContent = 'Good answer!';
+      await sleep(1200);
+      _ivState.questionIdx++;
+      if (_ivState.questionIdx < INTERVIEW_QUESTIONS[_ivState.lang].length) {
+        await ivAskQuestion();
+      } else {
+        await endInterview();
+      }
+    } else {
+      // Learn call mode — normal flow
+      STATE.callHistory.push({ role: 'user', content: text });
+      STATE.silenceStrikes = 0;
+      setMicState('processing');
+      addTyping();
+      await _processUserSpeech(text);
+    }
 
   } catch(err) {
     console.warn('Groq transcription error:', err);
