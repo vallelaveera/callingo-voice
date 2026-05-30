@@ -855,8 +855,10 @@ body{
 </div>
 
 <!-- ============ SCREEN: INTERVIEW CALL (Page 5) ============ -->
-<div id="screen-interview-call" class="screen">
-  <div class="top-bar" style="background:rgba(26,26,26,0.95);">
+<div id="screen-interview-call" class="screen" style="display:flex;flex-direction:column;height:100vh;overflow:hidden;">
+
+  <!-- Fixed top bar -->
+  <div class="top-bar" style="background:rgba(26,26,26,0.95);flex-shrink:0;">
     <div style="display:flex;align-items:center;gap:10px;">
       <div style="width:36px;height:36px;border-radius:50%;background:var(--green-dim);display:flex;align-items:center;justify-content:center;font-size:18px;" id="iv-bot-avatar">💼</div>
       <div>
@@ -871,9 +873,11 @@ body{
     </div>
   </div>
 
-  <div id="iv-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;padding-bottom:140px;"></div>
+  <!-- Scrollable messages container -->
+  <div id="iv-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;"></div>
 
-  <div style="position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;padding:16px;background:var(--bg);border-top:1px solid var(--border);">
+  <!-- Always-visible mic bar at bottom -->
+  <div style="flex-shrink:0;padding:12px 16px 20px;background:var(--bg);border-top:1px solid var(--border);">
     <div style="text-align:center;font-size:12px;color:var(--sub);margin-bottom:10px;" id="iv-status">Getting ready…</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;">
       <div style="font-size:11px;color:var(--sub);text-align:center;">
@@ -3315,6 +3319,7 @@ function ivAddBubble(role, text) {
   el.appendChild(bubble);
   const container = document.getElementById('iv-messages');
   container.appendChild(el);
+  // Always scroll to latest message
   container.scrollTop = container.scrollHeight;
 }
 
@@ -3353,29 +3358,32 @@ async function ivAskQuestion() {
   ivAddBubble('ai', q);
   _ivState.transcript.push({ role: 'ai', content: q, timestamp: new Date().toISOString() });
 
-  // Speak — always ensure welcome voice is loaded (Veera's cloned voice)
+  // Speak with natural pauses between sentences
   STATE.isSpeaking = true;
   try {
     if (!STATE.welcomeVoiceId) await loadWelcomeVoice();
-    // Priority: bot's own voice → user's cloned voice → Veera's welcome voice → browser TTS
     const voiceId = STATE.selectedBot?.fishVoiceId || STATE.voiceId || STATE.welcomeVoiceId;
 
     if (voiceId) {
-      const audio = await tts(q, voiceId);
-      if (audio) {
-        await new Promise(r => {
-          audio.onended = () => { STATE.isSpeaking = false; r(); };
-          audio.onerror = () => { STATE.isSpeaking = false; r(); };
-          audio.play();
-        });
-      } else {
-        // tts() returned null — fall back to browser TTS
-        console.warn('[Interview] Fish Audio returned null, using browser TTS');
-        STATE.isSpeaking = false;
-        await browserTTS(q);
+      // Split into sentences for natural pacing
+      const sentences = q.match(/[^.!?]+[.!?]+/g) || [q];
+      for (const sentence of sentences) {
+        if (!_ivState.active) break;
+        const trimmed = sentence.trim();
+        if (!trimmed) continue;
+        const audio = await tts(trimmed, voiceId);
+        if (audio) {
+          await new Promise(r => {
+            audio.onended = r;
+            audio.onerror = r;
+            audio.play();
+          });
+          // Natural pause between sentences
+          await sleep(300);
+        }
       }
+      STATE.isSpeaking = false;
     } else {
-      // No voice ID at all — use browser TTS
       STATE.isSpeaking = false;
       await browserTTS(q);
     }
@@ -3384,8 +3392,6 @@ async function ivAskQuestion() {
     STATE.isSpeaking = false;
     await browserTTS(q).catch(() => {});
   }
-
-  STATE.isSpeaking = false;
   if (!_ivState.active) { _ivAsking = false; return; }
 
   // Small natural pause before listening
@@ -3400,12 +3406,88 @@ async function ivAskQuestion() {
   startListening();
 }
 
+// React to user's answer naturally, then ask next question
+async function ivReactAndNext(userAnswer) {
+  if (!_ivState.active) return;
+
+  const bot = STATE.selectedBot;
+  const lang = _ivState.lang;
+  const nextQ = INTERVIEW_QUESTIONS[lang][_ivState.questionIdx + 1];
+
+  document.getElementById('iv-status').textContent = 'Thinking…';
+
+  try {
+    // Ask Claude for a short natural reaction + transition
+    const systemPrompt = bot?.system || `You are a professional interviewer.`;
+    const prompt = `${systemPrompt}
+
+The candidate just answered: "${userAnswer}"
+
+Write a SHORT natural reaction (1-2 sentences max) to what they said — acknowledge it, comment briefly, or follow up naturally. Then transition to this next question: "${nextQ || 'That was our last question.'}"
+
+${!nextQ ? 'Since this is the last question, close the interview warmly.' : ''}
+
+Rules:
+- Sound completely human and conversational
+- React to what they ACTUALLY said — don't be generic
+- Keep it under 3 sentences total
+- ${lang === 'de' ? 'Respond entirely in German.' : 'Respond in English.'}
+- Do NOT say "Great answer" or "That's great" — be specific
+- Just return the spoken text, nothing else`;
+
+    const res = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: prompt }],
+        system: systemPrompt,
+        stream: false,
+      }),
+    });
+
+    let reaction = '';
+    if (res.ok) {
+      const data = await res.json();
+      reaction = data.content?.[0]?.text?.trim() || '';
+    }
+
+    if (!reaction) {
+      // Fallback reactions if Claude fails
+      const fallbacks = {
+        en: ["I see, thank you for that.", "Interesting, I appreciate you sharing that.", "Got it, thanks."],
+        de: ["Ich verstehe, danke dafür.", "Interessant, danke für Ihre Antwort.", "Gut, danke."],
+      };
+      reaction = fallbacks[lang]?.[Math.floor(Math.random() * 3)] || "Thank you.";
+    }
+
+    // Show reaction in bubble
+    ivAddBubble('ai', reaction);
+    _ivState.transcript.push({ role: 'ai', content: reaction, timestamp: new Date().toISOString() });
+
+    // Speak reaction
+    const voiceId = bot?.fishVoiceId || STATE.voiceId || STATE.welcomeVoiceId;
+    if (voiceId) {
+      const audio = await tts(reaction, voiceId);
+      if (audio) await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play(); });
+    } else {
+      await browserTTS(reaction).catch(() => {});
+    }
+
+  } catch(e) {
+    console.warn('[Interview] Reaction failed:', e.message);
+  }
+
+  // Move to next question
+  _ivState.questionIdx++;
+  await sleep(500);
+  if (_ivState.questionIdx < INTERVIEW_QUESTIONS[_ivState.lang].length) {
+    await ivAskQuestion();
+  } else {
+    await endInterview();
+  }
+}
 async function ivStartListening() {
   if (_ivListening || !_ivState.active) return;
-  _ivListening = true;
-
-  document.getElementById('iv-status').textContent = 'Listening… speak your answer';
-  document.getElementById('iv-mic-btn').textContent = '🎙';
   document.getElementById('iv-mic-btn').style.background = 'var(--green)';
 
   try {
@@ -3532,17 +3614,9 @@ async function _ivOnRecordDone(stream) {
     ivAddBubble('user', userText);
     _ivState.transcript.push({ role: 'user', content: userText, timestamp: new Date().toISOString() });
 
-    // Move to next question after natural pause
-    _ivState.questionIdx++;
-    if (_ivState.questionIdx < INTERVIEW_QUESTIONS[_ivState.lang].length) {
-      document.getElementById('iv-status').textContent = 'Good answer!';
-      await sleep(1200);
-      await ivAskQuestion();
-    } else {
-      document.getElementById('iv-status').textContent = 'Interview complete! Generating report…';
-      await sleep(800);
-      await endInterview();
-    }
+    // React naturally then ask next question
+    document.getElementById('iv-status').textContent = 'Good answer!';
+    await ivReactAndNext(userText);
 
   } catch(e) {
     console.error('[Interview] Record done error:', e);
@@ -3595,6 +3669,22 @@ async function endInterview() {
         document.getElementById('iv-playback').src = audioUrl;
       }
     } catch(e) { console.warn('Audio upload failed:', e); }
+  }
+
+  // Save transcript to DB first (needed for generate-report)
+  if (_ivState.sessionId) {
+    try {
+      await fetch('/api/db?action=save-session', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: _ivState.sessionId,
+          transcript: _ivState.transcript,
+          duration_seconds: _ivState.seconds,
+          audio_url: audioUrl,
+        }),
+      });
+    } catch(e) { console.warn('Transcript save failed:', e); }
   }
 
   // Generate report with Claude
@@ -4664,13 +4754,7 @@ async function startListeningSoniox() {
       if (el) el.textContent = _ivState.fillerCount;
       _ivState.transcript.push({ role: 'user', content: finalText, timestamp: new Date().toISOString() });
       document.getElementById('iv-status').textContent = 'Good answer!';
-      await sleep(1200);
-      _ivState.questionIdx++;
-      if (_ivState.questionIdx < INTERVIEW_QUESTIONS[_ivState.lang].length) {
-        await ivAskQuestion();
-      } else {
-        await endInterview();
-      }
+      await ivReactAndNext(finalText);
     } else {
       if (!isIndicUser()) addBubble('user', finalText);
       STATE.callHistory.push({ role: 'user', content: finalText });
@@ -4843,13 +4927,7 @@ async function _onRecordingDone() {
       if (el) el.textContent = _ivState.fillerCount;
       _ivState.transcript.push({ role: 'user', content: text, timestamp: new Date().toISOString() });
       document.getElementById('iv-status').textContent = 'Good answer!';
-      await sleep(1200);
-      _ivState.questionIdx++;
-      if (_ivState.questionIdx < INTERVIEW_QUESTIONS[_ivState.lang].length) {
-        await ivAskQuestion();
-      } else {
-        await endInterview();
-      }
+      await ivReactAndNext(text);
     } else {
       // Learn call mode — normal flow
       STATE.callHistory.push({ role: 'user', content: text });
